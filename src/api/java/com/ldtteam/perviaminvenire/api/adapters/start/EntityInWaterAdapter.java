@@ -1,5 +1,7 @@
 package com.ldtteam.perviaminvenire.api.adapters.start;
 
+import java.util.Optional;
+
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 
 import net.minecraft.block.BlockState;
@@ -9,9 +11,12 @@ import net.minecraft.util.math.BlockPos;
 public class EntityInWaterAdapter implements IStartPositionAdapter {
 
     @Override
-    public BlockPos apply(final AbstractPathJob job, final Entity entity) {
+    public Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity) {
         BlockPos workingPos = entity.getPosition();
         BlockState liquidState = entity.getEntityWorld().getBlockState(workingPos);
+
+        if (!liquidState.getMaterial().isLiquid())
+            return Optional.empty();
 
         while (liquidState.getMaterial().isLiquid())
         {
@@ -19,6 +24,6 @@ public class EntityInWaterAdapter implements IStartPositionAdapter {
             liquidState = entity.getEntityWorld().getBlockState(workingPos);
         }
 
-        return workingPos;
+        return Optional.of(workingPos);
     }
 }

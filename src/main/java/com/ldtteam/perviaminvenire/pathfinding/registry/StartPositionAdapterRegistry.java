@@ -1,6 +1,7 @@
 package com.ldtteam.perviaminvenire.pathfinding.registry;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -8,11 +9,13 @@ import java.util.function.Predicate;
 import com.google.common.collect.Maps;
 import com.ldtteam.perviaminvenire.api.adapters.start.IStartPositionAdapter;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
+import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
 
-public final class StartPositionAdapterRegistry implements IStartPositionAdapterRegistry {
+public final class StartPositionAdapterRegistry extends AbstractCallbackBasedRegistry<IStartPositionAdapterRegistry, IStartPositionAdapter> implements IStartPositionAdapterRegistry {
 
     private static final StartPositionAdapterRegistry INSTANCE = new StartPositionAdapterRegistry();
 
@@ -20,45 +23,16 @@ public final class StartPositionAdapterRegistry implements IStartPositionAdapter
         return INSTANCE;
     }
 
-    private final Map<Predicate<Entity>, IStartPositionAdapter> entityAdapterMap = Maps.newConcurrentMap();
-    private final Map<Predicate<Block>, IStartPositionAdapter> blockAdapterMap = Maps.newConcurrentMap();
-
     private StartPositionAdapterRegistry() {
     }
 
     @Override
-    public IStartPositionAdapterRegistry registerForBlocks(
-                    final IStartPositionAdapter adapter, final Collection<Predicate<Block>> predicates) {
-        predicates.forEach(predicate -> {
-            blockAdapterMap.putIfAbsent(predicate, adapter);
-        });
-
+    public IStartPositionAdapterRegistry getThis() {
         return this;
     }
 
     @Override
-    public Optional<IStartPositionAdapter> getForBlock(final Block block) {
-        return this.blockAdapterMap.keySet().stream()
-                        .filter(blockPredicate -> blockPredicate.test(block))
-                        .findFirst()
-                        .map(this.blockAdapterMap::get);
-    }
-
-    @Override
-    public IStartPositionAdapterRegistry registerForEntity(
-                    final IStartPositionAdapter adapter, final Collection<Predicate<Entity>> predicates) {
-        predicates.forEach(predicate -> {
-            entityAdapterMap.putIfAbsent(predicate, adapter);
-        });
-
-        return this;
-    }
-
-    @Override
-    public Optional<IStartPositionAdapter> getForEntity(final Entity entity) {
-        return this.entityAdapterMap.keySet().stream()
-                               .filter(entityPredicate -> entityPredicate.test(entity))
-                               .findFirst()
-                               .map(this.entityAdapterMap::get);
+    protected IStartPositionAdapter getRunnerInternal(final List<IStartPositionAdapter> callbacks) {
+        return (job, entity) -> callbacks.stream().map(a -> a.apply(job, entity)).filter(Optional::isPresent).map(Optional::get).findFirst();
     }
 }

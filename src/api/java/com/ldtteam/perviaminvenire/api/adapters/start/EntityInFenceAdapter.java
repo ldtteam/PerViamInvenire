@@ -3,6 +3,8 @@ package com.ldtteam.perviaminvenire.api.adapters.start;
 import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.TOO_CLOSE_TO_FENCE;
 import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.TOO_FAR_FROM_FENCE;
 
+import java.util.Optional;
+
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 
 import net.minecraft.entity.Entity;
@@ -10,7 +12,7 @@ import net.minecraft.util.math.BlockPos;
 
 public class EntityInFenceAdapter implements IStartPositionAdapter {
     @Override
-    public BlockPos apply(final AbstractPathJob job, final Entity entity) {
+    public Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity) {
         BlockPos entityPos = entity.getPosition();
 
         //Push away from fence
@@ -34,7 +36,10 @@ public class EntityInFenceAdapter implements IStartPositionAdapter {
         {
             entityPos = entityPos.south();
         }
-        
-        return entityPos;
+
+        if (entityPos == entity.getPosition())
+            return Optional.empty();
+
+        return Optional.of(entityPos);
     }
 }

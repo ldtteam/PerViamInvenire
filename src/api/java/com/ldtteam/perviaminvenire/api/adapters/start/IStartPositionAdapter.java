@@ -1,5 +1,7 @@
 package com.ldtteam.perviaminvenire.api.adapters.start;
 
+import java.util.Optional;
+
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 
 import net.minecraft.entity.Entity;
@@ -12,8 +14,5 @@ import net.minecraft.util.math.BlockPos;
  */
 @FunctionalInterface
 public interface IStartPositionAdapter {
-
-    IStartPositionAdapter IDENTITY = (job, entity) -> entity.getPosition();
-
-    BlockPos apply(final AbstractPathJob job, final Entity entity);
+    Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity);
 }

@@ -14,8 +14,7 @@ import java.util.concurrent.Callable;
 
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.start.IStartPositionAdapter;
-import com.ldtteam.perviaminvenire.api.config.IClientConfig;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 import org.apache.logging.log4j.LogManager;
@@ -27,14 +26,11 @@ import net.minecraft.block.AbstractRailBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.FenceBlock;
-import net.minecraft.block.FenceGateBlock;
 import net.minecraft.block.LadderBlock;
 import net.minecraft.block.ScaffoldingBlock;
 import net.minecraft.block.SnowBlock;
 import net.minecraft.block.StairsBlock;
 import net.minecraft.block.VineBlock;
-import net.minecraft.block.WallBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.pathfinding.Path;
@@ -42,7 +38,6 @@ import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.state.properties.Half;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
@@ -211,16 +206,7 @@ public abstract class AbstractPathJob implements Callable<Path>
      */
     public BlockPos prepareStart(@NotNull final LivingEntity entity)
     {
-        @NotNull final BlockPos.Mutable pos = new BlockPos.Mutable(MathHelper.floor(entity.getPosX()),
-          MathHelper.floor(entity.getPosY()),
-          MathHelper.floor(entity.getPosZ()));
-        BlockState bs = entity.getEntityWorld().getBlockState(pos);
-        final Block b = bs.getBlock();
-
-        return IStartPositionAdapterRegistry.getInstance()
-                        .getForEntity(entity)
-                        .orElseGet(() -> IStartPositionAdapterRegistry.getInstance().getForBlock(b).orElse(IStartPositionAdapter.IDENTITY))
-                        .apply(this, entity);
+        return IStartPositionAdapterRegistry.getInstance().getRunner().apply(this, entity).orElse(entity.getPosition());
     }
 
     /**
@@ -743,7 +729,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
 
         final boolean swimStart = isSwimming && !parent.isSwimming();
-        final boolean onRoad = IRoadBlockRegistry.getInstance().isRoadBlock(this.entity.get(), world.getBlockState(pos.down()).getBlock());
+        final boolean onRoad = IRoadBlockRegistry.getInstance().getRunner().isRoad(this.entity.get(), world.getBlockState(pos.down()).getBlock());
         final boolean onRails = pathingOptions.canUseRails() && world.getBlockState(pos).getBlock() instanceof AbstractRailBlock;
         final boolean railsExit = !onRails && parent.isOnRails();
 
@@ -1002,7 +988,7 @@ public abstract class AbstractPathJob implements Callable<Path>
     {
         if (blockState.getMaterial() != Material.AIR)
         {
-            return pathingOptions.canUseDynamicPassableBlocks() && IPassableBlockRegistry.getInstance().isPassableBlock(this.pathingOptions, this.entity.get(), blockState, head);
+            return pathingOptions.canUseDynamicPassableBlocks() && IPassableBlockRegistry.getInstance().getRunner().isPassable(this.pathingOptions, this.entity.get(), blockState, head);
         }
 
         return true;
@@ -1024,28 +1010,14 @@ public abstract class AbstractPathJob implements Callable<Path>
     @NotNull
     protected SurfaceType isWalkableSurface(@NotNull final BlockState blockState, final BlockPos pos)
     {
-        final Block block = blockState.getBlock();
-        if (block instanceof FenceBlock
-              || block instanceof FenceGateBlock
-              || block instanceof WallBlock
-              || block instanceof AbstractBlockMinecoloniesDefault
-              || block instanceof AbstractBlockBarrel
-              || (blockState.getShape(world, pos).getEnd(Direction.Axis.Y) > 1.0))
-        {
-            return SurfaceType.NOT_PASSABLE;
-        }
+        return IWalkableBlockRegistry.getInstance().getRunner().get(this.pathingOptions, this.entity.get(), blockState, pos).orElseGet(() -> {
+            if (blockState.getMaterial().isSolid() || (blockState.getBlock() == Blocks.SNOW && blockState.get(SnowBlock.LAYERS) > 1))
+            {
+                return SurfaceType.WALKABLE;
+            }
 
-        if (block instanceof AbstractBlockMinecoloniesConstructionTape)
-        {
             return SurfaceType.DROPABLE;
-        }
-
-        if (blockState.getMaterial().isSolid() || (blockState.getBlock() == Blocks.SNOW && blockState.get(SnowBlock.LAYERS) > 1))
-        {
-            return SurfaceType.WALKABLE;
-        }
-
-        return SurfaceType.DROPABLE;
+        });
     }
 
     /**

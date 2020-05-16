@@ -1,13 +1,17 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedPathNavigate;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
+import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigate;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
+import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
+import com.ldtteam.perviaminvenire.api.util.ModEntities;
+import com.ldtteam.perviaminvenire.entity.PVIMinecart;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -26,16 +30,15 @@ import net.minecraft.state.properties.RailShape;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**
  * Minecolonies async PathNavigate.
  */
-public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
+public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPathNavigate
 {
-    private static final Logger LOGGER = LogManager.getLogger(PerViamInvenirePathNavigate.class);
+    private static final Logger LOGGER = LogManager.getLogger(PerViamInvenireGroundPathNavigate.class);
 
     private static final double ON_PATH_SPEED_MULTIPLIER = 1.3D;
     private static final double PIRATE_SWIM_BONUS        = 30;
@@ -67,7 +70,7 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
      * @param entity the ourEntity.
      * @param world  the world it is in.
      */
-    public PerViamInvenirePathNavigate(@NotNull final MobEntity entity, final World world)
+    public PerViamInvenireGroundPathNavigate(@NotNull final MobEntity entity, final World world)
     {
         super(entity, world);
 
@@ -101,10 +104,8 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
     @Nullable
     public PathResult moveAwayFromXYZ(final BlockPos avoid, final double range, final double speed)
     {
-        @NotNull final BlockPos start = AbstractPathJob.prepareStart(ourEntity);
-
         return setPathJob(new PathJobMoveAwayFromLocation(ourEntity.getEntityWorld(),
-          start,
+          ourEntity.getPosition(),
           avoid,
           (int) range,
           (int) ourEntity.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue(),
@@ -130,7 +131,7 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
         }
 
         job.setPathingOptions(getPathingOptions());
-        calculationFuture = Pathfinding.enqueue(job);
+        calculationFuture = PathFinding.enqueue(job);
         pathResult = job.getResult();
         return pathResult;
     }
@@ -193,31 +194,26 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
     @Nullable
     public PathResult moveToXYZ(final double x, final double y, final double z, final double speed)
     {
-        final int newX = MathHelper.floor(x);
-        final int newY = (int) y;
-        final int newZ = MathHelper.floor(z);
+        final BlockPos target = new BlockPos(x,y,z);
 
         if (pathResult != null &&
               (
                 pathResult.isComputing()
-                  || (destination != null && BlockPosUtil.isEqual(destination, newX, newY, newZ))
-                  || (originalDestination != null && BlockPosUtil.isEqual(originalDestination, newX, newY, newZ))
+                  || (destination != null && destination.equals(target))
+                  || (originalDestination != null && originalDestination.equals(target))
               )
         )
         {
             return pathResult;
         }
 
-        @NotNull final BlockPos start = AbstractPathJob.prepareStart(ourEntity);
-        @NotNull final BlockPos dest = new BlockPos(newX, newY, newZ);
-
         return setPathJob(
-          new PathJobMoveToLocation(CompatibilityUtils.getWorldFromEntity(ourEntity),
-            start,
-            dest,
+          new PathJobMoveToLocation(ourEntity.getEntityWorld(),
+            ourEntity.getPosition(),
+            target,
             (int) ourEntity.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue(),
             ourEntity),
-          dest, speed);
+          target, speed);
     }
 
     public boolean tryMoveToBlockPos(final BlockPos pos, final double speed)
@@ -236,20 +232,20 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
     protected boolean canNavigate()
     {
         // Auto dismount when trying to path.
-        if (ourEntity.ridingEntity != null)
+        if (ourEntity.getLowestRidingEntity() != null)
         {
             @NotNull final PathPointExtended pEx = (PathPointExtended) this.getPath().getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             if (pEx.isRailsExit())
             {
-                final Entity entity = ourEntity.ridingEntity;
+                final Entity entity = ourEntity.getLowestRidingEntity();
                 ourEntity.stopRiding();
                 entity.remove();
             }
             else if (!pEx.isOnRails())
             {
-                if (ourEntity.ridingEntity instanceof MinecoloniesMinecart)
+                if (ourEntity.getLowestRidingEntity() instanceof PVIMinecart)
                 {
-                    final Entity entity = ourEntity.ridingEntity;
+                    final Entity entity = ourEntity.getLowestRidingEntity();
                     ourEntity.stopRiding();
                     entity.remove();
                 }
@@ -258,9 +254,9 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
                     ourEntity.stopRiding();
                 }
             }
-            else if ((Math.abs(pEx.x - entity.posX) > 5 || Math.abs(pEx.z - entity.posZ) > 5) && ourEntity.ridingEntity != null)
+            else if ((Math.abs(pEx.x - entity.getPosX()) > 5 || Math.abs(pEx.z - entity.getPosZ()) > 5) && ourEntity.getLowestRidingEntity() != null)
             {
-                final Entity entity = ourEntity.ridingEntity;
+                final Entity entity = ourEntity.getLowestRidingEntity();
                 ourEntity.stopRiding();
                 entity.remove();
             }
@@ -285,26 +281,14 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
     @Override
     protected boolean isDirectPathBetweenPoints(final Vec3d start, final Vec3d end, final int sizeX, final int sizeY, final int sizeZ)
     {
-        // TODO improve road walking. This is better in some situations, but still not great.
-        return !WorkerUtil.isPathBlock(world.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
-                 && super.isDirectPathBetweenPoints(start, end, sizeX, sizeY, sizeZ);
+        return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, world.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
+                               && super.isDirectPathBetweenPoints(start, end, sizeX, sizeY, sizeZ);
     }
 
     public double getSpeed()
     {
-        if (ourEntity instanceof AbstractEntityPirate && ourEntity.isInWater())
-        {
-            speed = walkSpeed * PIRATE_SWIM_BONUS;
-            return speed;
-        }
-        else if (ourEntity instanceof AbstractEntityBarbarian && ourEntity.isInWater())
-        {
-            speed = walkSpeed * BARBARIAN_SWIM_BONUS;
-            return speed;
-        }
-
-        speed = walkSpeed;
-        return walkSpeed;
+        speed = ISpeedAdaptationRegistry.getInstance().getRunner().get(ourEntity, walkSpeed).orElse(walkSpeed);
+        return speed;
     }
 
     @Override
@@ -438,7 +422,7 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
             }
             else
             {
-                if (WorkerUtil.isPathBlock(world.getBlockState(ourEntity.getPosition().down()).getBlock()))
+                if (IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, world.getBlockState(ourEntity.getPosition().down()).getBlock()))
                 {
                     speed = ON_PATH_SPEED_MULTIPLIER * getSpeed();
                 }
@@ -498,13 +482,13 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
                     yOffset = 0.5D;
                 }
 
-                if (entity.ridingEntity instanceof MinecoloniesMinecart)
+                if (entity.getLowestRidingEntity() instanceof PVIMinecart)
                 {
-                    ((MinecoloniesMinecart) entity.ridingEntity).setRollingDirection(1);
+                    ((PVIMinecart) entity.getLowestRidingEntity()).setRollingDirection(1);
                 }
                 else
                 {
-                    MinecoloniesMinecart minecart = (MinecoloniesMinecart) ModEntities.MINECART.create(world);
+                    PVIMinecart minecart = (PVIMinecart) ModEntities.MINECART.create(world);
                     final double x = pEx.x + 0.5D;
                     final double y = pEx.y + 0.625D + yOffset;
                     final double z = pEx.z + 0.5D;
@@ -527,29 +511,29 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
             spawnedPos = BlockPos.ZERO;
         }
 
-        if (entity.ridingEntity instanceof MinecoloniesMinecart && pExNext != null)
+        if (entity.getLowestRidingEntity() instanceof PVIMinecart && pExNext != null)
         {
             final BlockPos blockPos = new BlockPos(pEx.x, pEx.y, pEx.z);
             final BlockPos blockPosNext = new BlockPos(pExNext.x, pExNext.y, pExNext.z);
-            final Vec3d motion = entity.ridingEntity.getMotion();
+            final Vec3d motion = entity.getLowestRidingEntity().getMotion();
             double forward;
-            switch (BlockPosUtil.getXZFacing(blockPos, blockPosNext).getOpposite())
+            switch (AbstractPathJob.getXZFacing(blockPos, blockPosNext).getOpposite())
             {
                 case EAST:
                     forward = Math.min(Math.max(motion.getX() - 1 * 0.01D, -1), 0);
-                    entity.ridingEntity.setMotion(motion.add(forward == -1 ? -1 : -1 * 0.01D, 0.0D, 0.0D));
+                    entity.getLowestRidingEntity().setMotion(motion.add(forward == -1 ? -1 : -1 * 0.01D, 0.0D, 0.0D));
                     break;
                 case WEST:
                     forward = Math.max(Math.min(motion.getX() + 0.01D, 1), 0);
-                    entity.ridingEntity.setMotion(motion.add(forward == 1 ? 1 : 0.01D, 0.0D, 0.0D));
+                    entity.getLowestRidingEntity().setMotion(motion.add(forward == 1 ? 1 : 0.01D, 0.0D, 0.0D));
                     break;
                 case NORTH:
                     forward = Math.max(Math.min(motion.getZ() + 0.01D, 1), 0);
-                    entity.ridingEntity.setMotion(motion.add(0.0D, 0.0D, forward == 1 ? 1 : 0.01D));
+                    entity.getLowestRidingEntity().setMotion(motion.add(0.0D, 0.0D, forward == 1 ? 1 : 0.01D));
                     break;
                 case SOUTH:
                     forward = Math.min(Math.max(motion.getZ() - 1 * 0.01D, -1), 0);
-                    entity.ridingEntity.setMotion(motion.add(0.0D, 0.0D, forward == -1 ? -1 : -1 * 0.01D));
+                    entity.getLowestRidingEntity().setMotion(motion.add(0.0D, 0.0D, forward == -1 ? -1 : -1 * 0.01D));
             }
         }
         return false;
@@ -559,7 +543,7 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
     {
         Vec3d vec3 = this.getPath().getPosition(this.ourEntity);
 
-        if (vec3.squareDistanceTo(ourEntity.posX, vec3.y, ourEntity.posZ) < Math.random() * 0.1)
+        if (vec3.squareDistanceTo(ourEntity.getPosX(), vec3.y, ourEntity.getPosZ()) < Math.random() * 0.1)
         {
             //This way he is less nervous and gets up the ladder
             double newSpeed = 0.05;
@@ -624,8 +608,8 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
 
         Vec3d vec3d = this.getPath().getPosition(this.ourEntity);
 
-        if (vec3d.squareDistanceTo(new Vec3d(ourEntity.posX, vec3d.y, ourEntity.posZ)) < 0.1
-              && Math.abs(ourEntity.posY - vec3d.y) < 0.5)
+        if (vec3d.squareDistanceTo(new Vec3d(ourEntity.getPosX(), vec3d.y, ourEntity.getPosZ())) < 0.1
+              && Math.abs(ourEntity.getPosY() - vec3d.y) < 0.5)
         {
             this.getPath().incrementPathIndex();
             if (this.noPath())
@@ -755,69 +739,6 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
     }
 
     /**
-     * Used to find a water.
-     *
-     * @param range in the range.
-     * @param speed walking speed.
-     * @param ponds a list of ponds.
-     * @return the result of the search.
-     */
-    @Nullable
-    public WaterPathResult moveToWater(final int range, final double speed, final List<BlockPos> ponds)
-    {
-        @NotNull final BlockPos start = AbstractPathJob.prepareStart(ourEntity);
-        return (WaterPathResult) setPathJob(
-          new PathJobFindWater(CompatibilityUtils.getWorldFromEntity(ourEntity),
-            start,
-            ((AbstractEntityCitizen) ourEntity).getCitizenColonyHandler().getWorkBuilding().getPosition(),
-            range,
-            ponds,
-            ourEntity), null, speed);
-    }
-
-    /**
-     * Used to find a tree.
-     *
-     * @param startRestriction the start of the restricted area.
-     * @param endRestriction   the end of the restricted area.
-     * @param speed            walking speed.
-     * @param treesToCut       the trees which should be cut.
-     * @return the result of the search.
-     */
-    public TreePathResult moveToTree(final BlockPos startRestriction, final BlockPos endRestriction, final double speed, final List<ItemStorage> treesToCut, final IColony colony)
-    {
-        @NotNull final BlockPos start = AbstractPathJob.prepareStart(ourEntity);
-        final BlockPos buildingPos = ((AbstractEntityCitizen) entity).getCitizenColonyHandler().getWorkBuilding().getPosition();
-
-        final PathJobFindTree job =
-          new PathJobFindTree(CompatibilityUtils.getWorldFromEntity(entity), start, buildingPos, startRestriction, endRestriction, treesToCut, colony, ourEntity);
-
-        return (TreePathResult) setPathJob(job, null, speed);
-    }
-
-    /**
-     * Used to find a tree.
-     *
-     * @param range      in the range.
-     * @param speed      walking speed.
-     * @param treesToCut the trees which should be cut.
-     * @return the result of the search.
-     */
-    public TreePathResult moveToTree(final int range, final double speed, final List<ItemStorage> treesToCut, final IColony colony)
-    {
-        @NotNull BlockPos start = AbstractPathJob.prepareStart(ourEntity);
-        final BlockPos buildingPos = ((AbstractEntityCitizen) entity).getCitizenColonyHandler().getWorkBuilding().getPosition();
-
-        if (BlockPosUtil.getDistance2D(buildingPos, entity.getPosition()) > range * 4)
-        {
-            start = buildingPos;
-        }
-
-        return (TreePathResult) setPathJob(
-          new PathJobFindTree(CompatibilityUtils.getWorldFromEntity(entity), start, buildingPos, range, treesToCut, colony, ourEntity), null, speed);
-    }
-
-    /**
      * Used to move a living ourEntity with a speed.
      *
      * @param e     the ourEntity.
@@ -827,7 +748,7 @@ public class PerViamInvenirePathNavigate extends AbstractAdvancedPathNavigate
     @Nullable
     public PathResult moveToLivingEntity(@NotNull final Entity e, final double speed)
     {
-        return moveToXYZ(e.posX, e.posY, e.posZ, speed);
+        return moveToXYZ(e.getPosX(), e.getPosY(), e.getPosZ(), speed);
     }
 
     /**

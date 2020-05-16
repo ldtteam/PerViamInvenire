@@ -13,4 +13,6 @@ public interface ICommonConfig {
     int getMaxPathFindingNodes();
 
     int getPathFindingLogVerbosity();
+
+    int getPathFindingThreadingCount();
 }

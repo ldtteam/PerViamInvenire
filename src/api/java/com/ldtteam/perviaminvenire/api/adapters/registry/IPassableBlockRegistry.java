@@ -12,17 +12,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 
-public interface IPassableBlockRegistry {
-
+public interface IPassableBlockRegistry extends ICallbackBasedRegistry<IPassableBlockRegistry, IPassableBlockCallback> {
     static IPassableBlockRegistry getInstance() {
         return IPerViamInvenireApi.getInstance().getPassableBlockRegistry();
     }
-
-    default IPassableBlockRegistry registerPassableBlocks(final IPassableBlockCallback... blocks) {
-        return this.registerPassableBlocks(Arrays.asList(blocks));
-    }
-
-    IPassableBlockRegistry registerPassableBlocks(final Collection<IPassableBlockCallback> blocks);
-
-    boolean isPassableBlock(final PathingOptions pathingOptions, final Entity entity, final BlockState block, final boolean head);
 }

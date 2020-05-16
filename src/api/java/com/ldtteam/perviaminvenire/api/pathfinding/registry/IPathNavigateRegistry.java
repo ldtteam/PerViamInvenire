@@ -4,7 +4,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.ldtteam.perviaminvenire.api.IPerViamInvenireApi;
-import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedPathNavigate;
+import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigate;
 
 import net.minecraft.entity.MobEntity;
 
@@ -16,7 +16,7 @@ public interface IPathNavigateRegistry
         return IPerViamInvenireApi.getInstance().getPathNavigateRegistry();
     }
 
-    IPathNavigateRegistry registerNewPathNavigate(Predicate<MobEntity> selectionPredicate, Function<MobEntity, AbstractAdvancedPathNavigate> navigateProducer);
+    IPathNavigateRegistry registerNewPathNavigate(Predicate<MobEntity> selectionPredicate, Function<MobEntity, AbstractAdvancedGroundPathNavigate> navigateProducer);
 
-    AbstractAdvancedPathNavigate getNavigateFor(MobEntity entityLiving);
+    AbstractAdvancedGroundPathNavigate getNavigateFor(MobEntity entityLiving);
 }

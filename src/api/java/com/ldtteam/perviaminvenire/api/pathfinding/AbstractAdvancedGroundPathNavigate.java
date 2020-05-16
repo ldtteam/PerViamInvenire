@@ -12,7 +12,7 @@ import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public abstract class AbstractAdvancedPathNavigate extends GroundPathNavigator
+public abstract class AbstractAdvancedGroundPathNavigate extends GroundPathNavigator
 {
     //  Parent class private members
     protected final MobEntity    ourEntity;
@@ -29,7 +29,7 @@ public abstract class AbstractAdvancedPathNavigate extends GroundPathNavigator
      */
     private PathingOptions pathingOptions = new PathingOptions();
 
-    public AbstractAdvancedPathNavigate(
+    public AbstractAdvancedGroundPathNavigate(
       final MobEntity entityLiving,
       final World worldIn)
     {
