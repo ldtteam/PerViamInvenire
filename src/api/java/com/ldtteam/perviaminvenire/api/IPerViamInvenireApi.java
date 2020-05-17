@@ -1,6 +1,9 @@
 package com.ldtteam.perviaminvenire.api;
 
+import com.ldtteam.perviaminvenire.api.adapters.minecart.IDismountCartCallback;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
@@ -26,6 +29,10 @@ public interface IPerViamInvenireApi
     IWalkableBlockRegistry getWalkableBlockRegistry();
 
     ISpeedAdaptationRegistry getSpeedAdaptationRegistry();
+
+    IRidingOnCartRegistry getRidingOnCartRegistry();
+
+    IDismountCartRegistry getDismountCartRegistry();
 
     ICommonConfig getCommonConfig();
 }

@@ -8,15 +8,12 @@ import com.ldtteam.perviaminvenire.api.pathfinding.PathingOptions;
 import net.minecraft.entity.Entity;
 
 /**
- * This interface functions as a callback when the path navigate is handling,
- * pathing on rails. Allows for the spawning and despawning of carts when
- * needed.
+ * Callback invoked to handle the dismounting of an entity riding a minecart.
  *
  * If {@link PathingOptions#canUseRails()} is true then there needs to be at least one
  * {@link IRidingOnCartCallback} registered.
  */
 @FunctionalInterface
-public interface IRidingOnCartCallback {
-
-    Optional<Boolean> handle(final Entity entity, final PathPointExtended currentPathPoint, final PathPointExtended nextPathPoint);
+public interface IDismountCartCallback {
+    Optional<Boolean> handle(final Entity entity, final Entity ridingEntity, final PathPointExtended currentPathPoint);
 }

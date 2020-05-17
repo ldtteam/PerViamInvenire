@@ -1,8 +1,11 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
+import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigate;
@@ -10,15 +13,11 @@ import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
-import com.ldtteam.perviaminvenire.api.util.ModEntities;
-import com.ldtteam.perviaminvenire.entity.PVIMinecart;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.block.AbstractRailBlock;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -26,7 +25,6 @@ import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.pathfinding.WalkNodeProcessor;
-import net.minecraft.state.properties.RailShape;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
@@ -41,8 +39,6 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     private static final Logger LOGGER = LogManager.getLogger(PerViamInvenireGroundPathNavigate.class);
 
     private static final double ON_PATH_SPEED_MULTIPLIER = 1.3D;
-    private static final double PIRATE_SWIM_BONUS        = 30;
-    private static final double BARBARIAN_SWIM_BONUS     = 15;
     public static final  double MIN_Y_DISTANCE           = 0.001;
     public static final  int    MAX_SPEED_ALLOWED        = 100;
 
@@ -58,11 +54,6 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
      * The world time when a path was added.
      */
     private long pathStartTime = 0;
-
-    /**
-     * Spawn pos of minecart.
-     */
-    private BlockPos spawnedPos = BlockPos.ZERO;
 
     /**
      * Instantiates the navigation of an ourEntity.
@@ -161,7 +152,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
             calculationFuture = null;
         }
 
-        int oldIndex = this.noPath() ? 0 : this.getPath().getCurrentPathIndex();
+        int oldIndex = this.noPath() ? 0 : Objects.requireNonNull(this.getPath()).getCurrentPathIndex();
 
         entity.setSneaking(false);
         this.ourEntity.setMoveVertical(0);
@@ -222,6 +213,8 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
         return true;
     }
 
+    @SuppressWarnings("ConstantConditions")
+    @NotNull
     @Override
     protected PathFinder getPathFinder(final int p_179679_1_)
     {
@@ -232,34 +225,14 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     protected boolean canNavigate()
     {
         // Auto dismount when trying to path.
-        if (ourEntity.getLowestRidingEntity() != null)
+        @Nullable Entity lowestRidingEntity = ourEntity.getLowestRidingEntity();
+        //noinspection ConstantConditions
+        if (lowestRidingEntity != null)
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) this.getPath().getPathPointFromIndex(this.getPath().getCurrentPathIndex());
-            if (pEx.isRailsExit())
-            {
-                final Entity entity = ourEntity.getLowestRidingEntity();
-                ourEntity.stopRiding();
-                entity.remove();
-            }
-            else if (!pEx.isOnRails())
-            {
-                if (ourEntity.getLowestRidingEntity() instanceof PVIMinecart)
-                {
-                    final Entity entity = ourEntity.getLowestRidingEntity();
-                    ourEntity.stopRiding();
-                    entity.remove();
-                }
-                else
-                {
-                    ourEntity.stopRiding();
-                }
-            }
-            else if ((Math.abs(pEx.x - entity.getPosX()) > 5 || Math.abs(pEx.z - entity.getPosZ()) > 5) && ourEntity.getLowestRidingEntity() != null)
-            {
-                final Entity entity = ourEntity.getLowestRidingEntity();
-                ourEntity.stopRiding();
-                entity.remove();
-            }
+            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
+            return IDismountCartRegistry.getInstance()
+                            .getRunner().handle(this.ourEntity, lowestRidingEntity, pEx)
+                            .orElseThrow(() -> new IllegalStateException("Entity : " + this.ourEntity.getType().getRegistryName() + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
         }
         return true;
     }
@@ -272,14 +245,14 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     }
 
     @Override
-    public Path getPathToPos(final BlockPos pos, final int p_179680_2_)
+    public Path getPathToPos(@NotNull final BlockPos pos, final int p_179680_2_)
     {
         //Because this directly returns Path we can't do it async.
         return null;
     }
 
     @Override
-    protected boolean isDirectPathBetweenPoints(final Vec3d start, final Vec3d end, final int sizeX, final int sizeY, final int sizeZ)
+    protected boolean isDirectPathBetweenPoints(final Vec3d start, @NotNull final Vec3d end, final int sizeX, final int sizeY, final int sizeZ)
     {
         return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, world.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
                                && super.isDirectPathBetweenPoints(start, end, sizeX, sizeY, sizeZ);
@@ -378,7 +351,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
 
     private boolean processCompletedCalculationResult() throws InterruptedException, ExecutionException
     {
-        if (calculationFuture.get() == null)
+        if (Objects.requireNonNull(calculationFuture).get() == null)
         {
             calculationFuture = null;
             return true;
@@ -386,7 +359,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
 
         setPath(calculationFuture.get(), getSpeed());
 
-        pathResult.setPathLength(getPath().getCurrentPathLength());
+        Objects.requireNonNull(pathResult).setPathLength(Objects.requireNonNull(getPath()).getCurrentPathLength());
         pathResult.setStatus(PathFindingStatus.IN_PROGRESS_FOLLOWING);
 
         final PathPoint p = getPath().getFinalPathPoint();
@@ -405,7 +378,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
         //  Ladder Workaround
         if (!this.noPath())
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) this.getPath().getPathPointFromIndex(this.getPath().getCurrentPathIndex());
+            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             final PathPointExtended pExNext = getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1
                                                 ? (PathPointExtended) this.getPath()
                                                                         .getPathPointFromIndex(this.getPath()
@@ -444,7 +417,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     {
         if (!this.noPath())
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) this.getPath().getPathPointFromIndex(this.getPath().getCurrentPathIndex());
+            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             final PathPointExtended pExNext = getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1
                                                 ? (PathPointExtended) this.getPath()
                                                                         .getPathPointFromIndex(this.getPath()
@@ -467,81 +440,13 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
      */
     private boolean handlePathOnRails(final PathPointExtended pEx, final PathPointExtended pExNext)
     {
-        if (pEx.isRailsEntry())
-        {
-            final BlockPos blockPos = new BlockPos(pEx.x, pEx.y, pEx.z);
-            if (!spawnedPos.equals(blockPos))
-            {
-                final BlockState blockstate = world.getBlockState(blockPos);
-                RailShape railshape = blockstate.getBlock() instanceof AbstractRailBlock
-                                        ? ((AbstractRailBlock) blockstate.getBlock()).getRailDirection(blockstate, world, blockPos, null)
-                                        : RailShape.NORTH_SOUTH;
-                double yOffset = 0.0D;
-                if (railshape.isAscending())
-                {
-                    yOffset = 0.5D;
-                }
-
-                if (entity.getLowestRidingEntity() instanceof PVIMinecart)
-                {
-                    ((PVIMinecart) entity.getLowestRidingEntity()).setRollingDirection(1);
-                }
-                else
-                {
-                    PVIMinecart minecart = (PVIMinecart) ModEntities.MINECART.create(world);
-                    final double x = pEx.x + 0.5D;
-                    final double y = pEx.y + 0.625D + yOffset;
-                    final double z = pEx.z + 0.5D;
-                    minecart.setPosition(x, y, z);
-                    minecart.setMotion(Vec3d.ZERO);
-                    minecart.prevPosX = x;
-                    minecart.prevPosY = y;
-                    minecart.prevPosZ = z;
-
-
-                    world.addEntity(minecart);
-                    minecart.setRollingDirection(1);
-                    entity.startRiding(minecart, true);
-                }
-                spawnedPos = blockPos;
-            }
-        }
-        else
-        {
-            spawnedPos = BlockPos.ZERO;
-        }
-
-        if (entity.getLowestRidingEntity() instanceof PVIMinecart && pExNext != null)
-        {
-            final BlockPos blockPos = new BlockPos(pEx.x, pEx.y, pEx.z);
-            final BlockPos blockPosNext = new BlockPos(pExNext.x, pExNext.y, pExNext.z);
-            final Vec3d motion = entity.getLowestRidingEntity().getMotion();
-            double forward;
-            switch (AbstractPathJob.getXZFacing(blockPos, blockPosNext).getOpposite())
-            {
-                case EAST:
-                    forward = Math.min(Math.max(motion.getX() - 1 * 0.01D, -1), 0);
-                    entity.getLowestRidingEntity().setMotion(motion.add(forward == -1 ? -1 : -1 * 0.01D, 0.0D, 0.0D));
-                    break;
-                case WEST:
-                    forward = Math.max(Math.min(motion.getX() + 0.01D, 1), 0);
-                    entity.getLowestRidingEntity().setMotion(motion.add(forward == 1 ? 1 : 0.01D, 0.0D, 0.0D));
-                    break;
-                case NORTH:
-                    forward = Math.max(Math.min(motion.getZ() + 0.01D, 1), 0);
-                    entity.getLowestRidingEntity().setMotion(motion.add(0.0D, 0.0D, forward == 1 ? 1 : 0.01D));
-                    break;
-                case SOUTH:
-                    forward = Math.min(Math.max(motion.getZ() - 1 * 0.01D, -1), 0);
-                    entity.getLowestRidingEntity().setMotion(motion.add(0.0D, 0.0D, forward == -1 ? -1 : -1 * 0.01D));
-            }
-        }
-        return false;
+        return IRidingOnCartRegistry.getInstance().getRunner().handle(this.ourEntity, pEx, pExNext)
+                               .orElseThrow(() -> new IllegalStateException("Entity : " + this.ourEntity.getType().getRegistryName() + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
     }
 
     private boolean handlePathPointOnLadder(final PathPointExtended pEx)
     {
-        Vec3d vec3 = this.getPath().getPosition(this.ourEntity);
+        Vec3d vec3 = Objects.requireNonNull(this.getPath()).getPosition(this.ourEntity);
 
         if (vec3.squareDistanceTo(ourEntity.getPosX(), vec3.y, ourEntity.getPosZ()) < Math.random() * 0.1)
         {
@@ -595,7 +500,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     private boolean handleEntityInWater(int oldIndex, final PathPointExtended pEx)
     {
         //  Prevent shortcuts when swimming
-        final int curIndex = this.getPath().getCurrentPathIndex();
+        final int curIndex = Objects.requireNonNull(this.getPath()).getCurrentPathIndex();
         if (curIndex > 0
               && (curIndex + 1) < this.getPath().getCurrentPathLength()
               && this.getPath().getPathPointFromIndex(curIndex - 1).y != pEx.y)
@@ -629,7 +534,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     protected void pathFollow()
     {
         getSpeed();
-        final int curNode = currentPath.getCurrentPathIndex();
+        final int curNode = Objects.requireNonNull(currentPath).getCurrentPathIndex();
         final int curNodeNext = curNode + 1;
         if (curNodeNext < currentPath.getCurrentPathLength())
         {

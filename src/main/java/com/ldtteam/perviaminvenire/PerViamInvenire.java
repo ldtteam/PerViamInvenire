@@ -1,5 +1,7 @@
 package com.ldtteam.perviaminvenire;
 
+import com.ldtteam.perviaminvenire.api.PerViamInvenireApiProxy;
+import com.ldtteam.perviaminvenire.apiimpl.PerViamInvenireApiImplementation;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
@@ -16,6 +18,8 @@ public class PerViamInvenire
 
     public PerViamInvenire()
     {
+        PerViamInvenireApiProxy.getInstance().setApiInstance(new PerViamInvenireApiImplementation());
+
         Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener((FMLServerStartingEvent event) -> {
             PathFinding.shutdown();
         });

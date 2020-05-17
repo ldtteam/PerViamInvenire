@@ -1,3 +1,29 @@
+//  Debug Rendering
+protected        boolean            debugDrawEnabled     = false;
+@Nullable
+protected        Set<Node>          debugNodesVisited    = null;
+@Nullable
+protected        Set<Node>          debugNodesNotVisited = null;
+@Nullable
+protected        Set<Node>          debugNodesPath       = null;
+
+
+
+
+@Nullable
+protected static Set<Node>    lastDebugNodesVisited;
+@Nullable
+protected static Set<Node>    lastDebugNodesNotVisited;
+@Nullable
+protected static Set<Node>    lastDebugNodesPath;
+
+
+
+
+
+
+
+
 
 /**
  * Render debugging information for the pathfinding system.

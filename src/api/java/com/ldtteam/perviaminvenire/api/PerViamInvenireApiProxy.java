@@ -1,6 +1,8 @@
 package com.ldtteam.perviaminvenire.api;
 
+import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
@@ -57,6 +59,16 @@ public final class PerViamInvenireApiProxy implements IPerViamInvenireApi
     @Override
     public ISpeedAdaptationRegistry getSpeedAdaptationRegistry() {
         return this.apiInstance.getSpeedAdaptationRegistry();
+    }
+
+    @Override
+    public IRidingOnCartRegistry getRidingOnCartRegistry() {
+        return this.apiInstance.getRidingOnCartRegistry();
+    }
+
+    @Override
+    public IDismountCartRegistry getDismountCartRegistry() {
+        return this.apiInstance.getDismountCartRegistry();
     }
 
     @Override
