@@ -13,6 +13,9 @@ import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector3i;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathPoint;
@@ -28,7 +30,6 @@ import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /**
@@ -99,7 +100,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
           ourEntity.getPosition(),
           avoid,
           (int) range,
-          (int) ourEntity.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue(),
+          (int) ourEntity.getAttribute(Attributes.FOLLOW_RANGE).getValue(),
           ourEntity), null, speed);
     }
 
@@ -202,7 +203,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
           new PathJobMoveToLocation(ourEntity.getEntityWorld(),
             ourEntity.getPosition(),
             target,
-            (int) ourEntity.getAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getValue(),
+            (int) ourEntity.getAttribute(Attributes.FOLLOW_RANGE).getValue(),
             ourEntity),
           target, speed);
     }
@@ -239,9 +240,9 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
 
     @NotNull
     @Override
-    protected Vec3d getEntityPosition()
+    protected Vector3d getEntityPosition()
     {
-        return this.ourEntity.getPositionVector();
+        return this.ourEntity.getPositionVec();
     }
 
     @Override
@@ -252,7 +253,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     }
 
     @Override
-    protected boolean isDirectPathBetweenPoints(final Vec3d start, @NotNull final Vec3d end, final int sizeX, final int sizeY, final int sizeZ)
+    protected boolean isDirectPathBetweenPoints(final Vector3d start, @NotNull final Vector3d end, final int sizeX, final int sizeY, final int sizeZ)
     {
         return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, world.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
                                && super.isDirectPathBetweenPoints(start, end, sizeX, sizeY, sizeZ);
@@ -446,7 +447,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
 
     private boolean handlePathPointOnLadder(final PathPointExtended pEx)
     {
-        Vec3d vec3 = Objects.requireNonNull(this.getPath()).getPosition(this.ourEntity);
+        Vector3d vec3 = Objects.requireNonNull(this.getPath()).getPosition(this.ourEntity);
 
         if (vec3.squareDistanceTo(ourEntity.getPosX(), vec3.y, ourEntity.getPosZ()) < Math.random() * 0.1)
         {
@@ -511,9 +512,9 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
 
         this.getPath().setCurrentPathIndex(oldIndex);
 
-        Vec3d vec3d = this.getPath().getPosition(this.ourEntity);
+        Vector3d vec3d = this.getPath().getPosition(this.ourEntity);
 
-        if (vec3d.squareDistanceTo(new Vec3d(ourEntity.getPosX(), vec3d.y, ourEntity.getPosZ())) < 0.1
+        if (vec3d.squareDistanceTo(new Vector3d(ourEntity.getPosX(), vec3d.y, ourEntity.getPosZ())) < 0.1
               && Math.abs(ourEntity.getPosY() - vec3d.y) < 0.5)
         {
             this.getPath().incrementPathIndex();
@@ -551,7 +552,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
             if (pEx.isOnLadder() && pEx.getLadderFacing() == Direction.DOWN
                   && !pExNext.isOnLadder())
             {
-                final Vec3d vec3 = getEntityPosition();
+                final Vector3d vec3 = getEntityPosition();
                 if ((vec3.y - (double) pEx.y) < MIN_Y_DISTANCE)
                 {
                     this.currentPath.setCurrentPathIndex(curNodeNext);
@@ -571,7 +572,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
      * Don't let vanilla rapidly discard paths, set a timeout before its allowed to use stuck.
      */
     @Override
-    protected void checkForStuck(@NotNull final Vec3d positionVec3)
+    protected void checkForStuck(@NotNull final Vector3d positionVec3)
     {
         if (world.getGameTime() - pathStartTime < MIN_KEEP_TIME)
         {
@@ -591,21 +592,21 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
 
         if (this.currentPath != null && !this.currentPath.isFinished())
         {
-            Vec3d vec3d = this.currentPath.getCurrentPos();
+            Vector3d vec3d = this.currentPath.getPosition(ourEntity);
             if (vec3d.equals(this.timeoutCachedNode))
             {
                 this.timeoutTimer += Util.milliTime() - this.lastTimeoutCheck;
             }
             else
             {
-                this.timeoutCachedNode = vec3d;
-                double d0 = positionVec3.distanceTo(this.timeoutCachedNode);
+                this.timeoutCachedNode = new Vector3i(vec3d.x, vec3d.y, vec3d.z);
+                double d0 = positionVec3.distanceTo(vec3d);
                 this.timeoutLimit = (this.entity.getAIMoveSpeed() > 0.0F ? d0 / (double) this.entity.getAIMoveSpeed() * 1000.0D : 0.0D) * 25;
             }
 
             if (this.timeoutLimit > 0.0D && (double) this.timeoutTimer > this.timeoutLimit * 3.0D)
             {
-                this.timeoutCachedNode = Vec3d.ZERO;
+                this.timeoutCachedNode = Vector3i.NULL_VECTOR;
                 this.timeoutTimer = 0L;
                 this.timeoutLimit = 0.0D;
                 this.clearPath();

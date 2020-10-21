@@ -5,6 +5,7 @@ import com.ldtteam.perviaminvenire.apiimpl.PerViamInvenireApiImplementation;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,7 +21,7 @@ public class PerViamInvenire
     {
         PerViamInvenireApiProxy.getInstance().setApiInstance(new PerViamInvenireApiImplementation());
 
-        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener((FMLServerStartingEvent event) -> {
+        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener((FMLServerStoppingEvent event) -> {
             PathFinding.shutdown();
         });
     }

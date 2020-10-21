@@ -2,14 +2,17 @@ package com.ldtteam.perviaminvenire.api.pathfinding;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.fluid.FluidState;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.DimensionType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
-import net.minecraft.fluid.IFluidState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -24,9 +27,11 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.lighting.WorldLightManager;
+
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class ChunkCache implements IWorldReader
 {
@@ -110,7 +115,7 @@ public class ChunkCache implements IWorldReader
     }
 
     @Override
-    public IFluidState getFluidState(final BlockPos pos)
+    public FluidState getFluidState(final BlockPos pos)
     {
         return null;
     }
@@ -119,7 +124,7 @@ public class ChunkCache implements IWorldReader
     @Override
     public Biome getBiome(BlockPos pos)
     {
-        return Biomes.PLAINS;
+        return ForgeRegistries.BIOMES.getValue(Biomes.PLAINS.getLocation());
     }
 
     @Override
@@ -171,7 +176,7 @@ public class ChunkCache implements IWorldReader
     }
 
     @Override
-    public BiomeManager func_225523_d_()
+    public BiomeManager getBiomeManager()
     {
         return null;
     }
@@ -186,6 +191,13 @@ public class ChunkCache implements IWorldReader
     public boolean checkNoEntityCollision(@Nullable final Entity entityIn, final VoxelShape shape)
     {
         return false;
+    }
+
+    @Override
+    public Stream<VoxelShape> func_230318_c_(
+      @org.jetbrains.annotations.Nullable final Entity p_230318_1_, final AxisAlignedBB p_230318_2_, final Predicate<Entity> p_230318_3_)
+    {
+        return null;
     }
 
     @Override
@@ -207,7 +219,7 @@ public class ChunkCache implements IWorldReader
     }
 
     @Override
-    public Dimension getDimension()
+    public DimensionType getDimensionType()
     {
         return null;
     }
@@ -215,6 +227,12 @@ public class ChunkCache implements IWorldReader
     private boolean withinBounds(int x, int z)
     {
         return x >= 0 && x < chunkArray.length && z >= 0 && z < chunkArray[x].length && chunkArray[x][z] != null;
+    }
+
+    @Override
+    public float func_230487_a_(final Direction p_230487_1_, final boolean p_230487_2_)
+    {
+        return 0;
     }
 
     @Override
