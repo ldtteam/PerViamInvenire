@@ -28,3 +28,8 @@ runClient
 runServer
 runData
 build
+
+/logs/
+/out/
+/scratch/
+/run/

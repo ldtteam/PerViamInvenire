@@ -9,7 +9,7 @@ import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 
 import net.minecraft.entity.Entity;
 
-public class RidingOnCartRegistry extends AbstractCallbackBasedRegistry<IRidingOnCartRegistry, IRidingOnCartCallback> implements IRidingOnCartRegistry {
+public final class RidingOnCartRegistry extends AbstractCallbackBasedRegistry<IRidingOnCartRegistry, IRidingOnCartCallback> implements IRidingOnCartRegistry {
 
     private static final RidingOnCartRegistry INSTANCE = new RidingOnCartRegistry();
 

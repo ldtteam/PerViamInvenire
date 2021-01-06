@@ -63,11 +63,8 @@ public class PathJobMoveToLocation extends AbstractPathJob {
     @Override
     protected Path search()
     {
-        if (ICommonConfig.getInstance().getPathFindingLogVerbosity() > DEBUG_VERBOSITY_NONE)
-        {
-            LOGGER.info(String.format("Pathfinding from [%d,%d,%d] to [%d,%d,%d]",
-              start.getX(), start.getY(), start.getZ(), destination.getX(), destination.getY(), destination.getZ()));
-        }
+        LOGGER.debug(String.format("Pathfinding from [%d,%d,%d] to [%d,%d,%d]",
+          start.getX(), start.getY(), start.getZ(), destination.getX(), destination.getY(), destination.getZ()));
 
         //  Compute destination slack - if the destination point cannot be stood in
         if (getGroundHeight(null, destination) != destination.getY())

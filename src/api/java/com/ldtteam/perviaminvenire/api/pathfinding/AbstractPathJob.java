@@ -1,49 +1,11 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.BLOCKPOS_DOWN;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.BLOCKPOS_EAST;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.BLOCKPOS_IDENTITY;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.BLOCKPOS_NORTH;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.BLOCKPOS_SOUTH;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.BLOCKPOS_UP;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.BLOCKPOS_WEST;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.DEBUG_VERBOSITY_FULL;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.DEBUG_VERBOSITY_NONE;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.HALF_A_BLOCK;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.MAX_JUMP_HEIGHT;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.MAX_Y;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.MIN_Y;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.SHIFT_X_BY;
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.SHIFT_Y_BY;
-
-import java.lang.ref.WeakReference;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.concurrent.Callable;
-
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
-import org.apache.commons.lang3.Validate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.block.AbstractRailBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.block.ScaffoldingBlock;
-import net.minecraft.block.SnowBlock;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.block.VineBlock;
+import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.pathfinding.Path;
@@ -54,6 +16,17 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import org.apache.commons.lang3.Validate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.ref.WeakReference;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.*;
 
 /**
  * Abstract class for Jobs that run in the multithreaded path finder.
@@ -379,10 +352,8 @@ public abstract class AbstractPathJob implements Callable<Path> {
     }
 
     private void handleDebugOptions(final Node currentNode) {
-        if (ICommonConfig.getInstance().getPathFindingLogVerbosity() == DEBUG_VERBOSITY_FULL) {
-            LOGGER.info(String.format("Examining node [%d,%d,%d] ; g=%f ; f=%f",
-                            currentNode.pos.getX(), currentNode.pos.getY(), currentNode.pos.getZ(), currentNode.getCost(), currentNode.getScore()));
-        }
+        LOGGER.debug(String.format("Examining node [%d,%d,%d] ; g=%f ; f=%f",
+                        currentNode.pos.getX(), currentNode.pos.getY(), currentNode.pos.getZ(), currentNode.getCost(), currentNode.getScore()));
     }
 
     private void walkCurrentNode(@NotNull final Node currentNode) {
@@ -529,15 +500,13 @@ public abstract class AbstractPathJob implements Callable<Path> {
      * @param points the points to print.
      */
     private void doDebugPrinting(@NotNull final PathPoint[] points) {
-        if (ICommonConfig.getInstance().getPathFindingLogVerbosity() > DEBUG_VERBOSITY_NONE) {
-            LOGGER.info("Path found:");
+        LOGGER.debug("Path found:");
 
-            for (@NotNull final PathPoint p : points) {
-                LOGGER.info(String.format("Step: [%d,%d,%d]", p.x, p.y, p.z));
-            }
-
-            LOGGER.info(String.format("Total Nodes Visited %d / %d", totalNodesVisited, totalNodesAdded));
+        for (@NotNull final PathPoint p : points) {
+            LOGGER.debug(String.format("Step: [%d,%d,%d]", p.x, p.y, p.z));
         }
+
+        LOGGER.debug(String.format("Total Nodes Visited %d / %d", totalNodesVisited, totalNodesAdded));
     }
 
     /**
@@ -796,6 +765,9 @@ public abstract class AbstractPathJob implements Callable<Path> {
     private boolean checkHeadBlock(@Nullable final Node parent, @NotNull final BlockPos pos) {
         BlockPos localPos = pos;
         final VoxelShape bb = world.getBlockState(localPos).getCollisionShape(world, localPos);
+        if (bb.isEmpty())
+            return false;
+
         if (bb.getEnd(Direction.Axis.Y) < 1) {
             localPos = pos.up();
         }

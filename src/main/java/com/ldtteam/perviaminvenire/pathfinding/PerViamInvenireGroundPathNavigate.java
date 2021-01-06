@@ -1,9 +1,13 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
@@ -13,6 +17,7 @@ import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
+import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3i;
@@ -48,8 +53,24 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
      */
     private static final long MIN_KEEP_TIME = 100;
 
+    /**
+     * The current result of the calculation
+     */
     @Nullable
     private PathResult pathResult;
+
+    /**
+     * These are additional tasks that are currently being run in case vanilla asks for path finding data.
+     */
+    @NotNull
+    private final Table<Object, Integer, VanillaCompatibilityPath> additionalVanillaPathTasks = HashBasedTable.create();
+
+    /**
+     * The last position the entity for this navigator was on.
+     * If this changes path calculation are cancelled.
+     */
+    @NotNull
+    private BlockPos sourcePos = BlockPos.ZERO;
 
     /**
      * The world time when a path was added.
@@ -128,9 +149,38 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
         return pathResult;
     }
 
+    @Nullable
+    public <T> VanillaCompatibilityPath scheduleAdditionalPath(
+      @NotNull final T target,
+      final int range,
+      final BiFunction<T, Integer, AbstractPathJob> jobBuilder,
+      final Function<T, BlockPos> altTargetBuilder
+    ) {
+        if (this.additionalVanillaPathTasks.contains(target, range))
+            return this.additionalVanillaPathTasks.get(target, range);
+
+        final AbstractPathJob job = jobBuilder.apply(target, range);
+
+        final Future<Path> future = PathFinding.enqueue(job);
+        final VanillaCompatibilityPath path = new VanillaCompatibilityPath(
+          sourcePos,
+          altTargetBuilder.apply(target),
+          future
+        );
+        this.additionalVanillaPathTasks.put(target, range, path);
+
+        return path;
+    }
+
     @Override
     public void tick()
     {
+        if (this.sourcePos != this.ourEntity.getPosition()) {
+            this.additionalVanillaPathTasks.values().forEach(VanillaCompatibilityPath::setCancelled);
+            this.additionalVanillaPathTasks.clear();
+            this.sourcePos = this.ourEntity.getPosition();
+        }
+
         if (calculationFuture != null)
         {
             if (!calculationFuture.isDone())
@@ -228,12 +278,12 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
         // Auto dismount when trying to path.
         @Nullable Entity lowestRidingEntity = ourEntity.getLowestRidingEntity();
         //noinspection ConstantConditions
-        if (lowestRidingEntity != null)
+        if (lowestRidingEntity != null && lowestRidingEntity != ourEntity)
         {
             @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             return IDismountCartRegistry.getInstance()
                             .getRunner().handle(this.ourEntity, lowestRidingEntity, pEx)
-                            .orElseThrow(() -> new IllegalStateException("Entity : " + this.ourEntity.getType().getRegistryName() + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
+                            .orElse(false);
         }
         return true;
     }
@@ -246,10 +296,18 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     }
 
     @Override
-    public Path getPathToPos(@NotNull final BlockPos pos, final int p_179680_2_)
+    public Path getPathToPos(@NotNull final BlockPos pos, final int range)
     {
-        //Because this directly returns Path we can't do it async.
-        return null;
+        return scheduleAdditionalPath(
+          pos,
+          range,
+          (blockPos, integer) -> new PathJobMoveToLocation(ourEntity.getEntityWorld(),
+            ourEntity.getPosition(),
+            blockPos,
+            (int) ourEntity.getAttribute(Attributes.FOLLOW_RANGE).getValue(),
+            ourEntity),
+          Function.identity()
+        );
     }
 
     @Override
@@ -321,6 +379,9 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
      */
     private Path convertPath(final Path path)
     {
+        if (path instanceof VanillaCompatibilityPath)
+            return path;
+
         final int pathLength = path.getCurrentPathLength();
         Path tempPath = null;
         if (pathLength > 0 && !(path.getPathPointFromIndex(0) instanceof PathPointExtended))
@@ -377,7 +438,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     private boolean handleLadders(int oldIndex)
     {
         //  Ladder Workaround
-        if (!this.noPath())
+        if (!this.noPath() && this.getPath() != null && this.getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1)
         {
             @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             final PathPointExtended pExNext = getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1
@@ -676,5 +737,18 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     {
         super.setCanSwim(canSwim);
         getPathingOptions().setCanSwim(canSwim);
+    }
+
+    protected Path pathfind(Set<BlockPos> positions, int regionOffset, boolean offsetUpward, int distance) {
+        return scheduleAdditionalPath(
+          positions,
+          (int) ourEntity.getAttribute(Attributes.FOLLOW_RANGE).getValue() + regionOffset,
+          (blockPos, integer) -> new PathJobMoveToOneOfLocation(ourEntity.getEntityWorld(),
+            ourEntity.getPosition(),
+            blockPos,
+            (int) ourEntity.getAttribute(Attributes.FOLLOW_RANGE).getValue(),
+            ourEntity),
+          blockPos -> blockPos.stream().max(Comparator.comparing(ourEntity.getPosition()::distanceSq)).orElse(ourEntity.getPosition())
+        );
     }
 }

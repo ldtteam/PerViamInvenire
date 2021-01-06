@@ -3,14 +3,14 @@ package com.ldtteam.perviaminvenire;
 import com.ldtteam.perviaminvenire.api.PerViamInvenireApiProxy;
 import com.ldtteam.perviaminvenire.apiimpl.PerViamInvenireApiImplementation;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
+import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod("per-viam-invenire")
+@Mod(ModConstants.MOD_ID)
 public class PerViamInvenire
 {
 
