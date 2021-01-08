@@ -85,6 +85,8 @@ public class VanillaCompatibilityPath extends Path
         super.incrementPathIndex();
     }
 
+
+
     @Override
     public boolean func_242945_b()
     {
@@ -104,15 +106,6 @@ public class VanillaCompatibilityPath extends Path
     }
 
     @Override
-    public int getCurrentPathLength()
-    {
-        if (isNotComplete())
-            return Integer.MAX_VALUE;
-
-        return super.getCurrentPathLength();
-    }
-
-    @Override
     public void setCurrentPathIndex(final int currentPathIndexIn)
     {
         if (isNotComplete())
@@ -122,11 +115,21 @@ public class VanillaCompatibilityPath extends Path
     }
 
     public void setCancelled() {
+        if (isCalculationComplete)
+            return;
+
         this.field_224774_h = false;
         this.points = Collections.emptyList();
         this.currentPathIndex = 1;
 
         if (!this.calculationFuture.isDone())
             this.calculationFuture.cancel(true);
+    }
+
+    public BlockPos getDestination() {
+        if (this.getFinalPathPoint() == null)
+            return BlockPos.ZERO;
+
+        return this.getFinalPathPoint().func_224759_a();
     }
 }

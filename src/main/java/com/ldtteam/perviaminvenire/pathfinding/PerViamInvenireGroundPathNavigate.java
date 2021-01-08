@@ -78,9 +78,19 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     private long pathStartTime = 0;
 
     /**
-     * Instantiates the navigation of an ourEntity.
+     * Instantiates the navigation of an entity in its world.
      *
-     * @param entity the ourEntity.
+     * @param entity The entity.
+     */
+    public PerViamInvenireGroundPathNavigate(@NotNull final MobEntity entity)
+    {
+        this(entity, entity.getEntityWorld());
+    }
+
+    /**
+     * Instantiates the navigation of an entity in a given world.
+     *
+     * @param entity the entity.
      * @param world  the world it is in.
      */
     public PerViamInvenireGroundPathNavigate(@NotNull final MobEntity entity, final World world)
@@ -160,6 +170,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
             return this.additionalVanillaPathTasks.get(target, range);
 
         final AbstractPathJob job = jobBuilder.apply(target, range);
+        job.setPathingOptions(getPathingOptions());
 
         final Future<Path> future = PathFinding.enqueue(job);
         final VanillaCompatibilityPath path = new VanillaCompatibilityPath(
@@ -319,7 +330,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
 
     public double getSpeed()
     {
-        speed = ISpeedAdaptationRegistry.getInstance().getRunner().get(ourEntity, walkSpeed).orElse(walkSpeed);
+        speed = ISpeedAdaptationRegistry.getInstance().getRunner().get(ourEntity, requestedSpeed).orElse(walkSpeed);
         return speed;
     }
 
@@ -368,6 +379,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
             return false;
         }
         pathStartTime = world.getGameTime();
+        this.requestedSpeed = speed;
         return super.setPath(convertPath(path), speed);
     }
 
@@ -447,7 +459,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
                                                                                                  .getCurrentPathIndex() + 1)
                                                 : null;
 
-            if (pEx.isOnLadder() && (pExNext != null && pEx.y != pExNext.y))
+            if (getPathingOptions().canUseLadders() && pEx.isOnLadder() && (pExNext != null && pEx.y != pExNext.y))
             {
                 return handlePathPointOnLadder(pEx);
             }
@@ -740,6 +752,20 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     }
 
     protected Path pathfind(Set<BlockPos> positions, int regionOffset, boolean offsetUpward, int distance) {
+        if (positions.isEmpty()) {
+            return null;
+        } else if (this.entity.getPosY() < 0.0D) {
+            return null;
+        } else if (!this.canNavigate()) {
+            return null;
+        }
+
+        if (currentPath instanceof VanillaCompatibilityPath) {
+            final VanillaCompatibilityPath vanillaCompatibilityPath = (VanillaCompatibilityPath) currentPath;
+            if (positions.contains(vanillaCompatibilityPath.getDestination()))
+                return currentPath;
+        }
+
         return scheduleAdditionalPath(
           positions,
           (int) ourEntity.getAttribute(Attributes.FOLLOW_RANGE).getValue() + regionOffset,

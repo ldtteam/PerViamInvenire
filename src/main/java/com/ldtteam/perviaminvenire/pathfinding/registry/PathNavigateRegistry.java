@@ -10,9 +10,11 @@ import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigateRegistr
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigate;
 
 import net.minecraft.entity.MobEntity;
+import net.minecraft.pathfinding.GroundPathNavigator;
+import net.minecraft.pathfinding.PathNavigator;
 
 public final class PathNavigateRegistry implements IPathNavigateRegistry {
-    private static final Function<MobEntity, AbstractAdvancedGroundPathNavigate> DEFAULT = (entityLiving -> new PerViamInvenireGroundPathNavigate(entityLiving, entityLiving.world));
+    private static final Function<MobEntity, PathNavigator> DEFAULT = MobEntity::getNavigator;
 
     private static final PathNavigateRegistry INSTANCE = new PathNavigateRegistry();
 
@@ -20,7 +22,7 @@ public final class PathNavigateRegistry implements IPathNavigateRegistry {
         return INSTANCE;
     }
 
-    private final Map<Predicate<MobEntity>, Function<MobEntity, AbstractAdvancedGroundPathNavigate>> registry = Maps.newConcurrentMap();
+    private final Map<Predicate<MobEntity>, Function<MobEntity, PathNavigator>> registry = Maps.newConcurrentMap();
 
     private PathNavigateRegistry() {
     }
@@ -29,12 +31,12 @@ public final class PathNavigateRegistry implements IPathNavigateRegistry {
     public IPathNavigateRegistry registerNewPathNavigate(
                     final Predicate<MobEntity> selectionPredicate, final Function<MobEntity, AbstractAdvancedGroundPathNavigate> navigateProducer)
     {
-        registry.put(selectionPredicate, navigateProducer);
+        registry.put(selectionPredicate, navigateProducer::apply);
         return this;
     }
 
     @Override
-    public AbstractAdvancedGroundPathNavigate getNavigateFor(final MobEntity entityLiving)
+    public PathNavigator getNavigateFor(final MobEntity entityLiving)
     {
         return this.registry.keySet().stream().filter(predicate -> predicate.test(entityLiving)).findFirst().map(registry::get).orElse(DEFAULT).apply(entityLiving);
     }

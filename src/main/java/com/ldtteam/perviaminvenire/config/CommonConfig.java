@@ -10,6 +10,7 @@ public class CommonConfig implements ICommonConfig
     private final ForgeConfigSpec.IntValue maxPathFindingNodes;
     private final ForgeConfigSpec.IntValue pathFindingLogVerbosity;
     private final ForgeConfigSpec.IntValue pathFindingThreadCount;
+    private final ForgeConfigSpec.BooleanValue isVanillaReplacementEnabled;
 
     public CommonConfig(final ForgeConfigSpec.Builder builder)
     {
@@ -29,6 +30,10 @@ public class CommonConfig implements ICommonConfig
                                         .comment("Amount of threads to use for PathFinding.")
                                         .translation("Amount of threads to use for PathFinding.")
                                         .defineInRange("pathFindingThreadCount", 5, 1, 256);
+        this.isVanillaReplacementEnabled = builder
+                                        .comment("Enables the vanilla compatibility layer. Replaces Vanillas on thread pathfinding calculation.")
+                                        .translation("Enables the vanilla compatibility layer. Replaces Vanillas on thread pathfinding calculation.")
+                                        .define("isVanillaReplacementEnabled", true);
     }
 
     @Override
@@ -53,5 +58,11 @@ public class CommonConfig implements ICommonConfig
     public int getPathFindingThreadingCount()
     {
         return pathFindingThreadCount.get();
+    }
+
+    @Override
+    public boolean isVanillaReplacementEnabled()
+    {
+        return false;
     }
 }

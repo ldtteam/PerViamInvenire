@@ -16,6 +16,11 @@ public class PathingOptions
     public double onPathCost = 0.1D;
 
     /**
+     * Cost improvement of ladders - base 1.
+     */
+    public double onLadderCost = 1D;
+
+    /**
      * Cost improvement of paths - base 1.
      */
     public double onRailCost = 0.01D;
@@ -34,6 +39,11 @@ public class PathingOptions
      * Additional cost enter entering water
      */
     public double swimCostEnter = 25D;
+
+    /**
+     * Wether to use ladders during pathing.
+     */
+    private boolean canUseLadders = false;
 
     /**
      * Whether to use minecart rail pathing
@@ -63,6 +73,16 @@ public class PathingOptions
     public void setCanOpenDoors(final boolean canOpenDoors)
     {
         this.canOpenDoors = canOpenDoors;
+    }
+
+    public boolean canUseLadders()
+    {
+        return canUseLadders;
+    }
+
+    public void setCanUseLadders(final boolean canUseLadders)
+    {
+        this.canUseLadders = canUseLadders;
     }
 
     public boolean canUseRails()
@@ -128,6 +148,12 @@ public class PathingOptions
     public PathingOptions withRailExitCost(final double railExitCost)
     {
         railsExitCost = railExitCost;
+        return this;
+    }
+
+    public PathingOptions withLadderCost(final double onLadderCost)
+    {
+        this.onLadderCost = onLadderCost;
         return this;
     }
 }

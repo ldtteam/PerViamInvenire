@@ -15,4 +15,6 @@ public interface ICommonConfig {
     int getPathFindingLogVerbosity();
 
     int getPathFindingThreadingCount();
+
+    boolean isVanillaReplacementEnabled();
 }

@@ -223,6 +223,7 @@ public abstract class AbstractPathJob implements Callable<Path> {
      *
      * @param dPos       The delta from the parent to the new space; assumes dx,dy,dz in range of [-1..1].
      * @param isSwimming true is the current node would require the citizen to swim.
+     * @param isLadder   checks if the node is on a ladder.
      * @param onPath     checks if the node is on a path.
      * @param onRails    checks if the node is a rail block.
      * @param railsExit  the exit of the rails.
@@ -233,6 +234,7 @@ public abstract class AbstractPathJob implements Callable<Path> {
     protected double computeCost(
                     @NotNull final BlockPos dPos,
                     final boolean isSwimming,
+                    final boolean isLadder,
                     final boolean onPath,
                     final boolean onRails,
                     final boolean railsExit,
@@ -255,6 +257,10 @@ public abstract class AbstractPathJob implements Callable<Path> {
 
         if (railsExit) {
             cost *= pathingOptions.railsExitCost;
+        }
+
+        if (isLadder) {
+            cost *= pathingOptions.onLadderCost;
         }
 
         if (isSwimming) {
@@ -363,12 +369,12 @@ public abstract class AbstractPathJob implements Callable<Path> {
         }
 
         //  On a ladder, we can go 1 straight-up
-        if (onLadderGoingUp(currentNode, dPos)) {
+        if (onLadderGoingUp(currentNode, dPos) && pathingOptions.canUseLadders()) {
             walk(currentNode, BLOCKPOS_UP);
         }
 
         //  We can also go down 1, if the lower block is a ladder
-        if (onLadderGoingDown(currentNode, dPos)) {
+        if (onLadderGoingDown(currentNode, dPos) && pathingOptions.canUseLadders()) {
             walk(currentNode, BLOCKPOS_DOWN);
         }
 
@@ -573,12 +579,13 @@ public abstract class AbstractPathJob implements Callable<Path> {
         }
 
         final boolean swimStart = isSwimming && !parent.isSwimming();
+        final boolean onLadder = isLadder(pos);
         final boolean onRoad = IRoadBlockRegistry.getInstance().getRunner().isRoad(this.entity.get(), world.getBlockState(pos.down()).getBlock());
         final boolean onRails = pathingOptions.canUseRails() && world.getBlockState(pos).getBlock() instanceof AbstractRailBlock;
         final boolean railsExit = !onRails && parent.isOnRails();
 
         //  Cost may have changed due to a jump up or drop
-        final double stepCost = computeCost(dPos, isSwimming, onRoad, onRails, railsExit, swimStart, pos);
+        final double stepCost = computeCost(dPos, isSwimming, onLadder, onRoad, onRails, railsExit, swimStart, pos);
         final double heuristic = computeHeuristic(pos);
         final double cost = parent.getCost() + stepCost;
         final double score = cost + heuristic;
