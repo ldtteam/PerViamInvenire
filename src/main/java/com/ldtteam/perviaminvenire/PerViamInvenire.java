@@ -21,7 +21,6 @@ import java.util.Optional;
 @Mod(ModConstants.MOD_ID)
 public class PerViamInvenire
 {
-
     // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
 

@@ -12,11 +12,13 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
-import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigate;
+import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
+import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.CallbackBasedStuckHandler;
+import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.util.math.vector.Vector3d;
@@ -38,11 +40,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /**
- * Minecolonies async PathNavigate.
+ * PVI async PathNavigator.
  */
-public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPathNavigate
+public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPathNavigator
 {
-    private static final Logger LOGGER = LogManager.getLogger(PerViamInvenireGroundPathNavigate.class);
+    private static final Logger LOGGER = LogManager.getLogger(PerViamInvenireGroundPathNavigator.class);
 
     private static final double ON_PATH_SPEED_MULTIPLIER = 1.3D;
     public static final  double MIN_Y_DISTANCE           = 0.001;
@@ -78,11 +80,31 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     private long pathStartTime = 0;
 
     /**
+     * Desired position to reach
+     */
+    private BlockPos desiredPos;
+
+    /**
+     * Timeout for the desired pos, resets when its no longer wanted
+     */
+    private int desiredPosTimeout = 0;
+
+    /**
+     * The stuck handler to use
+     */
+    private IStuckHandler stuckHandler;
+
+    /**
+     * Whether we did set sneaking
+     */
+    private boolean isSneaking = true;
+
+    /**
      * Instantiates the navigation of an entity in its world.
      *
      * @param entity The entity.
      */
-    public PerViamInvenireGroundPathNavigate(@NotNull final MobEntity entity)
+    public PerViamInvenireGroundPathNavigator(@NotNull final MobEntity entity)
     {
         this(entity, entity.getEntityWorld());
     }
@@ -93,7 +115,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
      * @param entity the entity.
      * @param world  the world it is in.
      */
-    public PerViamInvenireGroundPathNavigate(@NotNull final MobEntity entity, final World world)
+    public PerViamInvenireGroundPathNavigator(@NotNull final MobEntity entity, final World world)
     {
         super(entity, world);
 
@@ -104,6 +126,8 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
         getPathingOptions().setCanOpenDoors(true);
         this.nodeProcessor.setCanSwim(true);
         getPathingOptions().setCanSwim(true);
+
+        stuckHandler = CallbackBasedStuckHandler.create().withCanBeStuckCallback(() -> true).withTakeDamageOnStuck(0.2f).withTeleportSteps(6).withTeleportOnFullStuck();
     }
 
     /**
@@ -141,10 +165,20 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
       final BlockPos dest,
       final double speed)
     {
+        if (dest != null && dest.equals(desiredPos) && calculationFuture != null && pathResult != null)
+        {
+            return pathResult;
+        }
+
         clearPath();
 
         this.destination = dest;
         this.originalDestination = dest;
+        if (dest != null)
+        {
+            desiredPos = dest;
+            desiredPosTimeout = 50 * 20;
+        }
         this.walkSpeed = speed;
 
         if (speed > MAX_SPEED_ALLOWED)
@@ -192,6 +226,14 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
             this.sourcePos = this.ourEntity.getPosition();
         }
 
+        if (desiredPosTimeout > 0)
+        {
+            if (desiredPosTimeout-- <= 0)
+            {
+                desiredPos = null;
+            }
+        }
+
         if (calculationFuture != null)
         {
             if (!calculationFuture.isDone())
@@ -208,7 +250,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
             }
             catch (@NotNull InterruptedException | ExecutionException e)
             {
-                LOGGER.catching(e);
+                LOGGER.error("Failed to finalize path.", e);
             }
 
             calculationFuture = null;
@@ -216,10 +258,15 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
 
         int oldIndex = this.noPath() ? 0 : Objects.requireNonNull(this.getPath()).getCurrentPathIndex();
 
-        entity.setSneaking(false);
+        if (isSneaking)
+        {
+            isSneaking = false;
+            entity.setSneaking(false);
+        }
         this.ourEntity.setMoveVertical(0);
         if (handleLadders(oldIndex))
         {
+            pathFollow();
             return;
         }
         if (handleRails())
@@ -233,6 +280,8 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
             pathResult.setStatus(PathFindingStatus.COMPLETE);
             pathResult = null;
         }
+
+        stuckHandler.checkStuck(this);
     }
 
     /**
@@ -380,6 +429,7 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
         }
         pathStartTime = world.getGameTime();
         this.requestedSpeed = speed;
+        this.desiredPos = path.target;
         return super.setPath(convertPath(path), speed);
     }
 
@@ -728,6 +778,18 @@ public class PerViamInvenireGroundPathNavigate extends AbstractAdvancedGroundPat
     public PathResult moveToLivingEntity(@NotNull final Entity e, final double speed)
     {
         return moveToXYZ(e.getPosX(), e.getPosY(), e.getPosZ(), speed);
+    }
+
+    @Override
+    public BlockPos getDesiredPos()
+    {
+        return this.desiredPos;
+    }
+
+    @Override
+    public void setStuckHandler(final IStuckHandler stuckHandler)
+    {
+        this.stuckHandler = stuckHandler;
     }
 
     /**

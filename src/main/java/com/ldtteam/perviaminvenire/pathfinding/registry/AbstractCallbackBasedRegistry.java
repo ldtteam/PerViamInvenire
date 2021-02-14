@@ -5,10 +5,9 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.collect.Lists;
-import com.ldtteam.perviaminvenire.api.adapters.registry.ICallbackBasedRegistry;
+import com.ldtteam.perviaminvenire.api.util.ICallbackBasedRegistry;
 
 public abstract class AbstractCallbackBasedRegistry<R extends ICallbackBasedRegistry<R, T>, T> implements ICallbackBasedRegistry<R, T> {
 

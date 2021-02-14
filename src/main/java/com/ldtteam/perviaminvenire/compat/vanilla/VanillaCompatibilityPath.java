@@ -1,15 +1,12 @@
 package com.ldtteam.perviaminvenire.compat.vanilla;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
-import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigate;
 import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.concurrent.Future;

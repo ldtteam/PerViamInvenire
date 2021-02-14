@@ -88,6 +88,11 @@ public class Node implements Comparable<Node>
     private boolean isOnRails = false;
 
     /**
+     * Whether this is an air node
+     */
+    private boolean isCornerNode = false;
+
+    /**
      * Create initial Node.
      *
      * @param pos       coordinates of node.
@@ -356,5 +361,23 @@ public class Node implements Comparable<Node>
     public boolean isOnRails()
     {
         return isOnRails;
+    }
+
+    /**
+     * Marks the node as reached by the worker
+     */
+    public void setCornerNode(boolean isCornerNode)
+    {
+        this.isCornerNode = isCornerNode;
+    }
+
+    /**
+     * Whether the node is reached by a worker
+     *
+     * @return reached
+     */
+    public boolean isCornerNode()
+    {
+        return isCornerNode;
     }
 }

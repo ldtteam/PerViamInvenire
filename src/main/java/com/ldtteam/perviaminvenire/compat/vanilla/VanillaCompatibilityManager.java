@@ -2,10 +2,13 @@ package com.ldtteam.perviaminvenire.compat.vanilla;
 
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
-import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigateRegistry;
+import com.ldtteam.perviaminvenire.api.pathfinding.IPathNavigatorProducer;
+import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.api.util.ModTags;
-import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigate;
+import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigator;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.pathfinding.GroundPathNavigator;
+import net.minecraft.pathfinding.PathNavigator;
 
 import java.util.Optional;
 
@@ -23,24 +26,23 @@ public class VanillaCompatibilityManager
     }
 
     public void initialize() {
-        IPathNavigateRegistry.getInstance().registerNewPathNavigate(
-          mobEntity -> ModTags.REPLACE_VANILLA_NAVIGATOR.contains(mobEntity.getType()) &&
-                         ICommonConfig.getInstance().isVanillaReplacementEnabled() &&
-                         !(mobEntity.getNavigator() instanceof PerViamInvenireGroundPathNavigate) &&
-                        mobEntity.getNavigator().getClass() == GroundPathNavigator.class,
-          mobEntity -> {
-              final PerViamInvenireGroundPathNavigate navigator = new PerViamInvenireGroundPathNavigate(mobEntity, mobEntity.getEntityWorld());
-              if (mobEntity.getNavigator() instanceof GroundPathNavigator) {
-                  final GroundPathNavigator existingNavigator = (GroundPathNavigator) mobEntity.getNavigator();
+        IPathNavigatorRegistry.getInstance().register(
+          (mobEntity, initialNavigator) -> {
+              if (!(ModTags.REPLACE_VANILLA_NAVIGATOR.contains(mobEntity.getType()) &&
+                    ICommonConfig.getInstance().isVanillaReplacementEnabled() &&
+                    !(initialNavigator instanceof PerViamInvenireGroundPathNavigator) &&
+                    initialNavigator.getClass() == GroundPathNavigator.class))
+                  return Optional.empty();
 
-                  navigator.getPathingOptions().setCanUseLadders(false);
-                  navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeProcessor().getCanSwim());
-                  navigator.getPathingOptions().setCanUseRails(false);
-                  navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeProcessor().getCanOpenDoors());
-                  navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeProcessor().getCanEnterDoors());
-              }
+              final PerViamInvenireGroundPathNavigator navigator = new PerViamInvenireGroundPathNavigator(mobEntity, mobEntity.getEntityWorld());
+              final GroundPathNavigator existingNavigator = (GroundPathNavigator) initialNavigator;
+              navigator.getPathingOptions().setCanUseLadders(false);
+              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeProcessor().getCanSwim());
+              navigator.getPathingOptions().setCanUseRails(false);
+              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeProcessor().getCanOpenDoors());
+              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeProcessor().getCanEnterDoors());
 
-              return navigator;
+              return Optional.of(navigator);
           }
         );
 

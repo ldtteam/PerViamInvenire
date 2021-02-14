@@ -1,4 +1,4 @@
-package com.ldtteam.perviaminvenire.api.adapters.registry;
+package com.ldtteam.perviaminvenire.api.util;
 
 import java.util.Arrays;
 import java.util.Collection;

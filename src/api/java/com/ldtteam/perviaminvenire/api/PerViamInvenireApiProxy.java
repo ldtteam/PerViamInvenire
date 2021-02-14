@@ -8,7 +8,7 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistr
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
-import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigateRegistry;
+import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 
 public final class PerViamInvenireApiProxy implements IPerViamInvenireApi
 {
@@ -31,7 +31,7 @@ public final class PerViamInvenireApiProxy implements IPerViamInvenireApi
     }
 
     @Override
-    public IPathNavigateRegistry getPathNavigateRegistry()
+    public IPathNavigatorRegistry getPathNavigateRegistry()
     {
         return apiInstance.getPathNavigateRegistry();
     }

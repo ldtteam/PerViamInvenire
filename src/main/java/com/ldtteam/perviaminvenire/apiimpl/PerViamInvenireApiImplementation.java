@@ -9,11 +9,11 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistr
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
-import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigateRegistry;
+import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.config.ConfigurationManager;
 import com.ldtteam.perviaminvenire.pathfinding.registry.DismountCartRegistry;
 import com.ldtteam.perviaminvenire.pathfinding.registry.PassableBlockRegistry;
-import com.ldtteam.perviaminvenire.pathfinding.registry.PathNavigateRegistry;
+import com.ldtteam.perviaminvenire.pathfinding.registry.PathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.pathfinding.registry.RidingOnCartRegistry;
 import com.ldtteam.perviaminvenire.pathfinding.registry.RoadBlockRegistry;
 import com.ldtteam.perviaminvenire.pathfinding.registry.SpeedAdaptationRegistry;
@@ -23,8 +23,8 @@ import com.ldtteam.perviaminvenire.pathfinding.registry.WalkableBlockRegistry;
 public class PerViamInvenireApiImplementation implements IPerViamInvenireApi {
 
     @Override
-    public IPathNavigateRegistry getPathNavigateRegistry() {
-        return PathNavigateRegistry.getInstance();
+    public IPathNavigatorRegistry getPathNavigateRegistry() {
+        return PathNavigatorRegistry.getInstance();
     }
 
     @Override

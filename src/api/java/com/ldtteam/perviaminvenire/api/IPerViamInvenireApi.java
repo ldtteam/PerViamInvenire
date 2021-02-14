@@ -1,6 +1,5 @@
 package com.ldtteam.perviaminvenire.api;
 
-import com.ldtteam.perviaminvenire.api.adapters.minecart.IDismountCartCallback;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
@@ -8,7 +7,7 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
-import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigateRegistry;
+import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 
 public interface IPerViamInvenireApi
@@ -18,7 +17,7 @@ public interface IPerViamInvenireApi
         return PerViamInvenireApiProxy.getInstance();
     }
 
-    IPathNavigateRegistry getPathNavigateRegistry();
+    IPathNavigatorRegistry getPathNavigateRegistry();
 
     IStartPositionAdapterRegistry getStartPositionAdapterRegistry();
 
