@@ -41,6 +41,11 @@ public class PathingOptions
     public double swimCostEnter = 25D;
 
     /**
+     * Cost to traverse trap doors
+     */
+    public double traverseToggleAbleCost = 2D;
+
+    /**
      * Wether to use ladders during pathing.
      */
     private boolean canUseLadders = false;
@@ -154,6 +159,12 @@ public class PathingOptions
     public PathingOptions withLadderCost(final double onLadderCost)
     {
         this.onLadderCost = onLadderCost;
+        return this;
+    }
+
+    public PathingOptions withToggleCost(final double toggleCost)
+    {
+        traverseToggleAbleCost = toggleCost;
         return this;
     }
 }

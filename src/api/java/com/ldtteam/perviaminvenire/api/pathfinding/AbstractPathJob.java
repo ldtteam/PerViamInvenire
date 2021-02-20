@@ -12,6 +12,7 @@ import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.state.properties.Half;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -258,6 +259,11 @@ public abstract class AbstractPathJob implements Callable<Path> {
         if (dPos.getY() != 0 && (dPos.getX() != 0 || dPos.getZ() != 0) && !(Math.abs(dPos.getY()) <= 1 && world.getBlockState(blockPos).getBlock() instanceof StairsBlock)) {
             //  Tax the cost for jumping, dropping
             cost *= pathingOptions.jumpDropCost * Math.abs(dPos.getY());
+        }
+
+        if (world.getBlockState(blockPos).hasProperty(BlockStateProperties.OPEN))
+        {
+            cost *= pathingOptions.traverseToggleAbleCost;
         }
 
         if (onPath) {
