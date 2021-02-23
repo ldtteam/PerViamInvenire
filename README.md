@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a name="logo" href="https://github.com/ldtteam/PerViamInvenire"><img src="https://github.com/ldtteam/PerViamInvenire/raw/version/lastest/logo.png" alt="PerViamInvenire" width="200"></a>
+  <a name="logo" href="https://github.com/ldtteam/PerViamInvenire"><img src="https://github.com/ldtteam/PerViamInvenire/raw/version/latest/logo.png" alt="PerViamInvenire" width="200"></a>
   <br>
   PerViamInvenire Source Code
 </h1>
@@ -84,7 +84,7 @@ Notable supported entities:
 - Zombie
 - Zombie Villager
 
-See the following file for more details: [Compatible Vanilla Entity List](https://github.com/ldtteam/PerViamInvenire/blob/version/lastest/src/datagen/generated/per-viam-invenire/wiki/per-viam-invenire/tags/entity_types/replace_vanilla_navigator.md).
+See the following file for more details: [Compatible Vanilla Entity List](https://github.com/ldtteam/PerViamInvenire/blob/version/latest/src/datagen/generated/per-viam-invenire/wiki/per-viam-invenire/tags/entity_types/replace_vanilla_navigator.md).
 
 ##### <a name="software"></a>Vanilla compatibility (State):
 State of the application:
