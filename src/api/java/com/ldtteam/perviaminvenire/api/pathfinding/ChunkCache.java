@@ -1,23 +1,16 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
-import javax.annotation.Nullable;
-
-import net.minecraft.fluid.FluidState;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.world.DimensionType;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.registries.ForgeRegistries;
-import org.jetbrains.annotations.NotNull;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -29,7 +22,12 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.lighting.WorldLightManager;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -59,7 +57,7 @@ public class ChunkCache implements IWorldReader
             {
                 if (worldIn.getChunkProvider().isChunkLoaded(new ChunkPos(k, l)))
                 {
-                    this.chunkArray[k - this.chunkX][l - this.chunkZ] = worldIn.getChunk(k, l);
+                    this.chunkArray[k - this.chunkX][l - this.chunkZ] = (Chunk) worldIn.getChunk(k, l, ChunkStatus.FULL, false);
                 }
             }
         }
