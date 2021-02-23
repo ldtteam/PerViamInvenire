@@ -56,6 +56,10 @@
     <a href="https://github.com/ldtteam/PerViamInvenire/pulls">
       Pull Requests
     </a>
+    <span> | </span>
+    <a href="https://www.patreon.com/Minecolonies">
+      Patreon
+    </a>
   </h4>
 </div>
 <hr />
