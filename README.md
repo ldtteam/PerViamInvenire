@@ -60,6 +60,10 @@
     <a href="https://www.patreon.com/Minecolonies">
       Patreon
     </a>
+    <span> | </span>
+    <a href="https://www.paypal.com/cgi-bin/webscr?return=https://www.curseforge.com/projects/449945&cn=Add+special+instructions+to+the+addon+author()&business=paypal%40ldtteam.com&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted&cancel_return=https://www.curseforge.com/projects/449945&lc=US&item_name=PerViamInvenire+(from+GitHub.com)&cmd=_donations&rm=1&no_shipping=1&currency_code=USD">
+      Paypal
+    </a>
   </h4>
 </div>
 <hr />
