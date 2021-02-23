@@ -29,6 +29,10 @@
 <hr />
 <div align="center"><a name="menu"></a>
   <h4>
+    <a href="https://discord.gg/C63JEm3aQt">
+      Discord
+    </a>
+    <span> | </span>
     <a href="https://www.curseforge.com/minecraft/mc-mods/perviaminvenire">
       CurseForge
     </a>
@@ -52,7 +56,7 @@
 </div>
 <hr />
 
-### <a name="software"></a>Base implementation:
+### <a name="BaseImplementation"></a>Base implementation:
 This library is a derivative of the multi-threaded pathfinder that was originally designed for the Minecraft mod [Minecolonies](https://github.com/ldtteam/minecolonies).
 This extraction replaces several of its Citizen specific features with flags which can be managed via callbacks and internal feature registries.
 
@@ -60,7 +64,7 @@ The default navigator creates a cache of the chunks between the source and possi
 The calculation that is run is an adapted version of the A<sup>*</sup>-Pathfinding algorithm.
 Block weights can be adapted for each different entity type using the provided API.
 
-### <a name="software"></a>Vanilla compatibility:
+### <a name="VanillaCompatibility"></a>Vanilla compatibility:
 By default, the mod replaces any vanilla mobs GroundPathNavigator.
 In other words all entities that travel over or on the ground are currently not supported.
 However, as of now no flying or climbing mobs are supported.
@@ -86,15 +90,45 @@ Notable supported entities:
 
 See the following file for more details: [Compatible Vanilla Entity List](https://github.com/ldtteam/PerViamInvenire/blob/version/latest/src/datagen/generated/per-viam-invenire/wiki/per-viam-invenire/tags/entity_types/replace_vanilla_navigator.md).
 
-##### <a name="software"></a>Vanilla compatibility (State):
+##### <a name="VanillaCompatibilityState"></a>Vanilla compatibility (State):
 State of the application:
 The current state of this mod is **ALPHA**.
 This is important, since even though we do our best to maintain the best compatibility and prevent bugs from appearing,
 we do not have the time or stamina to test every single feature/bugged-feature that minecraft holds when it comes to pathfinding.
 If you do find a bug or something that behaves differently from the vanilla minecraft please create an issue on the bug tracker [Here](https://github.com/ldtteam/PerViamInvenire/issues).
 
-#### <a name="software"></a>Mod compatibility:
+#### <a name="ModCompatibility"></a>Mod compatibility:
 By default, any mob that uses a default GroundPathNavigator can be easily added, by adding it to the data pack tag: `per-viam-invenire:replace_vanilla_navigator`.
 This will cause PerViamInvenire to replace the navigator that is used by the mobs in that list and use best guess values when needed.
 
 If a modder wants to support PerViamInvenire directly then they can depend directly on the PerViamInvenire API to make this a reality.
+
+#### <a name="Installation"></a>Installation:
+The way to install PerViamInvenire differs if you are a player or a modder:
+#### <a name="InstallationPlayer"></a>Installation of PerViamInvenire as a player:
+To install PerViamInvenire as a player you need to perform the following steps:
+1) Download the correct version from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/perviaminvenire).
+2) Create a Forge based profile in your launcher of choice.
+3) Drop the PerViamInvenire jar into the mods folder of your profile.
+4) Enjoy!
+5) Report any bugs you found.
+
+#### <a name="InstallationModder"></a>Installation of PerViamInvenire as a Modder:
+To install PerViamInvenire as a modder you need to perform the following steps:
+1) Add the LDTTeam Maven repository to your project:
+```groovy
+repositories {
+    maven {
+        name 'LDTTeam - Modding'
+        url 'https://ldtteam.jfrog.io/ldtteam/modding/'
+    }
+}
+```
+2) Determine which version of PerViamInvenire you want to depend on using [CurseForge](https://www.curseforge.com/minecraft/mc-mods/perviaminvenire).
+3) Add the PerViamInvenire API-jar as a Compile-time and the PerViamInvenire Main-jar as a Run-time dependency:
+```groovy
+dependencies {
+    compileOnly fg.deobf("com.ldtteam:PerViamInvenire:${project.exactMinecraftVersion}-${project.perViamInvenireVersion}:api")
+    runtimeOnly fg.deobf("com.ldtteam:PerViamInvenire:${project.exactMinecraftVersion}-${project.perViamInvenireVersion}:universal")
+}
+```
