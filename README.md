@@ -37,6 +37,10 @@
       CurseForge
     </a>
     <span> | </span>
+    <a href="https://www.curseforge.com/minecraft/mc-mods/perviaminvenire/files">
+      Releases
+    </a>
+    <span> | </span>
     <a href="https://buildsystem.ldtteam.com/project/LetSDevTogether_PerViamInvenire?branch=&mode=builds">
       BuildSystem
     </a>
