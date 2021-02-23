@@ -144,3 +144,8 @@ dependencies {
     runtimeOnly fg.deobf("com.ldtteam:PerViamInvenire:${project.exactMinecraftVersion}-${project.perViamInvenireVersion}:universal")
 }
 ```
+
+#### <a name="SupportedBy"></a>Proudly supported by:
+<h1 align="center">
+  <a name="logo" href="https://bisecthosting.com/ldtteam"><img src="https://media.discordapp.net/attachments/697517732219846766/727581811151995071/MinecoloniesLogo2Final.png" alt="BiSect Hosting LDTTeam link" width="300"></a>
+</h1>
