@@ -29,7 +29,7 @@
 <hr />
 <div align="center"><a name="menu"></a>
   <h4>
-    <a href="">
+    <a href="https://www.curseforge.com/minecraft/mc-mods/perviaminvenire">
       CurseForge
     </a>
     <span> | </span>
