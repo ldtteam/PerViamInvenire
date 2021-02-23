@@ -70,7 +70,7 @@ Block weights can be adapted for each different entity type using the provided A
 
 ### <a name="VanillaCompatibility"></a>Vanilla compatibility:
 By default, the mod replaces any vanilla mobs GroundPathNavigator.
-In other words all entities that travel over or on the ground are currently not supported.
+In other words all entities that travel over or on the ground are currently supported.
 However, as of now no flying or climbing mobs are supported.
 
 Notable supported entities:
