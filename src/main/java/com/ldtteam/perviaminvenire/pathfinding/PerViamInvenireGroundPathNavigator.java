@@ -1,35 +1,18 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
-import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
-import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
-import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
-import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
-import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
+import com.ldtteam.perviaminvenire.api.pathfinding.*;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.CallbackBasedStuckHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3i;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathFinder;
 import net.minecraft.pathfinding.PathPoint;
@@ -37,7 +20,21 @@ import net.minecraft.pathfinding.WalkNodeProcessor;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.World;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * PVI async PathNavigator.
@@ -59,7 +56,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * The current result of the calculation
      */
     @Nullable
-    private PathResult pathResult;
+    private PathResult<AbstractPathJob> pathResult;
 
     /**
      * These are additional tasks that are currently being run in case vanilla asks for path finding data.
@@ -68,8 +65,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     private final Table<Object, Integer, VanillaCompatibilityPath> additionalVanillaPathTasks = HashBasedTable.create();
 
     /**
-     * The last position the entity for this navigator was on.
-     * If this changes path calculation are cancelled.
+     * The last position the entity for this navigator was on. If this changes path calculation are cancelled.
      */
     @NotNull
     private BlockPos sourcePos = BlockPos.ZERO;
@@ -151,6 +147,11 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Nullable
     public PathResult moveAwayFromXYZ(final BlockPos avoid, final double range, final double speed)
     {
+        if (!pathResult.isDone() && pathResult.getJob() instanceof PathJobMoveAwayFromLocation)
+        {
+            return pathResult;
+        }
+
         return setPathJob(new PathJobMoveAwayFromLocation(ourEntity.getEntityWorld(),
           ourEntity.getPosition(),
           avoid,
@@ -165,11 +166,6 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
       final BlockPos dest,
       final double speed)
     {
-        if (dest != null && dest.equals(desiredPos) && calculationFuture != null && pathResult != null)
-        {
-            return pathResult;
-        }
-
         clearPath();
 
         this.destination = dest;
@@ -188,8 +184,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         }
 
         job.setPathingOptions(getPathingOptions());
-        calculationFuture = PathFinding.enqueue(job);
         pathResult = job.getResult();
+        pathResult.startJob(PathFinding.getExecutor());
         return pathResult;
     }
 
@@ -199,9 +195,12 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
       final int range,
       final BiFunction<T, Integer, AbstractPathJob> jobBuilder,
       final Function<T, BlockPos> altTargetBuilder
-    ) {
+    )
+    {
         if (this.additionalVanillaPathTasks.contains(target, range))
+        {
             return this.additionalVanillaPathTasks.get(target, range);
+        }
 
         final AbstractPathJob job = jobBuilder.apply(target, range);
         job.setPathingOptions(getPathingOptions());
@@ -220,7 +219,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Override
     public void tick()
     {
-        if (this.sourcePos != this.ourEntity.getPosition()) {
+        if (this.sourcePos != this.ourEntity.getPosition())
+        {
             this.additionalVanillaPathTasks.values().forEach(VanillaCompatibilityPath::setCancelled);
             this.additionalVanillaPathTasks.clear();
             this.sourcePos = this.ourEntity.getPosition();
@@ -234,26 +234,16 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             }
         }
 
-        if (calculationFuture != null)
+        if (pathResult != null)
         {
-            if (!calculationFuture.isDone())
+            if (!pathResult.isDone())
             {
                 return;
             }
-
-            try
+            else if (pathResult.getStatus() == PathFindingStatus.CALCULATION_COMPLETE)
             {
-                if (processCompletedCalculationResult())
-                {
-                    return;
-                }
+                processCompletedCalculationResult();
             }
-            catch (@NotNull InterruptedException | ExecutionException e)
-            {
-                LOGGER.error("Failed to finalize path.", e);
-            }
-
-            calculationFuture = null;
         }
 
         int oldIndex = this.noPath() ? 0 : Objects.requireNonNull(this.getPath()).getCurrentPathIndex();
@@ -296,9 +286,9 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Nullable
     public PathResult moveToXYZ(final double x, final double y, final double z, final double speed)
     {
-        final BlockPos target = new BlockPos(x,y,z);
+        final BlockPos target = new BlockPos(x, y, z);
 
-        if (pathResult != null &&
+        if (pathResult != null && pathResult.getJob() instanceof PathJobMoveToLocation &&
               (
                 pathResult.isComputing()
                   || (destination != null && destination.equals(target))
@@ -342,8 +332,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         {
             @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             return IDismountCartRegistry.getInstance()
-                            .getRunner().handle(this.ourEntity, lowestRidingEntity, pEx)
-                            .orElse(false);
+                     .getRunner().handle(this.ourEntity, lowestRidingEntity, pEx)
+                     .orElse(false);
         }
         return true;
     }
@@ -374,7 +364,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     protected boolean isDirectPathBetweenPoints(final Vector3d start, @NotNull final Vector3d end, final int sizeX, final int sizeY, final int sizeZ)
     {
         return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, world.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
-                               && super.isDirectPathBetweenPoints(start, end, sizeX, sizeY, sizeZ);
+                 && super.isDirectPathBetweenPoints(start, end, sizeX, sizeY, sizeZ);
     }
 
     public double getSpeed()
@@ -442,7 +432,9 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     private Path convertPath(final Path path)
     {
         if (path instanceof VanillaCompatibilityPath)
+        {
             return path;
+        }
 
         final int pathLength = path.getCurrentPathLength();
         Path tempPath = null;
@@ -473,27 +465,10 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         return tempPath == null ? path : tempPath;
     }
 
-    private boolean processCompletedCalculationResult() throws InterruptedException, ExecutionException
+    private boolean processCompletedCalculationResult()
     {
-        if (Objects.requireNonNull(calculationFuture).get() == null)
-        {
-            calculationFuture = null;
-            return true;
-        }
-
-        setPath(calculationFuture.get(), getSpeed());
-
-        Objects.requireNonNull(pathResult).setPathLength(Objects.requireNonNull(getPath()).getCurrentPathLength());
+        setPath(pathResult.getPath(), getSpeed());
         pathResult.setStatus(PathFindingStatus.IN_PROGRESS_FOLLOWING);
-
-        final PathPoint p = getPath().getFinalPathPoint();
-        if (p != null && destination == null)
-        {
-            destination = new BlockPos(p.x, p.y, p.z);
-
-            //  AbstractPathJob with no destination, did reach it's destination
-            pathResult.setPathReachesDestination(true);
-        }
         return false;
     }
 
@@ -558,14 +533,16 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
     /**
      * Handle pathing on rails.
-     * @param pEx the current path point.
+     *
+     * @param pEx     the current path point.
      * @param pExNext the next path point.
      * @return if go to next point.
      */
     private boolean handlePathOnRails(final PathPointExtended pEx, final PathPointExtended pExNext)
     {
         return IRidingOnCartRegistry.getInstance().getRunner().handle(this.ourEntity, pEx, pExNext)
-                               .orElseThrow(() -> new IllegalStateException("Entity : " + this.ourEntity.getType().getRegistryName() + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
+                 .orElseThrow(() -> new IllegalStateException(
+                   "Entity : " + this.ourEntity.getType().getRegistryName() + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
     }
 
     private boolean handlePathPointOnLadder(final PathPointExtended pEx)
@@ -686,7 +663,21 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             }
         }
 
+        if (currentPath.isFinished())
+        {
+            onPathFinish();
+            return;
+        }
+
         super.pathFollow();
+    }
+
+    /**
+     * Called upon reaching the path end, reset values
+     */
+    public void onPathFinish()
+    {
+        clearPath();
     }
 
     public void updatePath() {}
@@ -745,20 +736,16 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Override
     public boolean noPath()
     {
-        return calculationFuture == null && super.noPath();
+        return (pathResult == null || pathResult.isDone() && pathResult.getStatus() != PathFindingStatus.CALCULATION_COMPLETE) && super.noPath();
     }
 
     @Override
     public void clearPath()
     {
-        if (calculationFuture != null)
-        {
-            calculationFuture.cancel(true);
-            calculationFuture = null;
-        }
 
         if (pathResult != null)
         {
+            pathResult.cancel();
             pathResult.setStatus(PathFindingStatus.CANCELLED);
             pathResult = null;
         }
@@ -813,19 +800,28 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         getPathingOptions().setCanSwim(canSwim);
     }
 
-    protected Path pathfind(Set<BlockPos> positions, int regionOffset, boolean offsetUpward, int distance) {
-        if (positions.isEmpty()) {
+    protected Path pathfind(Set<BlockPos> positions, int regionOffset, boolean offsetUpward, int distance)
+    {
+        if (positions.isEmpty())
+        {
             return null;
-        } else if (this.entity.getPosY() < 0.0D) {
+        }
+        else if (this.entity.getPosY() < 0.0D)
+        {
             return null;
-        } else if (!this.canNavigate()) {
+        }
+        else if (!this.canNavigate())
+        {
             return null;
         }
 
-        if (currentPath instanceof VanillaCompatibilityPath) {
+        if (currentPath instanceof VanillaCompatibilityPath)
+        {
             final VanillaCompatibilityPath vanillaCompatibilityPath = (VanillaCompatibilityPath) currentPath;
             if (positions.contains(vanillaCompatibilityPath.getDestination()))
+            {
                 return currentPath;
+            }
         }
 
         return scheduleAdditionalPath(

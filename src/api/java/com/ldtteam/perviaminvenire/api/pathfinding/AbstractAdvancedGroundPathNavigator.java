@@ -1,15 +1,9 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
-import java.util.concurrent.Future;
-
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.pathfinding.Path;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
@@ -25,8 +19,6 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
     protected       double       requestedSpeed = walkSpeed;
     @Nullable
     protected       BlockPos     originalDestination;
-    @Nullable
-    protected       Future<Path> calculationFuture;
 
     /**
      * The navigators node costs

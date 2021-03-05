@@ -84,7 +84,7 @@ public abstract class AbstractPathJob implements Callable<Path> {
      * @param entity the entity.
      */
     public AbstractPathJob(final World world, @NotNull final BlockPos start, @NotNull final BlockPos end, final int range, final LivingEntity entity) {
-        this(world, start, end, range, new PathResult(), entity);
+        this(world, start, end, range, new PathResult<AbstractPathJob>(), entity);
     }
 
     /**
@@ -98,7 +98,14 @@ public abstract class AbstractPathJob implements Callable<Path> {
      * @param entity the entity.
      * @see AbstractPathJob#AbstractPathJob(World, BlockPos, BlockPos, int, LivingEntity)
      */
-    public AbstractPathJob(final World world, @NotNull final BlockPos start, @NotNull final BlockPos end, final int range, final PathResult result, final LivingEntity entity) {
+    public AbstractPathJob(
+      final World world,
+      @NotNull final BlockPos start,
+      @NotNull final BlockPos end,
+      final int range,
+      final PathResult<AbstractPathJob> result,
+      final LivingEntity entity)
+    {
         final int minX = Math.min(start.getX(), end.getX()) - (range / 2);
         final int minZ = Math.min(start.getZ(), end.getZ()) - (range / 2);
         final int maxX = Math.max(start.getX(), end.getX()) + (range / 2);
@@ -110,6 +117,7 @@ public abstract class AbstractPathJob implements Callable<Path> {
         this.maxRange = range;
 
         this.result = result;
+        result.setJob(this);
 
         allowJumpPointSearchTypeWalk = false;
         this.entity = new WeakReference<>(entity);
@@ -362,7 +370,9 @@ public abstract class AbstractPathJob implements Callable<Path> {
             //  If this is the closest node to our destination, treat it as our best node
             final double nodeResultScore =
                             getNodeResultScore(currentNode);
-            if (nodeResultScore < bestNodeResultScore) {
+            if (nodeResultScore < bestNodeResultScore && !currentNode.isCornerNode()
+                  && isWalkableSurface(world.getBlockState(currentNode.pos.down()), currentNode.pos.down()) == SurfaceType.WALKABLE)
+            {
                 bestNode = currentNode;
                 bestNodeResultScore = nodeResultScore;
             }
