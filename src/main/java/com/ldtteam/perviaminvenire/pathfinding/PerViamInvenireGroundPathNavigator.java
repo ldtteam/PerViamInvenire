@@ -145,9 +145,9 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * @return the result of the pathing.
      */
     @Nullable
-    public PathResult moveAwayFromXYZ(final BlockPos avoid, final double range, final double speed)
+    public PathResult<AbstractPathJob> moveAwayFromXYZ(final BlockPos avoid, final double range, final double speed)
     {
-        if (!pathResult.isDone() && pathResult.getJob() instanceof PathJobMoveAwayFromLocation)
+        if (pathResult != null && !pathResult.isDone() && pathResult.getJob() instanceof PathJobMoveAwayFromLocation)
         {
             return pathResult;
         }
@@ -161,7 +161,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     }
 
     @Nullable
-    public PathResult setPathJob(
+    public PathResult<AbstractPathJob> setPathJob(
       @NotNull final AbstractPathJob job,
       final BlockPos dest,
       final double speed)

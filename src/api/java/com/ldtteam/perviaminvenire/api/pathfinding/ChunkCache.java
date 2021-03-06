@@ -4,6 +4,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.FluidState;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -115,7 +116,23 @@ public class ChunkCache implements IWorldReader
     @Override
     public FluidState getFluidState(final BlockPos pos)
     {
-        return null;
+        if (pos.getY() >= 0 && pos.getY() < 256)
+        {
+            int i = (pos.getX() >> 4) - this.chunkX;
+            int j = (pos.getZ() >> 4) - this.chunkZ;
+
+            if (i >= 0 && i < this.chunkArray.length && j >= 0 && j < this.chunkArray[i].length)
+            {
+                Chunk chunk = this.chunkArray[i][j];
+
+                if (chunk != null)
+                {
+                    return chunk.getFluidState(pos);
+                }
+            }
+        }
+
+        return Fluids.EMPTY.getDefaultState();
     }
 
     @OnlyIn(Dist.CLIENT)

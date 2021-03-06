@@ -6,9 +6,11 @@ import com.ldtteam.perviaminvenire.api.adapters.speed.ISpeedAdaptationCallback;
 import com.ldtteam.perviaminvenire.api.util.ModTags;
 import com.ldtteam.perviaminvenire.apiimpl.PerViamInvenireApiImplementation;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityManager;
+import com.ldtteam.perviaminvenire.config.ConfigurationManager;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import net.minecraft.entity.Entity;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
@@ -32,6 +34,8 @@ public class PerViamInvenire
             PathFinding.shutdown();
         });
         Mod.EventBusSubscriber.Bus.MOD.bus().get().addListener(this::initialize);
+
+        ConfigurationManager.getInstance().ensureInitialized(ModLoadingContext.get().getActiveContainer());
     }
 
     public void initialize(FMLCommonSetupEvent commonSetupEvent) {

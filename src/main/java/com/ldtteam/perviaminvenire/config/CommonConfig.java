@@ -63,6 +63,6 @@ public class CommonConfig implements ICommonConfig
     @Override
     public boolean isVanillaReplacementEnabled()
     {
-        return false;
+        return isVanillaReplacementEnabled.get();
     }
 }
