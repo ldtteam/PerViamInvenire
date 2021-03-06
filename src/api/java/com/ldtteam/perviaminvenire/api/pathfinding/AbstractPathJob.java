@@ -41,7 +41,7 @@ public abstract class AbstractPathJob implements Callable<Path> {
     protected final BlockPos           start;
     @NotNull
     protected final IWorldReader       world;
-    protected final PathResult         result;
+    protected final PathResult<AbstractPathJob>         result;
     private final   int                maxRange;
     private final   Queue<Node>        nodesOpen    = new PriorityQueue<>(500);
     private final   Map<Integer, Node> nodesVisited = new HashMap<>();
@@ -310,7 +310,7 @@ public abstract class AbstractPathJob implements Callable<Path> {
         return (node == null) ? world.getBlockState(pos.down()).getMaterial().isLiquid() : node.isSwimming();
     }
 
-    public PathResult getResult() {
+    public PathResult<AbstractPathJob> getResult() {
         return result;
     }
 
