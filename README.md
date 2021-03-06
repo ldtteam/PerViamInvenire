@@ -56,6 +56,14 @@
     <a href="https://github.com/ldtteam/PerViamInvenire/pulls">
       Pull Requests
     </a>
+    <span> | </span>
+    <a href="https://www.patreon.com/Minecolonies">
+      Patreon
+    </a>
+    <span> | </span>
+    <a href="https://www.paypal.com/cgi-bin/webscr?return=https://www.curseforge.com/projects/449945&cn=Add+special+instructions+to+the+addon+author()&business=paypal%40ldtteam.com&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted&cancel_return=https://www.curseforge.com/projects/449945&lc=US&item_name=PerViamInvenire+(from+GitHub.com)&cmd=_donations&rm=1&no_shipping=1&currency_code=USD">
+      Paypal
+    </a>
   </h4>
 </div>
 <hr />
@@ -70,7 +78,7 @@ Block weights can be adapted for each different entity type using the provided A
 
 ### <a name="VanillaCompatibility"></a>Vanilla compatibility:
 By default, the mod replaces any vanilla mobs GroundPathNavigator.
-In other words all entities that travel over or on the ground are currently not supported.
+In other words all entities that travel over or on the ground are currently supported.
 However, as of now no flying or climbing mobs are supported.
 
 Notable supported entities:
@@ -136,3 +144,8 @@ dependencies {
     runtimeOnly fg.deobf("com.ldtteam:PerViamInvenire:${project.exactMinecraftVersion}-${project.perViamInvenireVersion}:universal")
 }
 ```
+
+#### <a name="SupportedBy"></a>Proudly supported by:
+<h1 align="center">
+  <a name="logo" href="https://bisecthosting.com/ldtteam"><img src="https://media.discordapp.net/attachments/697517732219846766/727581811151995071/MinecoloniesLogo2Final.png" alt="BiSect Hosting LDTTeam link" width="300"></a>
+</h1>
