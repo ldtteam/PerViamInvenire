@@ -8,6 +8,8 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistr
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
+import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
+import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 
 public final class PerViamInvenireApiProxy implements IPerViamInvenireApi
@@ -69,6 +71,18 @@ public final class PerViamInvenireApiProxy implements IPerViamInvenireApi
     @Override
     public IDismountCartRegistry getDismountCartRegistry() {
         return this.apiInstance.getDismountCartRegistry();
+    }
+
+    @Override
+    public ICalculationResultTracker getResultTracker()
+    {
+        return this.apiInstance.getResultTracker();
+    }
+
+    @Override
+    public IPathingResultHandler getResultHandler()
+    {
+        return this.apiInstance.getResultHandler();
     }
 
     @Override

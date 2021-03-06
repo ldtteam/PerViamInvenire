@@ -7,6 +7,8 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
+import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
+import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 
@@ -33,5 +35,10 @@ public interface IPerViamInvenireApi
 
     IDismountCartRegistry getDismountCartRegistry();
 
+    ICalculationResultTracker getResultTracker();
+
+    IPathingResultHandler getResultHandler();
+
     ICommonConfig getCommonConfig();
+
 }

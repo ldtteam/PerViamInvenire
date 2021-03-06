@@ -7,6 +7,7 @@ import com.ldtteam.perviaminvenire.api.util.ModTags;
 import com.ldtteam.perviaminvenire.apiimpl.PerViamInvenireApiImplementation;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityManager;
 import com.ldtteam.perviaminvenire.config.ConfigurationManager;
+import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import net.minecraft.entity.Entity;
@@ -35,6 +36,7 @@ public class PerViamInvenire
         });
         Mod.EventBusSubscriber.Bus.MOD.bus().get().addListener(this::initialize);
 
+        NetworkManager.getInstance().initialize();
         ConfigurationManager.getInstance().ensureInitialized(ModLoadingContext.get().getActiveContainer());
     }
 

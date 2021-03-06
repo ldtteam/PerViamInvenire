@@ -9,8 +9,12 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistr
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
+import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
+import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.config.ConfigurationManager;
+import com.ldtteam.perviaminvenire.pathfinding.CalculationResultTracker;
+import com.ldtteam.perviaminvenire.pathfinding.PathingResultHandler;
 import com.ldtteam.perviaminvenire.pathfinding.registry.DismountCartRegistry;
 import com.ldtteam.perviaminvenire.pathfinding.registry.PassableBlockRegistry;
 import com.ldtteam.perviaminvenire.pathfinding.registry.PathNavigatorRegistry;
@@ -60,6 +64,18 @@ public class PerViamInvenireApiImplementation implements IPerViamInvenireApi {
     @Override
     public IDismountCartRegistry getDismountCartRegistry() {
         return DismountCartRegistry.getInstance();
+    }
+
+    @Override
+    public ICalculationResultTracker getResultTracker()
+    {
+        return CalculationResultTracker.getInstance();
+    }
+
+    @Override
+    public IPathingResultHandler getResultHandler()
+    {
+        return PathingResultHandler.getInstance();
     }
 
     @Override
