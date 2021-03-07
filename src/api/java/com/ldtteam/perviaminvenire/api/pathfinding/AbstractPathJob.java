@@ -392,7 +392,6 @@ public abstract class AbstractPathJob implements Callable<Path>
             }
             currentNode.setCounterVisited(totalNodesVisited);
 
-            handleDebugOptions(currentNode);
             currentNode.setClosed();
 
             calculationData.onNodeConsumed(currentNode.pos);
@@ -441,12 +440,6 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         ICalculationResultTracker.getInstance().onCalculationCompleted(this);
         return path;
-    }
-
-    private void handleDebugOptions(final Node currentNode)
-    {
-        LOGGER.debug(String.format("Examining node [%d,%d,%d] ; g=%f ; f=%f",
-          currentNode.pos.getX(), currentNode.pos.getY(), currentNode.pos.getZ(), currentNode.getCost(), currentNode.getScore()));
     }
 
     private void walkCurrentNode(@NotNull final Node currentNode)
@@ -625,8 +618,6 @@ public abstract class AbstractPathJob implements Callable<Path>
             node = node.parent;
         }
 
-        doDebugPrinting(points);
-
         return new Path(Arrays.asList(points), getNodePosition(targetNode), isAtDestination(targetNode));
     }
 
@@ -641,22 +632,6 @@ public abstract class AbstractPathJob implements Callable<Path>
         return node.pos;
     }
 
-    /**
-     * Turns on debug printing.
-     *
-     * @param points the points to print.
-     */
-    private void doDebugPrinting(@NotNull final PathPoint[] points)
-    {
-        LOGGER.debug("Path found:");
-
-        for (@NotNull final PathPoint p : points)
-        {
-            LOGGER.debug(String.format("Step: [%d,%d,%d]", p.x, p.y, p.z));
-        }
-
-        LOGGER.debug(String.format("Total Nodes Visited %d / %d", totalNodesVisited, totalNodesAdded));
-    }
 
     /**
      * Compute the heuristic cost ('h' value) of a given position x,y,z.
