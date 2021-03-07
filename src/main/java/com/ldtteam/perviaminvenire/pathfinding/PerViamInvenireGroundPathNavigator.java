@@ -742,8 +742,13 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Override
     public BlockPos getTargetPos()
     {
-        if (!noPath() && pathResult != null)
-            return pathResult.getPath().getTarget();
+        if (!noPath())
+        {
+            if (pathResult != null)
+                return pathResult.getPath().getTarget();
+            else if (!super.noPath())
+                return super.getTargetPos();
+        }
 
         return BlockPos.ZERO;
     }
@@ -752,8 +757,13 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Override
     public Path getPath()
     {
-        if (!noPath() && pathResult != null)
-            return pathResult.getPath();
+        if (!noPath())
+        {
+            if (pathResult != null)
+                return pathResult.getPath();
+            else if (!super.noPath())
+                return super.getPath();
+        }
 
         return null;
     }

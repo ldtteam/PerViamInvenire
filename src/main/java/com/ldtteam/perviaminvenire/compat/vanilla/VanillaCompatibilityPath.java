@@ -1,14 +1,18 @@
 package com.ldtteam.perviaminvenire.compat.vanilla;
 
+import com.google.common.collect.Lists;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Future;
 
 public class VanillaCompatibilityPath extends Path
@@ -21,10 +25,17 @@ public class VanillaCompatibilityPath extends Path
 
     private boolean isCalculationComplete;
 
-    private static PathPointExtended calculatePathTo(final BlockPos source, final BlockPos target) {
+    private static List<PathPoint> calculatePathTo(final BlockPos source, final BlockPos target) {
         final BlockPos delta = target.subtract(source);
-        return new PathPointExtended(
-          target.add(Direction.getFacingFromVector(delta.getX(), delta.getY(), delta.getZ()).getDirectionVec())
+
+        return Lists.newArrayList(
+          new PathPointExtended(
+            target.add(Direction.getFacingFromVector(delta.getX(), delta.getY(), delta.getZ()).getDirectionVec())
+          ),
+          new PathPointExtended(
+            target.add(Direction.getFacingFromVector(delta.getX(), delta.getY(), delta.getZ()).getDirectionVec())
+              .add(Direction.getFacingFromVector(delta.getX(), delta.getY(), delta.getZ()).getDirectionVec())
+          )
         );
     }
 
@@ -33,7 +44,7 @@ public class VanillaCompatibilityPath extends Path
       final BlockPos target,
       @NotNull final Future<Path> calculationFuture)
     {
-        super(Collections.singletonList(calculatePathTo(source, target)),
+        super(calculatePathTo(source, target),
           target,
           true);
 

@@ -2,6 +2,7 @@ package com.ldtteam.perviaminvenire.pathfinding;
 
 import java.util.concurrent.*;
 
+import com.ldtteam.perviaminvenire.PerViamInvenire;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import org.apache.logging.log4j.LogManager;
@@ -26,10 +27,14 @@ public final class PathFinding
     {
         private static final Logger LOGGER = LogManager.getLogger();
 
+        private final ClassLoader classLoader;
+
         /**
          * Ongoing thread IDs.
          */
-        public static int id;
+        private static int id;
+
+        public PVIThreadFactory(final ClassLoader classLoader) {this.classLoader = classLoader;}
 
         @Override
         public Thread newThread(@NotNull final Runnable runnable)
@@ -37,6 +42,7 @@ public final class PathFinding
             final Thread thread = new Thread(runnable, "PVI Pathfinding Worker #" + (id++));
             thread.setDaemon(true);
 
+            thread.setContextClassLoader(classLoader);
             thread.setUncaughtExceptionHandler((thread1, throwable) -> LOGGER.error("PVI Pathfinding Thread errored! ", throwable));
             return thread;
         }
@@ -50,7 +56,7 @@ public final class PathFinding
     {
         if (executor == null)
         {
-            executor = new ThreadPoolExecutor(1, ICommonConfig.getInstance().getPathFindingThreadingCount(), 10, TimeUnit.SECONDS, jobQueue, new PVIThreadFactory());
+            executor = new ThreadPoolExecutor(1, ICommonConfig.getInstance().getPathFindingThreadingCount(), 10, TimeUnit.SECONDS, jobQueue, new PVIThreadFactory(PerViamInvenire.class.getClassLoader()));
         }
         return executor;
     }
