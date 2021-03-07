@@ -740,6 +740,31 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     }
 
     @Override
+    public BlockPos getTargetPos()
+    {
+        if (!noPath() && pathResult != null)
+            return pathResult.getPath().getTarget();
+
+        return BlockPos.ZERO;
+    }
+
+    @Nullable
+    @Override
+    public Path getPath()
+    {
+        if (!noPath() && pathResult != null)
+            return pathResult.getPath();
+
+        return null;
+    }
+
+    @Override
+    public boolean getCanSwim()
+    {
+        return getPathingOptions().canSwim();
+    }
+
+    @Override
     public void clearPath()
     {
 
