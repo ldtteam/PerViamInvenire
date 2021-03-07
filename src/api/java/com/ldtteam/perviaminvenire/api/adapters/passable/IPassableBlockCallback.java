@@ -6,6 +6,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 
+import java.util.Optional;
+
 /**
  * This interface determines if a given block is passable
  * for a given entity.
@@ -13,5 +15,5 @@ import net.minecraft.entity.Entity;
 @FunctionalInterface
 public interface IPassableBlockCallback {
 
-    boolean isPassable(final PathingOptions pathingOptions, final Entity entity, final BlockState block, final boolean head);
+    Optional<Boolean> isPassable(final PathingOptions pathingOptions, final Entity entity, final BlockState block, final boolean head);
 }

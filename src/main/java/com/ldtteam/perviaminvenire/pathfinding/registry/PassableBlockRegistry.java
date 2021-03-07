@@ -1,11 +1,6 @@
 package com.ldtteam.perviaminvenire.pathfinding.registry;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import com.google.common.collect.Sets;
 import com.ldtteam.perviaminvenire.api.adapters.passable.IPassableBlockCallback;
@@ -34,6 +29,6 @@ public final class PassableBlockRegistry extends AbstractCallbackBasedRegistry<I
 
     @Override
     protected IPassableBlockCallback getRunnerInternal(final List<IPassableBlockCallback> callbacks) {
-        return (pathingOptions, entity, block, head) -> callbacks.stream().anyMatch(c -> c.isPassable(pathingOptions, entity, block, head));
+        return (pathingOptions, entity, block, head) -> callbacks.stream().map(c -> c.isPassable(pathingOptions, entity, block, head)).filter(Optional::isPresent).map(Optional::get).findFirst();
     }
 }

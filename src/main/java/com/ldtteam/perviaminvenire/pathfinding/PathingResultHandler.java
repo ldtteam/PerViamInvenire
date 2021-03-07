@@ -79,7 +79,7 @@ public class PathingResultHandler implements IPathingResultHandler
 
         if (data.getConsumedNodes().contains(pos))
         {
-            return ParticleTypes.ASH;
+            return ParticleTypes.SOUL_FIRE_FLAME;
         }
 
         return ParticleTypes.DAMAGE_INDICATOR;

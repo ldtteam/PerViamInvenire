@@ -5,6 +5,7 @@ import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.DE
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.Node;
+import net.minecraft.util.math.vector.Vector3i;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -88,13 +89,18 @@ public class PathJobMoveToLocation extends AbstractPathJob {
      * @return true if has been reached.
      */
     @Override
-    protected boolean isAtDestination(@NotNull final Node n)
+    protected boolean  isAtDestination(@NotNull final Node n)
     {
         if (destinationSlack <= DESTINATION_SLACK_NONE)
         {
             return n.pos.getX() == destination.getX()
                      && n.pos.getY() == destination.getY()
                      && n.pos.getZ() == destination.getZ();
+        }
+
+        if (n.pos.getY() == destination.getY() - 1)
+        {
+            return destination.withinDistance(new Vector3i(n.pos.getX(), destination.getY(), n.pos.getZ()), DESTINATION_SLACK_ADJACENT);
         }
 
         return destination.withinDistance(n.pos, DESTINATION_SLACK_ADJACENT);

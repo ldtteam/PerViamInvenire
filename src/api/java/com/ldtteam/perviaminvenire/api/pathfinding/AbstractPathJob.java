@@ -848,7 +848,7 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         //  Now check the block we want to move to
         final BlockState target = world.getBlockState(pos);
-        if (isNotPassable(target, false))
+        if (isNotPassable(pos, false))
         {
             return handleTargetNotPassable(parent, pos, target);
         }
@@ -1052,28 +1052,40 @@ public abstract class AbstractPathJob implements Callable<Path>
         return bb.isEmpty() ? 0 : bb.getEnd(Direction.Axis.Y);
     }
 
-    /**
-     * Is the space passable.
-     *
-     * @param blockState the block we are checking.
-     * @return true if the block does not block movement.
-     */
-    protected boolean isNotPassable(@NotNull final BlockState blockState, final boolean head)
+    protected boolean isNotPassable(final BlockPos pos, final boolean head)
     {
+        final BlockState blockState = world.getBlockState(pos);
         if (blockState.getMaterial() != Material.AIR)
         {
-            return !pathingOptions.canUseDynamicPassableBlocks() && IPassableBlockRegistry.getInstance()
-                                                                      .getRunner()
-                                                                      .isPassable(this.pathingOptions, this.entity.get(), blockState, head);
+            return IPassableBlockRegistry.getInstance()
+                     .getRunner()
+                     .isPassable(this.pathingOptions, this.entity.get(), blockState, head).orElseGet(() -> {
+                  if (blockState.getMaterial().blocksMovement())
+                  {
+                      return !(pathingOptions.canUseDynamicPassableBlocks() && (blockState.getBlock() instanceof DoorBlock
+                                                                                || blockState.getBlock() instanceof FenceGateBlock
+                                                                                || (blockState.getBlock() instanceof TrapDoorBlock && !(world.getBlockState(pos.up()).getBlock() instanceof TrapDoorBlock)))
+                               || blockState.getBlock() instanceof PressurePlateBlock
+                               || blockState.getBlock() instanceof AbstractSignBlock
+                               || blockState.getBlock() instanceof AbstractBannerBlock);
+                  }
+                  else if (blockState.getBlock() instanceof FireBlock)
+                  {
+                      return true;
+                  }
+                  else
+                  {
+                      final VoxelShape shape = blockState.getCollisionShape(world, pos);
+                      return !(isLadder(blockState.getBlock(), pos) ||
+                               ((shape.isEmpty() || shape.getEnd(Direction.Axis.Y) <= 0.1)
+                                  && !blockState.getMaterial().isLiquid()
+                                  && (blockState.getBlock() != Blocks.SNOW || blockState.get(SnowBlock.LAYERS) == 1)
+                                  && blockState.getBlock() != Blocks.SWEET_BERRY_BUSH));
+                  }
+              });
         }
 
         return false;
-    }
-
-    protected boolean isNotPassable(final BlockPos pos, final boolean head)
-    {
-        final BlockState state = world.getBlockState(pos);
-        return !isNotPassable(state, head);
     }
 
     /**
