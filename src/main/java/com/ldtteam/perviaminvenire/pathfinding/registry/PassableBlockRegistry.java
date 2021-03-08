@@ -29,6 +29,6 @@ public final class PassableBlockRegistry extends AbstractCallbackBasedRegistry<I
 
     @Override
     protected IPassableBlockCallback getRunnerInternal(final List<IPassableBlockCallback> callbacks) {
-        return (pathingOptions, entity, block, head) -> callbacks.stream().map(c -> c.isPassable(pathingOptions, entity, block, head)).filter(Optional::isPresent).map(Optional::get).findFirst();
+        return (entity, block) -> callbacks.stream().map(c -> c.isPassable(entity, block)).filter(Optional::isPresent).map(Optional::get).findFirst();
     }
 }

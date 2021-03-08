@@ -6,6 +6,7 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
+import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
@@ -38,6 +39,8 @@ public interface IPerViamInvenireApi
     ICalculationResultTracker getResultTracker();
 
     IPathingResultHandler getResultHandler();
+
+    ICollisionDetectionManager getCollisionDetectionManager();
 
     ICommonConfig getCommonConfig();
 

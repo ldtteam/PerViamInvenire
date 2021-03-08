@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.DimensionType;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -41,6 +42,7 @@ public class ChunkCache implements IWorldReader
     protected boolean   empty;
     /** Reference to the World object. */
     protected World     world;
+    protected WorldBorder worldBorder = new WorldBorder();
 
     public ChunkCache(World worldIn, BlockPos posFromIn, BlockPos posToIn, int subIn)
     {
@@ -159,6 +161,13 @@ public class ChunkCache implements IWorldReader
         return state.getBlock().isAir(state, this, pos);
     }
 
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public IBlockReader getBlockReader(final int chunkX, final int chunkZ)
+    {
+        return this;
+    }
+
     @Nullable
     @Override
     public IChunk getChunk(final int x, final int z, final ChunkStatus requiredStatus, final boolean nonnull)
@@ -199,7 +208,7 @@ public class ChunkCache implements IWorldReader
     @Override
     public WorldBorder getWorldBorder()
     {
-        return null;
+        return worldBorder;
     }
 
     @Override
@@ -212,7 +221,7 @@ public class ChunkCache implements IWorldReader
     public Stream<VoxelShape> func_230318_c_(
       @org.jetbrains.annotations.Nullable final Entity p_230318_1_, final AxisAlignedBB p_230318_2_, final Predicate<Entity> p_230318_3_)
     {
-        return null;
+        return Stream.empty();
     }
 
     @Override

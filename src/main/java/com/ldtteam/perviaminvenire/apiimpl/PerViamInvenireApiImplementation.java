@@ -8,10 +8,12 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
+import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
+import com.ldtteam.perviaminvenire.collisions.CollisionDetectionManager;
 import com.ldtteam.perviaminvenire.config.ConfigurationManager;
 import com.ldtteam.perviaminvenire.pathfinding.CalculationResultTracker;
 import com.ldtteam.perviaminvenire.pathfinding.PathingResultHandler;
@@ -76,6 +78,12 @@ public class PerViamInvenireApiImplementation implements IPerViamInvenireApi {
     public IPathingResultHandler getResultHandler()
     {
         return PathingResultHandler.getInstance();
+    }
+
+    @Override
+    public ICollisionDetectionManager getCollisionDetectionManager()
+    {
+        return CollisionDetectionManager.getInstance();
     }
 
     @Override

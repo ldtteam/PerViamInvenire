@@ -15,5 +15,5 @@ import java.util.Optional;
 @FunctionalInterface
 public interface IPassableBlockCallback {
 
-    Optional<Boolean> isPassable(final PathingOptions pathingOptions, final Entity entity, final BlockState block, final boolean head);
+    Optional<Boolean> isPassable(final Entity entity, final BlockState block);
 }
