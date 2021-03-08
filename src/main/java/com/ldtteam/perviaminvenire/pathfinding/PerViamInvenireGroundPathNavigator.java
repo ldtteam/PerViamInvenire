@@ -475,7 +475,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     private boolean handleLadders(int oldIndex)
     {
         //  Ladder Workaround
-        if (!this.noPath() && this.getPath() != null && this.getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1)
+        if (!this.noPath() && this.getPath() != null && this.getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1  && Objects.requireNonNull(this.getPath()).points.size() > this.getPath().getCurrentPathIndex())
         {
             @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             final PathPointExtended pExNext = getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1
@@ -514,7 +514,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      */
     private boolean handleRails()
     {
-        if (!this.noPath())
+        if (!this.noPath() && Objects.requireNonNull(this.getPath()).points.size() > this.getPath().getCurrentPathIndex())
         {
             @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             final PathPointExtended pExNext = getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1
