@@ -16,6 +16,7 @@ import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -140,24 +141,29 @@ public abstract class AbstractPathJob implements Callable<Path>
      * @param entity           the entity.
      * @see AbstractPathJob#AbstractPathJob(World, BlockPos, BlockPos, int, LivingEntity)
      */
-    public AbstractPathJob(final World world, final BlockPos startRestriction, final BlockPos endRestriction, final PathResult<? extends AbstractPathJob> result, final LivingEntity entity)
+    public AbstractPathJob(final World world,
+        final BlockPos start,
+        final BlockPos startRestriction,
+        final BlockPos endRestriction,
+        final int range,
+        final Vector3i grow,
+        final PathResult<AbstractPathJob> result,
+        final LivingEntity entity)
     {
-        this.minX = Math.min(startRestriction.getX(), endRestriction.getX());
-        this.minZ = Math.min(startRestriction.getZ(), endRestriction.getZ());
-        this.maxX = Math.max(startRestriction.getX(), endRestriction.getX());
-        this.maxZ = Math.max(startRestriction.getZ(), endRestriction.getZ());
+        this.minX = Math.min(startRestriction.getX(), endRestriction.getX()) - grow.getX();
+        this.minZ = Math.min(startRestriction.getZ(), endRestriction.getZ()) - grow.getZ();
+        this.maxX = Math.max(startRestriction.getX(), endRestriction.getX()) + grow.getX();
+        this.maxZ = Math.max(startRestriction.getZ(), endRestriction.getZ()) + grow.getZ();
 
         xzRestricted = true;
 
-
-        final int range = (int) Math.sqrt(Math.pow(maxX - minX, 2) + Math.pow(maxZ - minZ, 2)) * 2;
-
         this.world = new ChunkCache(world, new BlockPos(minX, MIN_Y, minZ), new BlockPos(maxX, MAX_Y, maxZ), range);
 
-        this.start = new BlockPos((minX + maxX) / 2, (startRestriction.getY() + endRestriction.getY()) / 2, (minZ + maxZ) / 2);
+        this.start = start;
         this.maxRange = range;
 
         this.result = result;
+        result.setJob(this);
 
         allowJumpPointSearchTypeWalk = false;
         this.entity = new WeakReference<>(entity);
@@ -395,7 +401,9 @@ public abstract class AbstractPathJob implements Callable<Path>
 
             calculationData.onNodeConsumed(currentNode.pos);
 
-            if (isAtDestination(currentNode))
+            // if xz restricted then disallow pathing to end outside given restriction
+            if ((!xzRestricted || (currentNode.pos.getX() >= minX && currentNode.pos.getX() <= maxX && currentNode.pos.getZ() >= minZ
+                && currentNode.pos.getZ() <= maxZ)) && isAtDestination(currentNode))
             {
                 bestNode = currentNode;
                 result.setPathReachesDestination(true);
@@ -412,10 +420,8 @@ public abstract class AbstractPathJob implements Callable<Path>
                 bestNodeResultScore = nodeResultScore;
             }
 
-            if (!xzRestricted || (currentNode.pos.getX() >= minX && currentNode.pos.getX() <= maxX && currentNode.pos.getZ() >= minZ && currentNode.pos.getZ() <= maxZ))
-            {
-                walkCurrentNode(currentNode);
-            }
+            // if xz restricted we can walk outside the restricted area to be able to find ways around back to the area
+            walkCurrentNode(currentNode);
         }
 
         @NotNull final Path path = finalizePath(bestNode);
@@ -563,6 +569,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         @NotNull final PathPoint[] points = new PathPoint[pathLength];
 
         @Nullable Node nextInPath = null;
+        @Nullable PathPoint next = null;
         node = targetNode;
         while (node.parent != null)
         {
@@ -610,6 +617,11 @@ public abstract class AbstractPathJob implements Callable<Path>
                 p.setOnLadder(true);
             }
 
+            if (next != null)
+            {
+                next.previous = p;
+            }
+            next = p;
             points[pathLength] = p;
 
             nextInPath = node;
@@ -629,7 +641,6 @@ public abstract class AbstractPathJob implements Callable<Path>
     {
         return node.pos;
     }
-
 
     /**
      * Compute the heuristic cost ('h' value) of a given position x,y,z.
