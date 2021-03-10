@@ -16,6 +16,7 @@ import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -53,9 +54,14 @@ public abstract class AbstractPathJob implements Callable<Path>
     private       int     totalNodesVisited = 0;
 
     /**
-     * Are there hard xz restrictions.
+     * Are there xz restrictions.
      */
-    private boolean xzRestricted = false;
+    private final boolean xzRestricted;
+
+    /**
+     * Are xz restrictions hard or soft.
+     */
+    private final boolean hardXzRestriction;
 
     /**
      * The cost values for certain nodes.
@@ -118,6 +124,9 @@ public abstract class AbstractPathJob implements Callable<Path>
         final int maxX = Math.max(start.getX(), end.getX()) + (range / 2);
         final int maxZ = Math.max(start.getZ(), end.getZ()) + (range / 2);
 
+        this.xzRestricted = false;
+        this.hardXzRestriction = false;
+
         this.world = new ChunkCache(world, new BlockPos(minX, MIN_Y, minZ), new BlockPos(maxX, MAX_Y, maxZ), range);
 
         this.start = new BlockPos(this.prepareStart(entity));
@@ -134,32 +143,71 @@ public abstract class AbstractPathJob implements Callable<Path>
      * AbstractPathJob constructor.
      *
      * @param world            the world within which to path.
+     * @param start            the start position from which to path from.
      * @param startRestriction start of restricted area.
      * @param endRestriction   end of restricted area.
+     * @param range            range^2 is used as cap for visited node count
+     * @param hardRestriction  if <code>true</code> start has to be inside the restricted area (otherwise the search immidiately finishes) -
+     *                         node visits outside the area are not allowed, isAtDestination is called on every node, if <code>false</code>
+     *                         restricted area only applies to calling isAtDestination thus searching outside area is allowed
      * @param result           path result.
      * @param entity           the entity.
-     * @see AbstractPathJob#AbstractPathJob(World, BlockPos, BlockPos, int, LivingEntity)
      */
-    public AbstractPathJob(final World world, final BlockPos startRestriction, final BlockPos endRestriction, final PathResult<? extends AbstractPathJob> result, final LivingEntity entity)
+    public AbstractPathJob(final World world,
+        final BlockPos start,
+        final BlockPos startRestriction,
+        final BlockPos endRestriction,
+        final int range,
+        final boolean hardRestriction,
+        final PathResult<AbstractPathJob> result,
+        final LivingEntity entity)
     {
-        this.minX = Math.min(startRestriction.getX(), endRestriction.getX());
-        this.minZ = Math.min(startRestriction.getZ(), endRestriction.getZ());
-        this.maxX = Math.max(startRestriction.getX(), endRestriction.getX());
-        this.maxZ = Math.max(startRestriction.getZ(), endRestriction.getZ());
+        this(world, start, startRestriction, endRestriction, range, Vector3i.NULL_VECTOR, hardRestriction, result, entity);
+    }
 
-        xzRestricted = true;
+    /**
+     * AbstractPathJob constructor.
+     *
+     * @param world            the world within which to path.
+     * @param start            the start position from which to path from.
+     * @param startRestriction start of restricted area.
+     * @param endRestriction   end of restricted area.
+     * @param range            range^2 is used as cap for visited node count
+     * @param grow             adjustment for restricted area, can be either shrink or grow, is applied in both of xz directions after
+     *                         getting min/max box values
+     * @param hardRestriction  if <code>true</code> start has to be inside the restricted area (otherwise the search immidiately finishes) -
+     *                         node visits outside the area are not allowed, isAtDestination is called on every node, if <code>false</code>
+     *                         restricted area only applies to calling isAtDestination thus searching outside area is allowed
+     * @param result           path result.
+     * @param entity           the entity.
+     */
+    public AbstractPathJob(final World world,
+        final BlockPos start,
+        final BlockPos startRestriction,
+        final BlockPos endRestriction,
+        final int range,
+        final Vector3i grow,
+        final boolean hardRestriction,
+        final PathResult<AbstractPathJob> result,
+        final LivingEntity entity)
+    {
+        this.minX = Math.min(startRestriction.getX(), endRestriction.getX()) - grow.getX();
+        this.minZ = Math.min(startRestriction.getZ(), endRestriction.getZ()) - grow.getZ();
+        this.maxX = Math.max(startRestriction.getX(), endRestriction.getX()) + grow.getX();
+        this.maxZ = Math.max(startRestriction.getZ(), endRestriction.getZ()) + grow.getZ();
 
-
-        final int range = (int) Math.sqrt(Math.pow(maxX - minX, 2) + Math.pow(maxZ - minZ, 2)) * 2;
+        this.xzRestricted = true;
+        this.hardXzRestriction = hardRestriction;
 
         this.world = new ChunkCache(world, new BlockPos(minX, MIN_Y, minZ), new BlockPos(maxX, MAX_Y, maxZ), range);
 
-        this.start = new BlockPos((minX + maxX) / 2, (startRestriction.getY() + endRestriction.getY()) / 2, (minZ + maxZ) / 2);
+        this.start = start;
         this.maxRange = range;
 
         this.result = result;
+        result.setJob(this);
 
-        allowJumpPointSearchTypeWalk = false;
+        this.allowJumpPointSearchTypeWalk = false;
         this.entity = new WeakReference<>(entity);
     }
 
@@ -395,24 +443,28 @@ public abstract class AbstractPathJob implements Callable<Path>
 
             calculationData.onNodeConsumed(currentNode.pos);
 
-            if (isAtDestination(currentNode))
+            final boolean isPositionOk = !xzRestricted || (currentNode.pos.getX() >= minX && currentNode.pos.getX() <= maxX
+                && currentNode.pos.getZ() >= minZ && currentNode.pos.getZ() <= maxZ);
+
+            // if xz restricted then disallow check destination outsite the restricted area
+            if (isPositionOk && isAtDestination(currentNode))
             {
                 bestNode = currentNode;
                 result.setPathReachesDestination(true);
                 break;
             }
 
-            //  If this is the closest node to our destination, treat it as our best node
-            final double nodeResultScore =
-              getNodeResultScore(currentNode);
-            if (nodeResultScore < bestNodeResultScore && !currentNode.isCornerNode()
+            // If this is the closest node to our destination, treat it as our best node
+            final double nodeResultScore = getNodeResultScore(currentNode);
+            if (isPositionOk && nodeResultScore < bestNodeResultScore && !currentNode.isCornerNode()
                   && isWalkableSurface(world.getBlockState(currentNode.pos.down()), currentNode.pos.down()) == SurfaceType.WALKABLE)
             {
                 bestNode = currentNode;
                 bestNodeResultScore = nodeResultScore;
             }
 
-            if (!xzRestricted || (currentNode.pos.getX() >= minX && currentNode.pos.getX() <= maxX && currentNode.pos.getZ() >= minZ && currentNode.pos.getZ() <= maxZ))
+            // if xz soft-restricted we can walk outside the restricted area to be able to find ways around back to the area
+            if (!hardXzRestriction || isPositionOk)
             {
                 walkCurrentNode(currentNode);
             }
@@ -563,6 +615,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         @NotNull final PathPoint[] points = new PathPoint[pathLength];
 
         @Nullable Node nextInPath = null;
+        @Nullable PathPoint next = null;
         node = targetNode;
         while (node.parent != null)
         {
@@ -610,6 +663,11 @@ public abstract class AbstractPathJob implements Callable<Path>
                 p.setOnLadder(true);
             }
 
+            if (next != null)
+            {
+                next.previous = p;
+            }
+            next = p;
             points[pathLength] = p;
 
             nextInPath = node;
@@ -629,7 +687,6 @@ public abstract class AbstractPathJob implements Callable<Path>
     {
         return node.pos;
     }
-
 
     /**
      * Compute the heuristic cost ('h' value) of a given position x,y,z.
