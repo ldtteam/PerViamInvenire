@@ -9,7 +9,7 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavigator
+public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavigator implements IAdvancedPathNavigator
 {
     //  Parent class private members
     protected final MobEntity    ourEntity;

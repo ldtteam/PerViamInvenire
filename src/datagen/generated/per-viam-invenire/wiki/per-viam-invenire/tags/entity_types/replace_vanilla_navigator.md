@@ -3,6 +3,7 @@
 - Bat
 - Blaze
 - Cat
+- Cave Spider
 - Chicken
 - Cow
 - Creeper
@@ -40,6 +41,7 @@
 - Skeleton Horse
 - Slime
 - Snow Golem
+- Spider
 - Squid
 - Stray
 - Trader Llama

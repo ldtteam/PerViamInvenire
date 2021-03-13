@@ -79,7 +79,7 @@ public class VanillaCompatibilityPath extends Path
         this.closedSet = calculatedPath.closedSet;
         this.currentPathIndex = calculatedPath.currentPathIndex;
         this.field_224773_g = calculatedPath.field_224773_g;
-        this.field_224774_h = calculatedPath.field_224774_h;
+        this.reachesTargetFlag = calculatedPath.reachesTargetFlag;
 
         return false;
     }
@@ -126,7 +126,7 @@ public class VanillaCompatibilityPath extends Path
         if (isCalculationComplete)
             return;
 
-        this.field_224774_h = false;
+        this.reachesTargetFlag = false;
         this.points = Collections.emptyList();
         this.currentPathIndex = 1;
 

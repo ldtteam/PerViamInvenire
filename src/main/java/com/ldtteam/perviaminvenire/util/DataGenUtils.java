@@ -4,6 +4,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.pathfinding.ClimberPathNavigator;
 import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.profiler.EmptyProfiler;
 import net.minecraft.util.registry.DynamicRegistries;
@@ -65,7 +66,8 @@ public class DataGenUtils
                              return false;
 
                          final MobEntity mob = (MobEntity) entity;
-                         return mob.getNavigator().getClass() == GroundPathNavigator.class;
+                         return mob.getNavigator().getClass() == GroundPathNavigator.class ||
+                            mob.getNavigator().getClass() == ClimberPathNavigator.class;
                      }
                      catch (Exception ex)
                      {
