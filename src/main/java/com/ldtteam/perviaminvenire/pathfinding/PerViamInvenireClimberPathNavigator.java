@@ -70,14 +70,14 @@ public class PerViamInvenireClimberPathNavigator extends PerViamInvenireGroundPa
             super.tick();
         } else {
             //No path available. But we have a last position stored.
-            if (this.targetPosition != null) {
+   /*         if (this.targetPosition != null) {
                 // FORGE: Fix MC-94054
                 if (!this.targetPosition.withinDistance(this.entity.getPositionVec(), Math.max((double)this.entity.getWidth(), 1.0D)) && (!(this.entity.getPosY() > (double)this.targetPosition.getY()) || !(new BlockPos((double)this.targetPosition.getX(), this.entity.getPosY(), (double)this.targetPosition.getZ())).withinDistance(this.entity.getPositionVec(), Math.max((double)this.entity.getWidth(), 1.0D)))) {
                     this.entity.getMoveHelper().setMoveTo((double)this.targetPosition.getX(), (double)this.targetPosition.getY(), (double)this.targetPosition.getZ(), this.speed);
                 } else {
                     this.targetPosition = null;
                 }
-            }
+            }*/
 
         }
     }

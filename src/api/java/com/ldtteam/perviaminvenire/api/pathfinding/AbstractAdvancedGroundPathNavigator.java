@@ -38,6 +38,7 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
      *
      * @return the destination position.
      */
+    @Override
     @Nullable
     public BlockPos getDestination()
     {
@@ -96,6 +97,7 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
      *
      * @return the pathing options.
      */
+    @Override
     public PathingOptions getPathingOptions()
     {
         return pathingOptions;
@@ -106,22 +108,9 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
      *
      * @return mobentity
      */
+    @Override
     public MobEntity getOurEntity()
     {
         return ourEntity;
     }
-
-    /**
-     * Gets the desired to go position
-     *
-     * @return desired go to pos
-     */
-    public abstract BlockPos getDesiredPos();
-
-    /**
-     * Sets the stuck handler for this navigator
-     *
-     * @param stuckHandler handler to use
-     */
-    public abstract void setStuckHandler(final IStuckHandler stuckHandler);
 }

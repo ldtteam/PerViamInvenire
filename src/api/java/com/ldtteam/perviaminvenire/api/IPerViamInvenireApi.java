@@ -1,17 +1,14 @@
 package com.ldtteam.perviaminvenire.api;
 
-import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.*;
 import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
+import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultRenderer;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
+import com.ldtteam.perviaminvenire.api.results.ICalculationResultsImportManager;
+import com.ldtteam.perviaminvenire.api.results.ICalculationResultsStorageManager;
 
 public interface IPerViamInvenireApi
 {
@@ -44,4 +41,13 @@ public interface IPerViamInvenireApi
 
     ICommonConfig getCommonConfig();
 
+    IIsLadderBlockRegistry getLadderBlockRegistry();
+
+    IBoundingBoxProducerRegistry getBoundingBoxRegistry();
+
+    ICalculationResultRenderer getCalculationResultRenderer();
+
+    ICalculationResultsStorageManager getCalculationStorageManager();
+
+    ICalculationResultsImportManager getCalculationResultsImportManager();
 }

@@ -5,11 +5,14 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistr
 import com.ldtteam.perviaminvenire.api.adapters.speed.ISpeedAdaptationCallback;
 import com.ldtteam.perviaminvenire.api.util.ModTags;
 import com.ldtteam.perviaminvenire.apiimpl.PerViamInvenireApiImplementation;
+import com.ldtteam.perviaminvenire.command.ImportableResultDataArgument;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityManager;
 import com.ldtteam.perviaminvenire.config.ConfigurationManager;
 import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
+import com.mojang.brigadier.arguments.ArgumentType;
+import net.minecraft.command.arguments.ArgumentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -43,6 +46,11 @@ public class PerViamInvenire
     public void initialize(FMLCommonSetupEvent commonSetupEvent) {
         LOGGER.info("Starting PVI.");
         VanillaCompatibilityManager.getInstance().initialize();
+
+        commonSetupEvent.enqueueWork(() -> {
+            LOGGER.info("Registering custom argument types.");
+            ArgumentTypes.register("pvi_importable_results", ImportableResultDataArgument.class, ImportableResultDataArgument.Serializer.getInstance());
+        });
     }
 
 }

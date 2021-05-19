@@ -2,14 +2,12 @@ package com.ldtteam.perviaminvenire.pathfinding;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.*;
 import com.ldtteam.perviaminvenire.api.pathfinding.*;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.CallbackBasedStuckHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
@@ -339,7 +337,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         // Auto dismount when trying to path.
         @Nullable Entity lowestRidingEntity = ourEntity.getLowestRidingEntity();
         //noinspection ConstantConditions
-        if (lowestRidingEntity != null && lowestRidingEntity != ourEntity)
+        if (this.getPath() != null && lowestRidingEntity != null && lowestRidingEntity != ourEntity)
         {
             @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
             return IDismountCartRegistry.getInstance()
@@ -566,7 +564,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     {
         Vector3d vec3 = Objects.requireNonNull(this.getPath()).getPosition(this.ourEntity);
 
-        if (vec3.squareDistanceTo(ourEntity.getPosX(), vec3.y, ourEntity.getPosZ()) < Math.random() * 0.1)
+        if (vec3.squareDistanceTo(ourEntity.getPosX(), vec3.y, ourEntity.getPosZ()) < (this.ourEntity.getWidth() * 0.5))
         {
             //This way he is less nervous and gets up the ladder
             double newSpeed = 0.05;
@@ -601,7 +599,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             }
             else
             {
-                if (world.getBlockState(ourEntity.getPosition().down()).isLadder(world, ourEntity.getPosition().down(), ourEntity))
+                if (isLadder(world.getBlockState(ourEntity.getPosition().down()), ourEntity.getPosition().down()))
                 {
                     this.ourEntity.setMoveVertical(-0.5f);
                 }
@@ -613,6 +611,20 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             }
         }
         return false;
+    }
+
+    /**
+     * Is the blockstate a ladder.
+     *
+     * @param blockstate blockstate to check.
+     * @param pos   location of the blockstate.
+     * @return true if the blockstate is a ladder.
+     */
+    protected boolean isLadder(@NotNull final BlockState blockstate, final BlockPos pos)
+    {
+        return IIsLadderBlockRegistry.getInstance()
+                 .getRunner().isLadder(this.entity, blockstate, world, pos)
+                 .orElseGet(() -> blockstate.getBlock().isLadder(this.world.getBlockState(pos), world, pos, entity));
     }
 
     private boolean handleEntityInWater(int oldIndex, final PathPointExtended pEx)
@@ -686,7 +698,56 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return;
         }
 
-        super.pathFollow();
+        this.maxDistanceToWaypoint = this.entity.getWidth() > 0.75F ? this.entity.getWidth() / 2.0F : 0.75F - this.entity.getWidth() / 2.0F;
+        boolean wentAhead = false;
+
+
+        // Look at multiple points, incase we're too fast
+        for (int i = this.currentPath.getCurrentPathIndex(); i < Math.min(this.currentPath.getCurrentPathLength(), this.currentPath.getCurrentPathIndex() + 4); i++)
+        {
+            Vector3d next = this.currentPath.getVectorFromIndex(this.entity, i);
+            if (Math.abs(this.entity.getPosX() - next.x) < (double) this.maxDistanceToWaypoint - Math.abs(this.entity.getPosY() - (next.y)) * 0.1
+                  && Math.abs(this.entity.getPosZ() - next.z) < (double) this.maxDistanceToWaypoint - Math.abs(this.entity.getPosY() - (next.y)) * 0.1 &&
+                  Math.abs(this.entity.getPosY() - (next.y - 0.5f)) < 1.0D)
+            {
+                this.currentPath.incrementPathIndex();
+                wentAhead = true;
+            }
+        }
+
+        if (currentPath.isFinished())
+        {
+            onPathFinish();
+            return;
+        }
+
+        if (wentAhead)
+        {
+            return;
+        }
+
+        if (curNode >= currentPath.getCurrentPathLength() || curNode <= 1)
+        {
+            return;
+        }
+
+        // Check some past nodes case we fell behind.
+        final Vector3d curr = this.currentPath.getVectorFromIndex(this.entity, curNode - 1);
+        final Vector3d next = this.currentPath.getVectorFromIndex(this.entity, curNode);
+
+        if (entity.getPositionVec().distanceTo(curr) >= 2.0 && entity.getPositionVec().distanceTo(next) >= 2.0)
+        {
+            int currentIndex = curNode - 1;
+            while (currentIndex > 0)
+            {
+                final Vector3d tempoPos = this.currentPath.getVectorFromIndex(this.entity, currentIndex);
+                if (entity.getPositionVec().distanceTo(tempoPos) <= 1.0)
+                {
+                    this.currentPath.setCurrentPathIndex(currentIndex);
+                }
+                currentIndex--;
+            }
+        }
     }
 
     /**
@@ -762,7 +823,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     {
         if (!noPath())
         {
-            if (pathResult != null)
+            if (pathResult != null && pathResult.getPath() != null)
                 return pathResult.getPath().getTarget();
             else if (!super.noPath())
                 return super.getTargetPos();

@@ -2,10 +2,12 @@ package com.ldtteam.perviaminvenire.compat.vanilla;
 
 import com.google.common.collect.Lists;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
+import net.minecraft.entity.Entity;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -139,5 +141,17 @@ public class VanillaCompatibilityPath extends Path
             return BlockPos.ZERO;
 
         return this.getFinalPathPoint().func_224759_a();
+    }
+
+    /**
+     * Gets the vector of the PathPoint associated with the given index.
+     *
+     * @param entityIn The entity in question.
+     * @param index The index in question.
+     */
+    @Override
+    public Vector3d getVectorFromIndex(final Entity entityIn, final int index)
+    {
+        return super.getVectorFromIndex(entityIn, index);
     }
 }

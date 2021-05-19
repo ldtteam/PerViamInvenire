@@ -9,7 +9,8 @@ import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 
 import net.minecraft.entity.Entity;
 
-public final class DismountCartRegistry extends AbstractCallbackBasedRegistry<IDismountCartRegistry, IDismountCartCallback> implements IDismountCartRegistry {
+public final class DismountCartRegistry extends AbstractCallbackBasedRegistry<IDismountCartRegistry, IDismountCartCallback> implements IDismountCartRegistry
+{
 
     private static final DismountCartRegistry INSTANCE = new DismountCartRegistry();
 

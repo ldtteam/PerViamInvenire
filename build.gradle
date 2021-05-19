@@ -14,5 +14,5 @@ buildscript {
     }
 }
 
-apply from: 'https://raw.githubusercontent.com/ldtteam/A-Duce-Te-Aedificaverunt/master/gradle/mod.gradle'
+apply from: 'https://raw.githubusercontent.com/ldtteam/OperaPublicaCreator/main/gradle/mod.gradle'
 project.getLogger().lifecycle("Loaded remote build.gradle with version: " + project.modVersion)

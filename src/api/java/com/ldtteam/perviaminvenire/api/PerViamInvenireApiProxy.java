@@ -3,9 +3,12 @@ package com.ldtteam.perviaminvenire.api;
 import com.ldtteam.perviaminvenire.api.adapters.registry.*;
 import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
+import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultRenderer;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
+import com.ldtteam.perviaminvenire.api.results.ICalculationResultsImportManager;
+import com.ldtteam.perviaminvenire.api.results.ICalculationResultsStorageManager;
 
 public final class PerViamInvenireApiProxy implements IPerViamInvenireApi
 {
@@ -89,5 +92,35 @@ public final class PerViamInvenireApiProxy implements IPerViamInvenireApi
     @Override
     public ICommonConfig getCommonConfig() {
         return this.apiInstance.getCommonConfig();
+    }
+
+    @Override
+    public IIsLadderBlockRegistry getLadderBlockRegistry()
+    {
+        return this.apiInstance.getLadderBlockRegistry();
+    }
+
+    @Override
+    public IBoundingBoxProducerRegistry getBoundingBoxRegistry()
+    {
+        return this.apiInstance.getBoundingBoxRegistry();
+    }
+
+    @Override
+    public ICalculationResultRenderer getCalculationResultRenderer()
+    {
+        return this.apiInstance.getCalculationResultRenderer();
+    }
+
+    @Override
+    public ICalculationResultsStorageManager getCalculationStorageManager()
+    {
+        return this.apiInstance.getCalculationStorageManager();
+    }
+
+    @Override
+    public ICalculationResultsImportManager getCalculationResultsImportManager()
+    {
+        return this.apiInstance.getCalculationResultsImportManager();
     }
 }

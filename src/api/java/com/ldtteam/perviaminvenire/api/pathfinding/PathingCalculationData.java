@@ -1,29 +1,52 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.gson.*;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.util.JSONUtils;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
 
-import java.util.ArrayList;
+import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class PathingCalculationData
 {
-    private final Multimap<BlockPos, BlockPos>          walkedPositions    = HashMultimap.create();
-    private final Map<BlockPos, InvalidNodeReason> invalidNodeReasons = Maps.newHashMap();
-    private final LinkedList<BlockPos>                  consumedNodes      = new LinkedList<>();
-    private final LinkedList<BlockPos>                  path               = new LinkedList<>();
-    private       boolean                               reachesDestination = false;
+    private final Multimap<BlockPos, BlockPos>          walkedPositions;
+    private final Map<BlockPos, InvalidNodeReason>      invalidNodeReasons;
+    private final LinkedList<BlockPos>                  consumedNodes;
+    private final LinkedList<BlockPos>                  path;
+    private       boolean                               reachesDestination;
+
+    private PathingCalculationData(
+      final Multimap<BlockPos, BlockPos> walkedPositions,
+      final Map<BlockPos, InvalidNodeReason> invalidNodeReasons,
+      final LinkedList<BlockPos> consumedNodes,
+      final LinkedList<BlockPos> path,
+      final boolean reachesDestination
+    ) {
+        this.walkedPositions = walkedPositions;
+        this.invalidNodeReasons = invalidNodeReasons;
+        this.consumedNodes = consumedNodes;
+        this.path = path;
+        this.reachesDestination = reachesDestination;
+    }
 
     public PathingCalculationData()
     {
+        this(
+          HashMultimap.create(),
+          Maps.newHashMap(),
+          Lists.newLinkedList(),
+          Lists.newLinkedList(),
+          false
+        );
     }
 
     public void onNodeWalked(final BlockPos source, final BlockPos target)

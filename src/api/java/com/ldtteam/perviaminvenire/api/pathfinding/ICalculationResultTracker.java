@@ -51,6 +51,20 @@ public interface ICalculationResultTracker
     void stopTracking(PlayerEntity playerEntity, Entity entity);
 
     /**
+     * Indicates to start exporting the pathing results of a given entity.
+     *
+     * @param entity The entity to start exporting.
+     */
+    void startExporting(Entity entity);
+
+    /**
+     * Indicates to stop exporting the pathing results of a given entity.
+     *
+     * @param entity The entity to stop exporting.
+     */
+    void stopExporting(Entity entity);
+
+    /**
      * Invoked when a particular job completes calculation.
      * Triggers the synchronization if needed.
      *

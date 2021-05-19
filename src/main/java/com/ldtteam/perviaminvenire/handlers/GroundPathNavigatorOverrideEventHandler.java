@@ -1,6 +1,5 @@
 package com.ldtteam.perviaminvenire.handlers;
 
-import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.pathfinding.registry.PathNavigatorRegistry;
 import net.minecraft.entity.Entity;

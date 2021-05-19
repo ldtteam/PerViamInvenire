@@ -1,5 +1,6 @@
 package com.ldtteam.perviaminvenire.collisions;
 
+import com.ldtteam.perviaminvenire.api.adapters.registry.IBoundingBoxProducerRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
 import net.minecraft.entity.Entity;
@@ -7,6 +8,9 @@ import net.minecraft.entity.EntitySize;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IWorldReader;
 
 public class CollisionDetectionManager implements ICollisionDetectionManager
@@ -23,10 +27,16 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
     }
 
     @Override
-    public boolean canFit(final Entity entity, final BlockPos center, final IWorldReader world)
+    public boolean canFit(final Entity entity, final Vector3d center, final Vector3d facing, final IWorldReader world)
     {
-        final EntitySize entitySize = entity.getSize(entity.getPose());
-        final AxisAlignedBB entityBox = entitySize.func_242285_a(center.getX() + 0.5d, center.getY(), center.getZ() + 0.5d);
+        final AxisAlignedBB entityBox = IBoundingBoxProducerRegistry.getInstance()
+          .getRunner().produce(entity, center, facing, world)
+          .orElseGet(() -> {
+              final EntitySize entitySize = entity.getSize(entity.getPose());
+              final float entityHorizontalSize = entitySize.width > 0.75F ? entitySize.width / 2.0F : 0.75F - entitySize.width / 2.0F;;
+
+              return AxisAlignedBB.withSizeAtOrigin(entityHorizontalSize, 0.1F, entityHorizontalSize).offset(center.getX(), center.getY() + entity.getEyeHeight(entity.getPose()), center.getZ());
+          });
 
         if (hasNoCollisions(entity, world, entityBox))
         {
@@ -38,7 +48,7 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
                                              .mapToDouble(shape -> shape.getEnd(Direction.Axis.Y) - bottomBox.minY)
                                              .max()
                                              .orElse(0d);
-        if (maxHeightOfBottom >= 0.99999d)
+        if (maxHeightOfBottom >= 1 - bottomBox.minY)
         {
             return false;
         }
@@ -72,6 +82,6 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
           entity,
           boundingBox,
           (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false)
-        ).allMatch(voxelShape -> voxelShape.isEmpty());
+        ).allMatch(VoxelShape::isEmpty);
     }
 }

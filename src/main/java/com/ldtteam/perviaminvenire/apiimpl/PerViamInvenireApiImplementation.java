@@ -1,30 +1,23 @@
 package com.ldtteam.perviaminvenire.apiimpl;
 
 import com.ldtteam.perviaminvenire.api.IPerViamInvenireApi;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IStartPositionAdapterRegistry;
-import com.ldtteam.perviaminvenire.api.adapters.registry.IWalkableBlockRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.*;
 import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
+import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultRenderer;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
+import com.ldtteam.perviaminvenire.api.results.ICalculationResultsImportManager;
+import com.ldtteam.perviaminvenire.api.results.ICalculationResultsStorageManager;
 import com.ldtteam.perviaminvenire.collisions.CollisionDetectionManager;
 import com.ldtteam.perviaminvenire.config.ConfigurationManager;
+import com.ldtteam.perviaminvenire.pathfinding.CalculationResultRenderer;
 import com.ldtteam.perviaminvenire.pathfinding.CalculationResultTracker;
 import com.ldtteam.perviaminvenire.pathfinding.PathingResultHandler;
-import com.ldtteam.perviaminvenire.pathfinding.registry.DismountCartRegistry;
-import com.ldtteam.perviaminvenire.pathfinding.registry.PassableBlockRegistry;
-import com.ldtteam.perviaminvenire.pathfinding.registry.PathNavigatorRegistry;
-import com.ldtteam.perviaminvenire.pathfinding.registry.RidingOnCartRegistry;
-import com.ldtteam.perviaminvenire.pathfinding.registry.RoadBlockRegistry;
-import com.ldtteam.perviaminvenire.pathfinding.registry.SpeedAdaptationRegistry;
-import com.ldtteam.perviaminvenire.pathfinding.registry.StartPositionAdapterRegistry;
-import com.ldtteam.perviaminvenire.pathfinding.registry.WalkableBlockRegistry;
+import com.ldtteam.perviaminvenire.pathfinding.registry.*;
+import com.ldtteam.perviaminvenire.results.CalculationResultsImportManager;
+import com.ldtteam.perviaminvenire.results.CalculationResultsStorageManager;
 
 public class PerViamInvenireApiImplementation implements IPerViamInvenireApi {
 
@@ -89,5 +82,35 @@ public class PerViamInvenireApiImplementation implements IPerViamInvenireApi {
     @Override
     public ICommonConfig getCommonConfig() {
         return ConfigurationManager.getInstance().getCommonConfig();
+    }
+
+    @Override
+    public IIsLadderBlockRegistry getLadderBlockRegistry()
+    {
+        return IsLadderBlockRegistry.getInstance();
+    }
+
+    @Override
+    public IBoundingBoxProducerRegistry getBoundingBoxRegistry()
+    {
+        return BoundingBoxProducerRegistry.getInstance();
+    }
+
+    @Override
+    public ICalculationResultRenderer getCalculationResultRenderer()
+    {
+        return CalculationResultRenderer.getInstance();
+    }
+
+    @Override
+    public ICalculationResultsStorageManager getCalculationStorageManager()
+    {
+        return CalculationResultsStorageManager.getInstance();
+    }
+
+    @Override
+    public ICalculationResultsImportManager getCalculationResultsImportManager()
+    {
+        return CalculationResultsImportManager.getInstance();
     }
 }

@@ -1,17 +1,27 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingCalculationData;
+import com.ldtteam.perviaminvenire.api.results.ICalculationResultsStorageManager;
 import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.network.message.OnCalculationCompleted;
+import com.ldtteam.perviaminvenire.results.CalculationResultsStorageManager;
+import com.ldtteam.perviaminvenire.util.gson.MultimapAdapter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CalculationResultTracker implements ICalculationResultTracker
@@ -23,8 +33,9 @@ public class CalculationResultTracker implements ICalculationResultTracker
         return INSTANCE;
     }
 
-    private final Multimap<PlayerEntity, Entity> playerToTrackingEntity = HashMultimap.create();
-    private final Multimap<Entity, PlayerEntity> entityToTrackingPlayer = HashMultimap.create();
+    private final Multimap<PlayerEntity, Entity> playerToTrackingEntity = Multimaps.synchronizedMultimap(HashMultimap.create());
+    private final Multimap<Entity, PlayerEntity> entityToTrackingPlayer = Multimaps.synchronizedMultimap(HashMultimap.create());
+    private final Set<Entity> entitiesToExport = Sets.newConcurrentHashSet();
 
     private CalculationResultTracker()
     {
@@ -68,6 +79,18 @@ public class CalculationResultTracker implements ICalculationResultTracker
     }
 
     @Override
+    public void startExporting(final Entity entity)
+    {
+        entitiesToExport.add(entity);
+    }
+
+    @Override
+    public void stopExporting(final Entity entity)
+    {
+        entitiesToExport.remove(entity);
+    }
+
+    @Override
     public void onCalculationCompleted(final AbstractPathJob job) {
         final Entity entity = job.getEntity();
         if (entity == null)
@@ -82,7 +105,14 @@ public class CalculationResultTracker implements ICalculationResultTracker
             .filter(ServerPlayerEntity.class::isInstance)
             .map(ServerPlayerEntity.class::cast).toArray(ServerPlayerEntity[]::new)
         );
+
+        final String storagePathName = entity.getUniqueID().toString();
+        if (entitiesToExport.contains(job.getEntity()))
+        {
+            ICalculationResultsStorageManager.getInstance().storeData(data, storagePathName);
+        }
     }
+
 
     @Override
     public Collection<PlayerEntity> getTrackingPlayers(final Entity entity)
