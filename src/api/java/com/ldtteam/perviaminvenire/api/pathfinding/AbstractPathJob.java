@@ -10,6 +10,7 @@ import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.pathfinding.Path;
@@ -382,7 +383,35 @@ public abstract class AbstractPathJob implements Callable<Path>
 
     private static boolean calculateSwimming(@NotNull final IWorldReader world, @NotNull final BlockPos pos, @Nullable final Node node)
     {
-        return (node == null) ? world.getBlockState(pos.down()).getMaterial().isLiquid() : node.isSwimming();
+        return (node == null) ? isWater(world, pos.down()) : node.isSwimming();
+    }
+
+
+    /**
+     * Check if the block at this position is actually some kind of waterly fluid.
+     * @param pos the pos in the world.
+     * @return true if so.
+     */
+    private static boolean isWater(@NotNull final IWorldReader world, final BlockPos pos)
+    {
+        final BlockState state = world.getBlockState(pos);
+        if (state.isSolid())
+        {
+            return false;
+        }
+        if (state.getBlock() == Blocks.WATER)
+        {
+            return true;
+        }
+
+        final FluidState fluidState = world.getFluidState(pos);
+        if (fluidState == null || fluidState.isEmpty())
+        {
+            return false;
+        }
+
+        final Fluid fluid = fluidState.getFluid();
+        return fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER;
     }
 
     public PathResult<? extends AbstractPathJob> getResult()
@@ -1021,7 +1050,7 @@ public abstract class AbstractPathJob implements Callable<Path>
             }
 
             final FluidState fluid = world.getFluidState(pos);
-            if (!fluid.isEmpty() && (fluid.getFluid() == Fluids.LAVA || fluid.getFluid() == Fluids.FLOWING_LAVA))
+            if (blockState.getBlock() == Blocks.LAVA || (!fluid.isEmpty() && (fluid.getFluid() == Fluids.LAVA || fluid.getFluid() == Fluids.FLOWING_LAVA)))
             {
                 return SurfaceType.NOT_PASSABLE;
             }
