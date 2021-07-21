@@ -40,6 +40,21 @@ public class SpiderClimbableTickEventHandler
         }
 
         final PathPointExtended pathPointExtended = (PathPointExtended) pathPoint;
-        spiderEntity.setBesideClimbableBlock(pathPointExtended.isOnLadder());
+        final boolean currentIsLadder = pathPointExtended.isOnLadder();
+        if (path.getCurrentPathIndex() == 0)
+        {
+            spiderEntity.setBesideClimbableBlock(currentIsLadder);
+            return;
+        }
+
+        final PathPoint pathPointPrevious = path.getPathPointFromIndex(path.getCurrentPathIndex() - 1);
+        if (!(pathPointPrevious instanceof PathPointExtended)) {
+            spiderEntity.setBesideClimbableBlock(currentIsLadder);
+            return;
+        }
+        final PathPointExtended pathPointPreviousExtended = (PathPointExtended) pathPoint;
+        final boolean previousIsLadder = pathPointPreviousExtended.isOnLadder();
+
+        spiderEntity.setBesideClimbableBlock(previousIsLadder || currentIsLadder);
     }
 }
