@@ -1,7 +1,11 @@
 package com.ldtteam.perviaminvenire.handlers;
 
+import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
+import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import net.minecraft.entity.monster.SpiderEntity;
+import net.minecraft.pathfinding.Path;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -18,6 +22,24 @@ public class SpiderClimbableTickEventHandler
         }
 
         final SpiderEntity spiderEntity = (SpiderEntity) event.getEntity();
-        spiderEntity.setBesideClimbableBlock(false);
+
+        if (!(spiderEntity.getNavigator() instanceof AbstractAdvancedGroundPathNavigator))
+            return;
+
+        final AbstractAdvancedGroundPathNavigator navigator = (AbstractAdvancedGroundPathNavigator) spiderEntity.getNavigator();
+        if (navigator.hasPath() || navigator.getPath() == null) {
+            spiderEntity.setBesideClimbableBlock(false);
+            return;
+        }
+
+        final Path path = navigator.getPath();
+        final PathPoint pathPoint = path.getCurrentPoint();
+        if (!(pathPoint instanceof PathPointExtended)) {
+            spiderEntity.setBesideClimbableBlock(false);
+            return;
+        }
+
+        final PathPointExtended pathPointExtended = (PathPointExtended) pathPoint;
+        spiderEntity.setBesideClimbableBlock(pathPointExtended.isOnLadder());
     }
 }

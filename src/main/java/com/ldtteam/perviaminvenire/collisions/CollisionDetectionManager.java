@@ -35,7 +35,7 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
               final EntitySize entitySize = entity.getSize(entity.getPose());
               final float entityHorizontalSize = entitySize.width > 0.75F ? entitySize.width / 2.0F : 0.75F - entitySize.width / 2.0F;;
 
-              return AxisAlignedBB.withSizeAtOrigin(entityHorizontalSize, 0.1F, entityHorizontalSize).offset(center.getX(), center.getY() + entity.getEyeHeight(entity.getPose()), center.getZ());
+              return AxisAlignedBB.withSizeAtOrigin(entityHorizontalSize, 0.1F, entityHorizontalSize).offset(center.getX(), center.getY() + (entity.getEyeHeight(entity.getPose()) - entitySize.height / 2), center.getZ());
           });
 
         if (hasNoCollisions(entity, world, entityBox))

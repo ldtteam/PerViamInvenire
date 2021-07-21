@@ -8,6 +8,7 @@ import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.CallbackBasedSt
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.LadderBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
@@ -487,6 +488,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         pathResult.setStatus(PathFindingStatus.IN_PROGRESS_FOLLOWING);
     }
 
+    @SuppressWarnings("ConstantConditions")
     private boolean handleLadders(int oldIndex)
     {
         //  Ladder Workaround
@@ -498,6 +500,20 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
                                                                         .getPathPointFromIndex(this.getPath()
                                                                                                  .getCurrentPathIndex() + 1)
                                                 : null;
+
+            for (int i = this.currentPath.getCurrentPathIndex(); i < Math.min(this.currentPath.getCurrentPathLength(), this.currentPath.getCurrentPathIndex() + 3); i++)
+            {
+                final PathPointExtended nextPoints = (PathPointExtended) this.getPath().getPathPointFromIndex(i);
+                if (nextPoints.isOnLadder())
+                {
+                    Vector3d motion = this.entity.getMotion();
+                    double x = motion.x < -0.1 ? -0.1 : Math.min(motion.x, 0.1);
+                    double z = motion.x < -0.1 ? -0.1 : Math.min(motion.z, 0.1);
+
+                    this.ourEntity.setMotion(x, motion.y, z);
+                    break;
+                }
+            }
 
             if (getPathingOptions().canUseLadders() && pEx.isOnLadder() && (pExNext != null && pEx.y != pExNext.y))
             {
@@ -595,6 +611,10 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
             if (newSpeed > 0)
             {
+                if (!(world.getBlockState(ourEntity.getPosition()).getBlock() instanceof LadderBlock))
+                {
+                    this.ourEntity.setMotion(this.ourEntity.getMotion().add(0, 0.1D, 0));
+                }
                 this.ourEntity.getMoveHelper().setMoveTo(vec3.x, vec3.y, vec3.z, newSpeed);
             }
             else
@@ -675,6 +695,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
             final PathPointExtended pEx = (PathPointExtended) currentPath.getPathPointFromIndex(curNode);
             final PathPointExtended pExNext = (PathPointExtended) currentPath.getPathPointFromIndex(curNodeNext);
+            this.maxDistanceToWaypoint = this.entity.getWidth() > 0.75F ? this.entity.getWidth() / 2.0F : 0.75F - this.entity.getWidth() / 2.0F;
 
             //  If current node is bottom of a ladder, then stay on this node until
             //  the ourEntity reaches the bottom, otherwise they will try to head out early
@@ -706,9 +727,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         for (int i = this.currentPath.getCurrentPathIndex(); i < Math.min(this.currentPath.getCurrentPathLength(), this.currentPath.getCurrentPathIndex() + 4); i++)
         {
             Vector3d next = this.currentPath.getVectorFromIndex(this.entity, i);
-            if (Math.abs(this.entity.getPosX() - next.x) < (double) this.maxDistanceToWaypoint - Math.abs(this.entity.getPosY() - (next.y)) * 0.1
-                  && Math.abs(this.entity.getPosZ() - next.z) < (double) this.maxDistanceToWaypoint - Math.abs(this.entity.getPosY() - (next.y)) * 0.1 &&
-                  Math.abs(this.entity.getPosY() - (next.y - 0.5f)) < 1.0D)
+            if (next.distanceTo(this.entity.getPositionVec()) < 2 * this.maxDistanceToWaypoint)
             {
                 this.currentPath.incrementPathIndex();
                 wentAhead = true;

@@ -4,15 +4,20 @@ import com.ldtteam.perviaminvenire.api.adapters.ladder.IIsLadderBlockCallback;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IIsLadderBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
+import com.ldtteam.perviaminvenire.api.movement.IMovementControllerProducer;
+import com.ldtteam.perviaminvenire.api.movement.registry.IMovementControllerRegistry;
+import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
 import com.ldtteam.perviaminvenire.api.pathfinding.IAdvancedPathNavigator;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathNavigatorProducer;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.api.util.ModTags;
+import com.ldtteam.perviaminvenire.movement.PVIMovementController;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireClimberPathNavigator;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigator;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.controller.MovementController;
 import net.minecraft.pathfinding.ClimberPathNavigator;
 import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.pathfinding.PathNavigator;
@@ -77,6 +82,13 @@ public class VanillaCompatibilityManager
               return Optional.of(navigator);
           }
         );
+
+        IMovementControllerRegistry.getInstance().register((entity, initialController) -> {
+            if (!(entity.navigator instanceof AbstractAdvancedGroundPathNavigator))
+                return Optional.empty();
+
+            return Optional.of(new PVIMovementController(entity));
+        });
 
         ISpeedAdaptationRegistry.getInstance().register(
           (entity, walkSpeed) -> ModTags.REPLACE_VANILLA_NAVIGATOR.contains(entity.getType()) ? Optional.of(walkSpeed) : Optional.empty()

@@ -1021,7 +1021,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         return !ICollisionDetectionManager.getInstance().canFit(
           entity,
           Vector3d.copyCentered(pos),
-          Vector3d.copy(parent.subtract(pos)),
+          Vector3d.copy(pos.subtract(parent)),
           this.world
         );
     }
