@@ -12,7 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -153,5 +152,10 @@ public class VanillaCompatibilityPath extends Path
     public Vector3d getVectorFromIndex(final Entity entityIn, final int index)
     {
         return super.getVectorFromIndex(entityIn, index);
+    }
+
+    public boolean isCalculationComplete()
+    {
+        return isCalculationComplete;
     }
 }

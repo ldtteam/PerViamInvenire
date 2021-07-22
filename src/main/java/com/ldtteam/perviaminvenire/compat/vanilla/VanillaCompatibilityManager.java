@@ -1,33 +1,23 @@
 package com.ldtteam.perviaminvenire.compat.vanilla;
 
-import com.ldtteam.perviaminvenire.api.adapters.ladder.IIsLadderBlockCallback;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IIsLadderBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
-import com.ldtteam.perviaminvenire.api.movement.IMovementControllerProducer;
 import com.ldtteam.perviaminvenire.api.movement.registry.IMovementControllerRegistry;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
 import com.ldtteam.perviaminvenire.api.pathfinding.IAdvancedPathNavigator;
-import com.ldtteam.perviaminvenire.api.pathfinding.IPathNavigatorProducer;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import com.ldtteam.perviaminvenire.api.util.ModTags;
 import com.ldtteam.perviaminvenire.movement.PVIMovementController;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireClimberPathNavigator;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigator;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.controller.MovementController;
+import net.minecraft.entity.monster.SlimeEntity;
 import net.minecraft.pathfinding.ClimberPathNavigator;
 import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.pathfinding.PathNavigator;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReader;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class VanillaCompatibilityManager
 {
@@ -84,7 +74,7 @@ public class VanillaCompatibilityManager
         );
 
         IMovementControllerRegistry.getInstance().register((entity, initialController) -> {
-            if (!(entity.navigator instanceof AbstractAdvancedGroundPathNavigator))
+            if (entity instanceof SlimeEntity || !(entity.navigator instanceof AbstractAdvancedGroundPathNavigator))
                 return Optional.empty();
 
             return Optional.of(new PVIMovementController(entity));
@@ -102,7 +92,7 @@ public class VanillaCompatibilityManager
             if (!(mobEntity.getNavigator() instanceof PerViamInvenireClimberPathNavigator))
                 return Optional.empty();
 
-            return Optional.of(Direction.Plane.HORIZONTAL.getDirectionValues()
+            return Optional.of(block.isAir() && Direction.Plane.HORIZONTAL.getDirectionValues()
               .anyMatch(direction -> !worldReader.getBlockState(blockPos.add(direction.getDirectionVec())).isAir(worldReader, blockPos.add(direction.getDirectionVec()))));
         });
     }
