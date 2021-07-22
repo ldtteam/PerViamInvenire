@@ -682,7 +682,7 @@ public abstract class AbstractPathJob implements Callable<Path>
             if (onALadder(node, nextInPath, pos))
             {
                 p.setOnLadder(true);
-                if (nextInPath.pos.getY() > pos.getY())
+                if (nextInPath.pos.getY() >= pos.getY())
                 {
                     //  We only care about facing if going up
                     //In the case of BlockVines (Which does not have Direction) we have to check the metadata of the vines... bitwise...
@@ -692,6 +692,7 @@ public abstract class AbstractPathJob implements Callable<Path>
             else if (onALadder(node.parent, node.parent, pos))
             {
                 p.setOnLadder(true);
+                p.setLadderFacing(Direction.UP);
             }
 
             if (next != null)
@@ -769,15 +770,22 @@ public abstract class AbstractPathJob implements Callable<Path>
         boolean corner = false;
         if (pos.getY() != newY)
         {
+            if (parent.isCornerNode() && (dPos.getX() != 0 || dPos.getZ() != 0))
+            {
+                return;
+            }
+
             // if the new position is above the current node, we're taking the node directly above
-            if (!parent.isCornerNode() && newY - pos.getY() > 0 && (parent.parent == null || !parent.parent.pos.equals(parent.pos.add(new BlockPos(0, newY - pos.getY(), 0)))))
+            if (!parent.isCornerNode() && newY - parent.pos.getY() > 0 && (parent.parent == null || !parent.parent.pos.equals(parent.pos.add(new BlockPos(0,
+              newY - pos.getY(),
+              0)))))
             {
                 dPos = new BlockPos(0, newY - pos.getY(), 0);
                 pos = parent.pos.add(dPos);
                 corner = true;
             }
             // If we're going down, take the air-corner before going to the lower node
-            else if (!parent.isCornerNode() && newY - pos.getY() < 0 && (dPos.getX() != 0 || dPos.getZ() != 0) && (parent.parent == null || !parent.pos.down()
+            else if (!parent.isCornerNode() && newY - parent.pos.getY() < 0 && (dPos.getX() != 0 || dPos.getZ() != 0) && (parent.parent == null || !parent.pos.down()
                                                                                                                                                .equals(parent.parent.pos)))
             {
                 dPos = new BlockPos(dPos.getX(), 0, dPos.getZ());
@@ -825,6 +833,10 @@ public abstract class AbstractPathJob implements Callable<Path>
             node = createNode(parent, pos, nodeKey, isSwimming, heuristic, cost, score);
             node.setOnRails(onRails);
             node.setCornerNode(corner);
+            if (parent.isLadder() && node.isCornerNode())
+            {
+                node.setLadder();
+            }
         }
         else if (updateCurrentNode(parent, node, heuristic, cost, score))
         {
