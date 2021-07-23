@@ -13,11 +13,11 @@ import net.minecraft.util.math.BlockPos;
 public class EntityInFenceAdapter implements IStartPositionAdapter {
     @Override
     public Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity) {
-        BlockPos entityPos = entity.getPosition();
+        BlockPos entityPos = entity.blockPosition();
 
         //Push away from fence
-        final double dX = entity.getPosX() - Math.floor(entity.getPosX());
-        final double dZ = entity.getPosZ() - Math.floor(entity.getPosZ());
+        final double dX = entity.getX() - Math.floor(entity.getX());
+        final double dZ = entity.getZ() - Math.floor(entity.getZ());
 
         if (dX < TOO_CLOSE_TO_FENCE)
         {
@@ -37,7 +37,7 @@ public class EntityInFenceAdapter implements IStartPositionAdapter {
             entityPos = entityPos.south();
         }
 
-        if (entityPos == entity.getPosition())
+        if (entityPos == entity.blockPosition())
             return Optional.empty();
 
         return Optional.of(entityPos);

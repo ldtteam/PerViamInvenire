@@ -99,14 +99,14 @@ public class CalculationResultTracker implements ICalculationResultTracker
         final PathingCalculationData data = job.getCalculationData();
 
         NetworkManager.getInstance().sendToPlayer(
-          new OnCalculationCompleted(entity.getUniqueID(), data),
+          new OnCalculationCompleted(entity.getUUID(), data),
           entityToTrackingPlayer.get(entity)
             .stream()
             .filter(ServerPlayerEntity.class::isInstance)
             .map(ServerPlayerEntity.class::cast).toArray(ServerPlayerEntity[]::new)
         );
 
-        final String storagePathName = entity.getUniqueID().toString();
+        final String storagePathName = entity.getUUID().toString();
         if (entitiesToExport.contains(job.getEntity()))
         {
             ICalculationResultsStorageManager.getInstance().storeData(data, storagePathName);

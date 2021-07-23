@@ -165,7 +165,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         final PathResult<AbstractPathJob> result,
         final LivingEntity entity)
     {
-        this(world, start, startRestriction, endRestriction, range, Vector3i.NULL_VECTOR, hardRestriction, result, entity);
+        this(world, start, startRestriction, endRestriction, range, Vector3i.ZERO, hardRestriction, result, entity);
     }
 
     /**
@@ -229,7 +229,7 @@ public abstract class AbstractPathJob implements Callable<Path>
      */
     public BlockPos prepareStart(@NotNull final LivingEntity entity)
     {
-        return IStartPositionAdapterRegistry.getInstance().getRunner().apply(this, entity).orElse(entity.getPosition());
+        return IStartPositionAdapterRegistry.getInstance().getRunner().apply(this, entity).orElse(entity.blockPosition());
     }
 
     /**
@@ -245,26 +245,26 @@ public abstract class AbstractPathJob implements Callable<Path>
         final Block block = state.getBlock();
         if (block instanceof VineBlock)
         {
-            if (state.get(VineBlock.SOUTH))
+            if (state.getValue(VineBlock.SOUTH))
             {
                 p.setLadderFacing(Direction.NORTH);
             }
-            else if (state.get(VineBlock.WEST))
+            else if (state.getValue(VineBlock.WEST))
             {
                 p.setLadderFacing(Direction.EAST);
             }
-            else if (state.get(VineBlock.NORTH))
+            else if (state.getValue(VineBlock.NORTH))
             {
                 p.setLadderFacing(Direction.SOUTH);
             }
-            else if (state.get(VineBlock.EAST))
+            else if (state.getValue(VineBlock.EAST))
             {
                 p.setLadderFacing(Direction.WEST);
             }
         }
         else if (block instanceof LadderBlock)
         {
-            p.setLadderFacing(state.get(LadderBlock.FACING));
+            p.setLadderFacing(state.getValue(LadderBlock.FACING));
         }
         else if (block instanceof ScaffoldingBlock)
         {
@@ -383,7 +383,7 @@ public abstract class AbstractPathJob implements Callable<Path>
 
     private static boolean calculateSwimming(@NotNull final IWorldReader world, @NotNull final BlockPos pos, @Nullable final Node node)
     {
-        return (node == null) ? isWater(world, pos.down()) : node.isSwimming();
+        return (node == null) ? isWater(world, pos.below()) : node.isSwimming();
     }
 
 
@@ -395,7 +395,7 @@ public abstract class AbstractPathJob implements Callable<Path>
     private static boolean isWater(@NotNull final IWorldReader world, final BlockPos pos)
     {
         final BlockState state = world.getBlockState(pos);
-        if (state.isSolid())
+        if (state.canOcclude())
         {
             return false;
         }
@@ -410,7 +410,7 @@ public abstract class AbstractPathJob implements Callable<Path>
             return false;
         }
 
-        final Fluid fluid = fluidState.getFluid();
+        final Fluid fluid = fluidState.getType();
         return fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER;
     }
 
@@ -488,7 +488,7 @@ public abstract class AbstractPathJob implements Callable<Path>
             // If this is the closest node to our destination, treat it as our best node
             final double nodeResultScore = getNodeResultScore(currentNode);
             if (isPositionOk && nodeResultScore < bestNodeResultScore && !currentNode.isCornerNode()
-                  && isWalkableSurface(world.getBlockState(currentNode.pos.down()), currentNode.pos.down()) == SurfaceType.WALKABLE)
+                  && isWalkableSurface(world.getBlockState(currentNode.pos.below()), currentNode.pos.below()) == SurfaceType.WALKABLE)
             {
                 bestNode = currentNode;
                 bestNodeResultScore = nodeResultScore;
@@ -507,9 +507,9 @@ public abstract class AbstractPathJob implements Callable<Path>
         if ((entity = this.entity.get()) != null)
         {
             calculationData.onPathCompleted(path);
-            if (entity.getEntityWorld() instanceof ServerWorld)
+            if (entity.getCommandSenderWorld() instanceof ServerWorld)
             {
-                final ServerWorld world = (ServerWorld) entity.getEntityWorld();
+                final ServerWorld world = (ServerWorld) entity.getCommandSenderWorld();
 
                 world.getServer().execute(() -> IPathingResultHandler.getInstance().onCompleted(
                   calculationData,
@@ -544,14 +544,14 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
 
         // Only explore downwards when dropping
-        if ((currentNode.parent == null || !currentNode.parent.pos.equals(currentNode.pos.down())) && currentNode.isCornerNode())
+        if ((currentNode.parent == null || !currentNode.parent.pos.equals(currentNode.pos.below())) && currentNode.isCornerNode())
         {
             walk(currentNode, BLOCKPOS_DOWN);
             return;
         }
 
         // Walk downwards node if passable
-        if (!isNotPassable(currentNode.pos, currentNode.pos.down()))
+        if (!isNotPassable(currentNode.pos, currentNode.pos.below()))
         {
             walk(currentNode, BLOCKPOS_DOWN);
         }
@@ -583,7 +583,7 @@ public abstract class AbstractPathJob implements Callable<Path>
 
     private boolean onLadderGoingDown(@NotNull final Node currentNode, @NotNull final BlockPos dPos)
     {
-        return (dPos.getY() <= 0 || dPos.getX() != 0 || dPos.getZ() != 0) && isLadder(currentNode.pos.down());
+        return (dPos.getY() <= 0 || dPos.getX() != 0 || dPos.getZ() != 0) && isLadder(currentNode.pos.below());
     }
 
     @NotNull
@@ -596,7 +596,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         {
             startNode.setLadder();
         }
-        else if (world.getBlockState(start.down()).getMaterial().isLiquid())
+        else if (world.getBlockState(start.below()).getMaterial().isLiquid())
         {
             startNode.setSwimming();
         }
@@ -657,7 +657,7 @@ public abstract class AbstractPathJob implements Callable<Path>
             if (node.isSwimming())
             {
                 //  Not truly necessary but helps prevent them spinning in place at swimming nodes
-                pos.add(BLOCKPOS_DOWN);
+                pos.offset(BLOCKPOS_DOWN);
             }
 
             @NotNull final PathPointExtended p = new PathPointExtended(pos);
@@ -697,7 +697,7 @@ public abstract class AbstractPathJob implements Callable<Path>
 
             if (next != null)
             {
-                next.previous = p;
+                next.cameFrom = p;
             }
             next = p;
             points[pathLength] = p;
@@ -757,7 +757,7 @@ public abstract class AbstractPathJob implements Callable<Path>
      */
     protected final void walk(@NotNull final Node parent, @NotNull BlockPos dPos)
     {
-        BlockPos pos = parent.pos.add(dPos);
+        BlockPos pos = parent.pos.offset(dPos);
 
         //  Can we traverse into this node?  Fix the y up
         final int newY = getGroundHeight(parent, pos);
@@ -776,26 +776,26 @@ public abstract class AbstractPathJob implements Callable<Path>
             }
 
             // if the new position is above the current node, we're taking the node directly above
-            if (!parent.isCornerNode() && newY - parent.pos.getY() > 0 && (parent.parent == null || !parent.parent.pos.equals(parent.pos.add(new BlockPos(0,
+            if (!parent.isCornerNode() && newY - parent.pos.getY() > 0 && (parent.parent == null || !parent.parent.pos.equals(parent.pos.offset(new BlockPos(0,
               newY - pos.getY(),
               0)))))
             {
                 dPos = new BlockPos(0, newY - pos.getY(), 0);
-                pos = parent.pos.add(dPos);
+                pos = parent.pos.offset(dPos);
                 corner = true;
             }
             // If we're going down, take the air-corner before going to the lower node
-            else if (!parent.isCornerNode() && newY - parent.pos.getY() < 0 && (dPos.getX() != 0 || dPos.getZ() != 0) && (parent.parent == null || !parent.pos.down()
+            else if (!parent.isCornerNode() && newY - parent.pos.getY() < 0 && (dPos.getX() != 0 || dPos.getZ() != 0) && (parent.parent == null || !parent.pos.below()
                                                                                                                                                .equals(parent.parent.pos)))
             {
                 dPos = new BlockPos(dPos.getX(), 0, dPos.getZ());
-                pos = parent.pos.add(dPos);
+                pos = parent.pos.offset(dPos);
                 corner = true;
             }
             // Fix up normal y
             else
             {
-                dPos = dPos.add(0, newY - pos.getY(), 0);
+                dPos = dPos.offset(0, newY - pos.getY(), 0);
                 pos = new BlockPos(pos.getX(), newY, pos.getZ());
             }
         }
@@ -818,8 +818,8 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         final boolean swimStart = isSwimming && !parent.isSwimming();
         final boolean onLadder = isLadder(pos);
-        final boolean onRoad = IRoadBlockRegistry.getInstance().getRunner().isRoad(this.entity.get(), world.getBlockState(pos.down()).getBlock());
-        final boolean onRails = pathingOptions.canUseRails() && world.getBlockState(corner ? pos.down() : pos).getBlock() instanceof AbstractRailBlock;
+        final boolean onRoad = IRoadBlockRegistry.getInstance().getRunner().isRoad(this.entity.get(), world.getBlockState(pos.below()).getBlock());
+        final boolean onRails = pathingOptions.canUseRails() && world.getBlockState(corner ? pos.below() : pos).getBlock() instanceof AbstractRailBlock;
         final boolean railsExit = !onRails && parent.isOnRails();
 
         //  Cost may have changed due to a jump up or drop
@@ -916,11 +916,11 @@ public abstract class AbstractPathJob implements Callable<Path>
         if ((entity = this.entity.get()) == null)
             return -1;
 
-        final Vector3d facing = Vector3d.copy(pos.subtract(parent == null ? pos : parent.pos));
+        final Vector3d facing = Vector3d.atLowerCornerOf(pos.subtract(parent == null ? pos : parent.pos));
 
         if (!ICollisionDetectionManager.getInstance().canFit(
           entity,
-          Vector3d.copyCentered(pos),
+          Vector3d.atCenterOf(pos),
           facing,
           this.world
         ))
@@ -929,7 +929,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
 
         //  Do we have something to stand on in the target space?
-        final BlockState below = world.getBlockState(pos.down());
+        final BlockState below = world.getBlockState(pos.below());
         final SurfaceType surfaceType = isWalkableSurface(below, pos);
         if (surfaceType == SurfaceType.WALKABLE)
         {
@@ -953,7 +953,7 @@ public abstract class AbstractPathJob implements Callable<Path>
             return handleInLiquid(pos, below, isSwimming);
         }
 
-        if (isLadder(below, pos.down()))
+        if (isLadder(below, pos.below()))
         {
             return pos.getY();
         }
@@ -965,15 +965,15 @@ public abstract class AbstractPathJob implements Callable<Path>
     {
         final boolean canDrop = parent != null && !parent.isLadder();
         //  Nothing to stand on
-        if (!canDrop || isSwimming || ((parent.pos.getX() != pos.getX() || parent.pos.getZ() != pos.getZ()) && !isNotPassable(parent.pos, parent.pos.down())
-                                         && isWalkableSurface(world.getBlockState(parent.pos.down()), parent.pos.down()) == SurfaceType.DROPABLE))
+        if (!canDrop || isSwimming || ((parent.pos.getX() != pos.getX() || parent.pos.getZ() != pos.getZ()) && !isNotPassable(parent.pos, parent.pos.below())
+                                         && isWalkableSurface(world.getBlockState(parent.pos.below()), parent.pos.below()) == SurfaceType.DROPABLE))
         {
             return -1;
         }
 
         for (int i = 2; i <= 10; i++)
         {
-            final BlockState below = world.getBlockState(pos.down(i));
+            final BlockState below = world.getBlockState(pos.below(i));
             if (isWalkableSurface(below, pos) == SurfaceType.WALKABLE && i <= 4 || below.getMaterial().isLiquid())
             {
                 //  Level path
@@ -1016,12 +1016,12 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
 
         //  Check for jump room from the origin space
-        if (isNotPassable(parent.pos, parent.pos.up()))
+        if (isNotPassable(parent.pos, parent.pos.above()))
         {
             return -1;
         }
 
-        return !isNotPassable(parent.pos.up(), pos.up()) ? pos.up().getY() : -1;
+        return !isNotPassable(parent.pos.above(), pos.above()) ? pos.above().getY() : -1;
     }
 
     protected boolean isNotPassable(final BlockPos parent, final BlockPos pos)
@@ -1032,8 +1032,8 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         return !ICollisionDetectionManager.getInstance().canFit(
           entity,
-          Vector3d.copyCentered(pos),
-          Vector3d.copy(pos.subtract(parent)),
+          Vector3d.atCenterOf(pos),
+          Vector3d.atLowerCornerOf(pos.subtract(parent)),
           this.world
         );
     }
@@ -1056,18 +1056,18 @@ public abstract class AbstractPathJob implements Callable<Path>
                   || block instanceof FireBlock
                   || block instanceof CampfireBlock
                   || block instanceof BambooBlock
-                  || (blockState.getShape(world, pos).getEnd(Direction.Axis.Y) > 1.0))
+                  || (blockState.getShape(world, pos).max(Direction.Axis.Y) > 1.0))
             {
                 return SurfaceType.NOT_PASSABLE;
             }
 
             final FluidState fluid = world.getFluidState(pos);
-            if (blockState.getBlock() == Blocks.LAVA || (!fluid.isEmpty() && (fluid.getFluid() == Fluids.LAVA || fluid.getFluid() == Fluids.FLOWING_LAVA)))
+            if (blockState.getBlock() == Blocks.LAVA || (!fluid.isEmpty() && (fluid.getType() == Fluids.LAVA || fluid.getType() == Fluids.FLOWING_LAVA)))
             {
                 return SurfaceType.NOT_PASSABLE;
             }
 
-            if (blockState.getMaterial().isSolid() || (blockState.getBlock() == Blocks.SNOW && blockState.get(SnowBlock.LAYERS) > 1)
+            if (blockState.getMaterial().isSolid() || (blockState.getBlock() == Blocks.SNOW && blockState.getValue(SnowBlock.LAYERS) > 1)
                   || blockState.getBlock() instanceof CarpetBlock)
             {
                 return SurfaceType.WALKABLE;

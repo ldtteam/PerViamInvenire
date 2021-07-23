@@ -102,7 +102,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @SuppressWarnings("unused")
     public PerViamInvenireGroundPathNavigator(@NotNull final MobEntity entity)
     {
-        this(entity, entity.getEntityWorld());
+        this(entity, entity.getCommandSenderWorld());
     }
 
     /**
@@ -115,12 +115,12 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     {
         super(entity, world);
 
-        this.nodeProcessor = new WalkNodeProcessor();
-        this.nodeProcessor.setCanEnterDoors(true);
+        this.nodeEvaluator = new WalkNodeProcessor();
+        this.nodeEvaluator.setCanPassDoors(true);
         getPathingOptions().setEnterDoors(true);
-        this.nodeProcessor.setCanOpenDoors(true);
+        this.nodeEvaluator.setCanOpenDoors(true);
         getPathingOptions().setCanOpenDoors(true);
-        this.nodeProcessor.setCanSwim(true);
+        this.nodeEvaluator.setCanFloat(true);
         getPathingOptions().setCanSwim(true);
 
         stuckHandler = CallbackBasedStuckHandler.create().withCanBeStuckCallback(() -> true).withTakeDamageOnStuck(0.2f).withTeleportSteps(6).withTeleportOnFullStuck();
@@ -158,8 +158,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return null;
         }
 
-        return setPathJob(new PathJobMoveAwayFromLocation(ourEntity.getEntityWorld(),
-          ourEntity.getPosition(),
+        return setPathJob(new PathJobMoveAwayFromLocation(ourEntity.getCommandSenderWorld(),
+          ourEntity.blockPosition(),
           avoid,
           (int) range,
           (int) followRangeAttribute.getValue(),
@@ -172,7 +172,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
       final BlockPos dest,
       final double speed)
     {
-        clearPath();
+        stop();
 
         this.destination = dest;
         this.originalDestination = dest;
@@ -208,7 +208,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             final VanillaCompatibilityPath cachedPath = this.additionalVanillaPathTasks.get(target, range);
 
             // Same logic vanilla does for results
-            if (cachedPath.isCalculationComplete() && cachedPath.getCurrentPathLength() < 2)
+            if (cachedPath.isCalculationComplete() && cachedPath.getNodeCount() < 2)
             {
                 return null;
             }
@@ -232,11 +232,11 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Override
     public void tick()
     {
-        if (this.sourcePos != this.ourEntity.getPosition())
+        if (this.sourcePos != this.ourEntity.blockPosition())
         {
             this.additionalVanillaPathTasks.values().forEach(VanillaCompatibilityPath::setCancelled);
             this.additionalVanillaPathTasks.clear();
-            this.sourcePos = this.ourEntity.getPosition();
+            this.sourcePos = this.ourEntity.blockPosition();
         }
 
         if (desiredPosTimeout > 0)
@@ -260,17 +260,17 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             }
         }
 
-        int oldIndex = this.noPath() ? 0 : Objects.requireNonNull(this.getPath()).getCurrentPathIndex();
+        int oldIndex = this.isDone() ? 0 : Objects.requireNonNull(this.getPath()).getNextNodeIndex();
 
         if (isSneaking)
         {
             isSneaking = false;
-            entity.setSneaking(false);
+            mob.setShiftKeyDown(false);
         }
-        this.ourEntity.setMoveVertical(0);
+        this.ourEntity.setYya(0);
         if (handleLadders(oldIndex))
         {
-            pathFollow();
+            followThePath();
             return;
         }
         if (handleRails())
@@ -279,7 +279,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         }
         super.tick();
 
-        if (pathResult != null && noPath())
+        if (pathResult != null && isDone())
         {
             pathResult.setStatus(PathFindingStatus.COMPLETE);
             pathResult = null;
@@ -320,8 +320,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         }
 
         return setPathJob(
-          new PathJobMoveToLocation(ourEntity.getEntityWorld(),
-            ourEntity.getPosition(),
+          new PathJobMoveToLocation(ourEntity.getCommandSenderWorld(),
+            ourEntity.blockPosition(),
             target,
             (int) followRangeAttribute.getValue(),
             ourEntity),
@@ -337,20 +337,20 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @SuppressWarnings("ConstantConditions")
     @NotNull
     @Override
-    protected PathFinder getPathFinder(final int p_179679_1_)
+    protected PathFinder createPathFinder(final int p_179679_1_)
     {
         return new PathFinder(null, p_179679_1_);
     }
 
     @Override
-    protected boolean canNavigate()
+    protected boolean canUpdatePath()
     {
         // Auto dismount when trying to path.
-        @Nullable Entity lowestRidingEntity = ourEntity.getLowestRidingEntity();
+        @Nullable Entity lowestRidingEntity = ourEntity.getRootVehicle();
         //noinspection ConstantConditions
         if (this.getPath() != null && lowestRidingEntity != null && lowestRidingEntity != ourEntity)
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
+            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
             return IDismountCartRegistry.getInstance()
                      .getRunner().handle(this.ourEntity, lowestRidingEntity, pEx)
                      .orElse(false);
@@ -360,13 +360,13 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
     @NotNull
     @Override
-    protected Vector3d getEntityPosition()
+    protected Vector3d getTempMobPos()
     {
-        return this.ourEntity.getPositionVec();
+        return this.ourEntity.position();
     }
 
     @Override
-    public Path getPathToPos(@NotNull final BlockPos pos, final int range)
+    public Path createPath(@NotNull final BlockPos pos, final int range)
     {
         final ModifiableAttributeInstance followRangeAttribute;
         if ((followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE)) == null)
@@ -377,8 +377,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         return scheduleAdditionalPath(
           pos,
           range,
-          (blockPos, integer) -> new PathJobMoveToLocation(ourEntity.getEntityWorld(),
-            ourEntity.getPosition(),
+          (blockPos, integer) -> new PathJobMoveToLocation(ourEntity.getCommandSenderWorld(),
+            ourEntity.blockPosition(),
             blockPos,
             (int) followRangeAttribute.getValue(),
             ourEntity),
@@ -387,20 +387,20 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     }
 
     @Override
-    protected boolean isDirectPathBetweenPoints(final Vector3d start, @NotNull final Vector3d end, final int sizeX, final int sizeY, final int sizeZ)
+    protected boolean canMoveDirectly(final Vector3d start, @NotNull final Vector3d end, final int sizeX, final int sizeY, final int sizeZ)
     {
-        return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, world.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
-                 && super.isDirectPathBetweenPoints(start, end, sizeX, sizeY, sizeZ);
+        return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, level.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
+                 && super.canMoveDirectly(start, end, sizeX, sizeY, sizeZ);
     }
 
     public double getSpeed()
     {
-        speed = ISpeedAdaptationRegistry.getInstance().getRunner().get(ourEntity, requestedSpeed).orElse(walkSpeed);
-        return speed;
+        speedModifier = ISpeedAdaptationRegistry.getInstance().getRunner().get(ourEntity, requestedSpeed).orElse(walkSpeed);
+        return speedModifier;
     }
 
     @Override
-    public void setSpeed(final double d)
+    public void setSpeedModifier(final double d)
     {
         if (d > MAX_SPEED_ALLOWED)
         {
@@ -414,7 +414,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * Deprecated - try to use BlockPos instead
      */
     @Override
-    public boolean tryMoveToXYZ(final double x, final double y, final double z, final double speed)
+    public boolean moveTo(final double x, final double y, final double z, final double speed)
     {
         if (x == 0 && y == 0 && z == 0)
         {
@@ -426,9 +426,9 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     }
 
     @Override
-    public boolean tryMoveToEntityLiving(final Entity entityIn, final double speedIn)
+    public boolean moveTo(final Entity entityIn, final double speedIn)
     {
-        return tryMoveToBlockPos(entityIn.getPosition(), speedIn);
+        return tryMoveToBlockPos(entityIn.blockPosition(), speedIn);
     }
 
     // Removes stupid vanilla stuff, causing our pathpoints to occasionally be replaced by vanilla ones.
@@ -436,17 +436,17 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     protected void trimPath() {}
 
     @Override
-    public boolean setPath(@Nullable final Path path, final double speed)
+    public boolean moveTo(@Nullable final Path path, final double speed)
     {
         if (path == null)
         {
-            this.currentPath = null;
+            this.path = null;
             return false;
         }
-        pathStartTime = world.getGameTime();
+        pathStartTime = level.getGameTime();
         this.requestedSpeed = speed;
         this.desiredPos = path.target;
-        return super.setPath(convertPath(path), speed);
+        return super.moveTo(convertPath(path), speed);
     }
 
     /**
@@ -462,16 +462,16 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return path;
         }
 
-        final int pathLength = path.getCurrentPathLength();
+        final int pathLength = path.getNodeCount();
         Path tempPath = null;
-        if (pathLength > 0 && !(path.getPathPointFromIndex(0) instanceof PathPointExtended))
+        if (pathLength > 0 && !(path.getNode(0) instanceof PathPointExtended))
         {
             //  Fix vanilla PathPoints to be PathPointExtended
             @NotNull final PathPointExtended[] newPoints = new PathPointExtended[pathLength];
 
             for (int i = 0; i < pathLength; ++i)
             {
-                final PathPoint point = path.getPathPointFromIndex(i);
+                final PathPoint point = path.getNode(i);
                 if (!(point instanceof PathPointExtended))
                 {
                     newPoints[i] = new PathPointExtended(new BlockPos(point.x, point.y, point.z));
@@ -498,7 +498,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return;
         }
 
-        setPath(pathResult.getPath(), getSpeed());
+        moveTo(pathResult.getPath(), getSpeed());
         pathResult.setStatus(PathFindingStatus.IN_PROGRESS_FOLLOWING);
     }
 
@@ -506,26 +506,26 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     private boolean handleLadders(int oldIndex)
     {
         //  Ladder Workaround
-        if (!this.noPath() && this.getPath() != null && this.getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1
-              && Objects.requireNonNull(this.getPath()).points.size() > this.getPath().getCurrentPathIndex())
+        if (!this.isDone() && this.getPath() != null && this.getPath().getNodeCount() > this.getPath().getNextNodeIndex() + 1
+              && Objects.requireNonNull(this.getPath()).nodes.size() > this.getPath().getNextNodeIndex())
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
-            final PathPointExtended pExNext = getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1
+            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
+            final PathPointExtended pExNext = getPath().getNodeCount() > this.getPath().getNextNodeIndex() + 1
                                                 ? (PathPointExtended) this.getPath()
-                                                                        .getPathPointFromIndex(this.getPath()
-                                                                                                 .getCurrentPathIndex() + 1)
+                                                                        .getNode(this.getPath()
+                                                                                                 .getNextNodeIndex() + 1)
                                                 : null;
 
-            for (int i = this.currentPath.getCurrentPathIndex(); i < Math.min(this.currentPath.getCurrentPathLength(), this.currentPath.getCurrentPathIndex() + 3); i++)
+            for (int i = this.path.getNextNodeIndex(); i < Math.min(this.path.getNodeCount(), this.path.getNextNodeIndex() + 3); i++)
             {
-                final PathPointExtended nextPoints = (PathPointExtended) this.getPath().getPathPointFromIndex(i);
+                final PathPointExtended nextPoints = (PathPointExtended) this.getPath().getNode(i);
                 if (nextPoints.isOnLadder())
                 {
-                    Vector3d motion = this.entity.getMotion();
+                    Vector3d motion = this.mob.getDeltaMovement();
                     double x = motion.x < -0.1 ? -0.1 : Math.min(motion.x, 0.1);
                     double z = motion.x < -0.1 ? -0.1 : Math.min(motion.z, 0.1);
 
-                    this.ourEntity.setMotion(x, motion.y, z);
+                    this.ourEntity.setDeltaMovement(x, motion.y, z);
                     break;
                 }
             }
@@ -540,20 +540,20 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             }
             else
             {
-                if (IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, world.getBlockState(ourEntity.getPosition().down()).getBlock()))
+                if (IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, level.getBlockState(ourEntity.blockPosition().below()).getBlock()))
                 {
-                    speed = ON_PATH_SPEED_MULTIPLIER * getSpeed();
+                    speedModifier = ON_PATH_SPEED_MULTIPLIER * getSpeed();
                 }
                 else
                 {
-                    speed = getSpeed();
+                    speedModifier = getSpeed();
                 }
             }
 
             if (pEx.isOnLadder() && pExNext != null && !pExNext.isOnLadder())
             {
                 // Ladder exit motion bump
-                Vector3d motion = this.entity.getMotion();
+                Vector3d motion = this.mob.getDeltaMovement();
                 double xMotion = motion.x;
                 if (pEx.x > pExNext.x)
                 {
@@ -576,7 +576,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
                     zMotion += 0.2;
                 }
 
-                this.ourEntity.setMotion(xMotion, motion.y + 0.2, zMotion);
+                this.ourEntity.setDeltaMovement(xMotion, motion.y + 0.2, zMotion);
             }
         }
         return false;
@@ -589,13 +589,13 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      */
     private boolean handleRails()
     {
-        if (!this.noPath() && Objects.requireNonNull(this.getPath()).points.size() > this.getPath().getCurrentPathIndex())
+        if (!this.isDone() && Objects.requireNonNull(this.getPath()).nodes.size() > this.getPath().getNextNodeIndex())
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getPathPointFromIndex(this.getPath().getCurrentPathIndex());
-            final PathPointExtended pExNext = getPath().getCurrentPathLength() > this.getPath().getCurrentPathIndex() + 1
+            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
+            final PathPointExtended pExNext = getPath().getNodeCount() > this.getPath().getNextNodeIndex() + 1
                                                 ? (PathPointExtended) this.getPath()
-                                                                        .getPathPointFromIndex(this.getPath()
-                                                                                                 .getCurrentPathIndex() + 1)
+                                                                        .getNode(this.getPath()
+                                                                                                 .getNextNodeIndex() + 1)
                                                 : null;
 
             if (pEx.isOnRails() || pEx.isRailsExit())
@@ -622,10 +622,10 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
     private boolean handlePathPointOnLadder(final PathPointExtended pEx)
     {
-        Vector3d vec3 = Objects.requireNonNull(this.getPath()).getPosition(this.ourEntity);
+        Vector3d vec3 = Objects.requireNonNull(this.getPath()).getNextEntityPos(this.ourEntity);
 
-        if (vec3.squareDistanceTo(ourEntity.getPosX(), vec3.y, ourEntity.getPosZ()) < (this.ourEntity.getWidth() * 0.5)
-              && Math.abs(vec3.getY() - ourEntity.getPosY()) < 1.5)
+        if (vec3.distanceToSqr(ourEntity.getX(), vec3.y, ourEntity.getZ()) < (this.ourEntity.getBbWidth() * 0.5)
+              && Math.abs(vec3.y() - ourEntity.getY()) < 1.5)
         {
             //This way he is less nervous and gets up the ladder
             double newSpeed = 0.05;
@@ -650,27 +650,27 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
                 //  Any other value is going down, so lets not move at all
                 default:
                     newSpeed = 0;
-                    entity.setSneaking(true);
+                    mob.setShiftKeyDown(true);
                     break;
             }
 
             if (newSpeed > 0)
             {
-                if (!(world.getBlockState(ourEntity.getPosition()).getBlock() instanceof LadderBlock))
+                if (!(level.getBlockState(ourEntity.blockPosition()).getBlock() instanceof LadderBlock))
                 {
-                    this.ourEntity.setMotion(this.ourEntity.getMotion().add(0, 0.1D, 0));
+                    this.ourEntity.setDeltaMovement(this.ourEntity.getDeltaMovement().add(0, 0.1D, 0));
                 }
-                this.ourEntity.getMoveHelper().setMoveTo(vec3.x, vec3.y, vec3.z, newSpeed);
+                this.ourEntity.getMoveControl().setWantedPosition(vec3.x, vec3.y, vec3.z, newSpeed);
             }
             else
             {
-                if (isLadder(world.getBlockState(ourEntity.getPosition().down()), ourEntity.getPosition().down()))
+                if (isLadder(level.getBlockState(ourEntity.blockPosition().below()), ourEntity.blockPosition().below()))
                 {
-                    this.ourEntity.setMoveVertical(-0.5f);
+                    this.ourEntity.setYya(-0.5f);
                 }
                 else
                 {
-                    this.ourEntity.getNavigator().clearPath();
+                    this.ourEntity.getNavigation().stop();
                 }
                 return true;
             }
@@ -688,83 +688,83 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     protected boolean isLadder(@NotNull final BlockState blockstate, final BlockPos pos)
     {
         return IIsLadderBlockRegistry.getInstance()
-                 .getRunner().isLadder(this.entity, blockstate, world, pos)
-                 .orElseGet(() -> blockstate.getBlock().isLadder(this.world.getBlockState(pos), world, pos, entity));
+                 .getRunner().isLadder(this.mob, blockstate, level, pos)
+                 .orElseGet(() -> blockstate.getBlock().isLadder(this.level.getBlockState(pos), level, pos, mob));
     }
 
     private boolean handleEntityInWater(int oldIndex, final PathPointExtended pEx)
     {
         //  Prevent shortcuts when swimming
-        final int curIndex = Objects.requireNonNull(this.getPath()).getCurrentPathIndex();
+        final int curIndex = Objects.requireNonNull(this.getPath()).getNextNodeIndex();
         if (curIndex > 0
-              && (curIndex + 1) < this.getPath().getCurrentPathLength()
-              && this.getPath().getPathPointFromIndex(curIndex - 1).y != pEx.y)
+              && (curIndex + 1) < this.getPath().getNodeCount()
+              && this.getPath().getNode(curIndex - 1).y != pEx.y)
         {
             //  Work around the initial 'spin back' when dropping into water
             oldIndex = curIndex + 1;
         }
 
-        this.getPath().setCurrentPathIndex(oldIndex);
+        this.getPath().setNextNodeIndex(oldIndex);
 
-        Vector3d vec3d = this.getPath().getPosition(this.ourEntity);
+        Vector3d vec3d = this.getPath().getNextEntityPos(this.ourEntity);
 
-        if (vec3d.squareDistanceTo(new Vector3d(ourEntity.getPosX(), vec3d.y, ourEntity.getPosZ())) < 0.1
-              && Math.abs(ourEntity.getPosY() - vec3d.y) < 0.5)
+        if (vec3d.distanceToSqr(new Vector3d(ourEntity.getX(), vec3d.y, ourEntity.getZ())) < 0.1
+              && Math.abs(ourEntity.getY() - vec3d.y) < 0.5)
         {
-            this.getPath().incrementPathIndex();
-            if (this.noPath())
+            this.getPath().advance();
+            if (this.isDone())
             {
                 return true;
             }
 
-            vec3d = this.getPath().getPosition(this.ourEntity);
+            vec3d = this.getPath().getNextEntityPos(this.ourEntity);
         }
 
-        ourEntity.setAIMoveSpeed((float) getSpeed());
-        this.ourEntity.getMoveHelper().setMoveTo(vec3d.x, vec3d.y, vec3d.z, getSpeed());
+        ourEntity.setSpeed((float) getSpeed());
+        this.ourEntity.getMoveControl().setWantedPosition(vec3d.x, vec3d.y, vec3d.z, getSpeed());
         return false;
     }
 
     @Override
-    protected void pathFollow()
+    protected void followThePath()
     {
         getSpeed();
-        final int curNode = Objects.requireNonNull(currentPath).getCurrentPathIndex();
+        final int curNode = Objects.requireNonNull(path).getNextNodeIndex();
         final int curNodeNext = curNode + 1;
-        if (curNodeNext < currentPath.getCurrentPathLength())
+        if (curNodeNext < path.getNodeCount())
         {
-            if (!(currentPath.getPathPointFromIndex(curNode) instanceof PathPointExtended))
+            if (!(path.getNode(curNode) instanceof PathPointExtended))
             {
-                currentPath = convertPath(currentPath);
+                path = convertPath(path);
             }
 
-            this.maxDistanceToWaypoint = this.entity.getWidth() > 0.75F ? this.entity.getWidth() / 2.0F : 0.75F - this.entity.getWidth() / 2.0F;
+            this.maxDistanceToWaypoint = this.mob.getBbWidth() > 0.75F ? this.mob.getBbWidth() / 2.0F : 0.75F - this.mob.getBbWidth() / 2.0F;
         }
 
-        if (currentPath.isFinished())
+        if (path.isDone())
         {
             onPathFinish();
             return;
         }
 
-        this.maxDistanceToWaypoint = this.entity.getWidth() > 0.75F ? this.entity.getWidth() / 2.0F : 0.75F - this.entity.getWidth() / 2.0F;
+        this.maxDistanceToWaypoint = this.mob.getBbWidth() > 0.75F ? this.mob.getBbWidth() / 2.0F : 0.75F - this.mob.getBbWidth() / 2.0F;
         boolean wentAhead = false;
 
 
         // Look at multiple points, incase we're too fast
-        for (int i = this.currentPath.getCurrentPathIndex(); i < Math.min(this.currentPath.getCurrentPathLength(), this.currentPath.getCurrentPathIndex() + 4); i++)
+        for (int i = this.path.getNextNodeIndex(); i < Math.min(this.path.getNodeCount(), this.path.getNextNodeIndex() + 4); i++)
         {
-            Vector3d next = this.currentPath.getVectorFromIndex(this.entity, i);
-            if (Math.abs(this.ourEntity.getPosX() - next.x) < (double) this.maxDistanceToWaypoint - Math.abs(this.ourEntity.getPosY() - (next.y)) * 0.1
-                  && Math.abs(this.ourEntity.getPosZ() - next.z) < (double) this.maxDistanceToWaypoint - Math.abs(this.ourEntity.getPosY() - (next.y)) * 0.1 &&
-                  Math.abs(this.ourEntity.getPosY() - next.y) < 1.0D)
+            Vector3d next = this.path.getEntityPosAtNode(this.mob, i);
+            if (Math.abs(this.ourEntity.getX() - next.x) < (double) this.maxDistanceToWaypoint - Math.abs(this.ourEntity.getY() - (next.y)) * 0.1
+                  && Math.abs(this.ourEntity.getZ() - next.z) < (double) this.maxDistanceToWaypoint - Math.abs(this.ourEntity.getY() - (next.y)) * 0.1 &&
+                  Math.abs(this.ourEntity.getY() - next.y) < 1.0D)
             {
-                this.currentPath.incrementPathIndex();
+                this.path.advance();
                 wentAhead = true;
             }
         }
 
-        if (currentPath.isFinished())
+        if (path.isDone())
         {
             onPathFinish();
             return;
@@ -775,24 +775,24 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return;
         }
 
-        if (curNode >= currentPath.getCurrentPathLength() || curNode <= 1)
+        if (curNode >= path.getNodeCount() || curNode <= 1)
         {
             return;
         }
 
         // Check some past nodes case we fell behind.
-        final Vector3d curr = this.currentPath.getVectorFromIndex(this.entity, curNode - 1);
-        final Vector3d next = this.currentPath.getVectorFromIndex(this.entity, curNode);
+        final Vector3d curr = this.path.getEntityPosAtNode(this.mob, curNode - 1);
+        final Vector3d next = this.path.getEntityPosAtNode(this.mob, curNode);
 
-        if (entity.getPositionVec().distanceTo(curr) >= 2.0 && entity.getPositionVec().distanceTo(next) >= 2.0)
+        if (mob.position().distanceTo(curr) >= 2.0 && mob.position().distanceTo(next) >= 2.0)
         {
             int currentIndex = curNode - 1;
             while (currentIndex > 0)
             {
-                final Vector3d tempoPos = this.currentPath.getVectorFromIndex(this.entity, currentIndex);
-                if (entity.getPositionVec().distanceTo(tempoPos) <= 1.0)
+                final Vector3d tempoPos = this.path.getEntityPosAtNode(this.mob, currentIndex);
+                if (mob.position().distanceTo(tempoPos) <= 1.0)
                 {
-                    this.currentPath.setCurrentPathIndex(currentIndex);
+                    this.path.setNextNodeIndex(currentIndex);
                 }
                 currentIndex--;
             }
@@ -804,56 +804,56 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      */
     public void onPathFinish()
     {
-        clearPath();
+        stop();
     }
 
-    public void updatePath() {}
+    public void recomputePath() {}
 
     /**
      * Don't let vanilla rapidly discard paths, set a timeout before its allowed to use stuck.
      */
     @Override
-    protected void checkForStuck(@NotNull final Vector3d positionVec3)
+    protected void doStuckDetection(@NotNull final Vector3d positionVec3)
     {
-        if (world.getGameTime() - pathStartTime < MIN_KEEP_TIME)
+        if (level.getGameTime() - pathStartTime < MIN_KEEP_TIME)
         {
             return;
         }
 
-        if (this.totalTicks - this.ticksAtLastPos > 100)
+        if (this.tick - this.lastStuckCheck > 100)
         {
-            if (positionVec3.squareDistanceTo(this.lastPosCheck) < 2.25D)
+            if (positionVec3.distanceToSqr(this.lastStuckCheckPos) < 2.25D)
             {
-                this.clearPath();
+                this.stop();
             }
 
-            this.ticksAtLastPos = this.totalTicks;
-            this.lastPosCheck = positionVec3;
+            this.lastStuckCheck = this.tick;
+            this.lastStuckCheckPos = positionVec3;
         }
 
-        if (this.currentPath != null && !this.currentPath.isFinished())
+        if (this.path != null && !this.path.isDone())
         {
-            Vector3d vec3d = this.currentPath.getPosition(ourEntity);
+            Vector3d vec3d = this.path.getNextEntityPos(ourEntity);
             if (new BlockPos(vec3d).equals(this.timeoutCachedNode))
             {
-                this.timeoutTimer += Util.milliTime() - this.lastTimeoutCheck;
+                this.timeoutTimer += Util.getMillis() - this.lastTimeoutCheck;
             }
             else
             {
                 this.timeoutCachedNode = new Vector3i(vec3d.x, vec3d.y, vec3d.z);
                 double d0 = positionVec3.distanceTo(vec3d);
-                this.timeoutLimit = (this.entity.getAIMoveSpeed() > 0.0F ? d0 / (double) this.entity.getAIMoveSpeed() * 1000.0D : 0.0D) * 25;
+                this.timeoutLimit = (this.mob.getSpeed() > 0.0F ? d0 / (double) this.mob.getSpeed() * 1000.0D : 0.0D) * 25;
             }
 
             if (this.timeoutLimit > 0.0D && (double) this.timeoutTimer > this.timeoutLimit * 3.0D)
             {
-                this.timeoutCachedNode = Vector3i.NULL_VECTOR;
+                this.timeoutCachedNode = Vector3i.ZERO;
                 this.timeoutTimer = 0L;
                 this.timeoutLimit = 0.0D;
-                this.clearPath();
+                this.stop();
             }
 
-            this.lastTimeoutCheck = Util.milliTime();
+            this.lastTimeoutCheck = Util.getMillis();
         }
     }
 
@@ -861,22 +861,22 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * If null path or reached the end.
      */
     @Override
-    public boolean noPath()
+    public boolean isDone()
     {
-        return (pathResult == null || pathResult.isDone() && pathResult.getStatus() != PathFindingStatus.CALCULATION_COMPLETE) && super.noPath();
+        return (pathResult == null || pathResult.isDone() && pathResult.getStatus() != PathFindingStatus.CALCULATION_COMPLETE) && super.isDone();
     }
 
     @NotNull
     @Override
     public BlockPos getTargetPos()
     {
-        if (!noPath())
+        if (!isDone())
         {
             if (pathResult != null && pathResult.getPath() != null)
             {
                 return pathResult.getPath().getTarget();
             }
-            else if (!super.noPath())
+            else if (!super.isDone())
             {
                 return super.getTargetPos();
             }
@@ -889,13 +889,13 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Override
     public Path getPath()
     {
-        if (!noPath())
+        if (!isDone())
         {
             if (pathResult != null)
             {
                 return pathResult.getPath();
             }
-            else if (!super.noPath())
+            else if (!super.isDone())
             {
                 return super.getPath();
             }
@@ -905,13 +905,13 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     }
 
     @Override
-    public boolean getCanSwim()
+    public boolean canFloat()
     {
         return getPathingOptions().canSwim();
     }
 
     @Override
-    public void clearPath()
+    public void stop()
     {
 
         if (pathResult != null)
@@ -922,7 +922,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         }
 
         destination = null;
-        super.clearPath();
+        super.stop();
     }
 
     /**
@@ -935,7 +935,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Nullable
     public PathResult<? extends AbstractPathJob> moveToLivingEntity(@NotNull final Entity e, final double speed)
     {
-        return moveToXYZ(e.getPosX(), e.getPosY(), e.getPosZ(), speed);
+        return moveToXYZ(e.getX(), e.getY(), e.getZ(), speed);
     }
 
     @Override
@@ -961,37 +961,37 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Nullable
     public PathResult<? extends AbstractPathJob> moveAwayFromLivingEntity(@NotNull final Entity e, final double distance, final double speed)
     {
-        return moveAwayFromXYZ(e.getPosition(), distance, speed);
+        return moveAwayFromXYZ(e.blockPosition(), distance, speed);
     }
 
     @Override
-    public void setCanSwim(boolean canSwim)
+    public void setCanFloat(boolean canSwim)
     {
-        super.setCanSwim(canSwim);
+        super.setCanFloat(canSwim);
         getPathingOptions().setCanSwim(canSwim);
     }
 
-    protected Path pathfind(Set<BlockPos> positions, int regionOffset, boolean offsetUpward, int distance)
+    protected Path createPath(Set<BlockPos> positions, int regionOffset, boolean offsetUpward, int distance)
     {
         if (positions.isEmpty())
         {
             return null;
         }
-        else if (this.entity.getPosY() < 0.0D)
+        else if (this.mob.getY() < 0.0D)
         {
             return null;
         }
-        else if (!this.canNavigate())
+        else if (!this.canUpdatePath())
         {
             return null;
         }
 
-        if (currentPath instanceof VanillaCompatibilityPath)
+        if (path instanceof VanillaCompatibilityPath)
         {
-            final VanillaCompatibilityPath vanillaCompatibilityPath = (VanillaCompatibilityPath) currentPath;
+            final VanillaCompatibilityPath vanillaCompatibilityPath = (VanillaCompatibilityPath) path;
             if (positions.contains(vanillaCompatibilityPath.getDestination()))
             {
-                return currentPath;
+                return path;
             }
         }
 
@@ -1005,12 +1005,12 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         return scheduleAdditionalPath(
           positions,
           (int) followRangeAttribute.getValue() + regionOffset,
-          (blockPos, integer) -> new PathJobMoveToOneOfLocation(ourEntity.getEntityWorld(),
-            ourEntity.getPosition(),
+          (blockPos, integer) -> new PathJobMoveToOneOfLocation(ourEntity.getCommandSenderWorld(),
+            ourEntity.blockPosition(),
             blockPos,
             (int) followRangeAttribute.getValue(),
             ourEntity),
-          blockPos -> blockPos.stream().max(Comparator.comparing(ourEntity.getPosition()::distanceSq)).orElse(ourEntity.getPosition())
+          blockPos -> blockPos.stream().max(Comparator.comparing(ourEntity.blockPosition()::distSqr)).orElse(ourEntity.blockPosition())
         );
     }
 }

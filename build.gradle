@@ -8,7 +8,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1+', changing: true
         classpath "com.github.jengelman.gradle.plugins:shadow:4.0.0"
         classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.4.0"
     }
@@ -16,3 +16,13 @@ buildscript {
 
 apply from: 'https://raw.githubusercontent.com/ldtteam/OperaPublicaCreator/main/gradle/mod.gradle'
 project.getLogger().lifecycle("Loaded remote build.gradle with version: " + project.modVersion)
+
+if (project.hasProperty('UPDATE_MAPPINGS')) {
+    extractRangeMap {
+        sources sourceSets.api.java.srcDirs
+    }
+    applyRangeMap {
+        sources sourceSets.api.java.srcDirs
+    }
+    sourceSets.api.java.srcDirs.each { extractMappedNew.addTarget it }
+}

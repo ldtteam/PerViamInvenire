@@ -66,11 +66,11 @@ public class PathingCalculationData
 
     public void onPathCompleted(final Path path)
     {
-        path.points.stream()
+        path.nodes.stream()
           .map(point -> new BlockPos(point.x, point.y, point.z))
           .forEach(this.path::add);
 
-        this.reachesDestination = path.reachesTarget();
+        this.reachesDestination = path.canReach();
     }
 
     public void reset()

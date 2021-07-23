@@ -37,35 +37,35 @@ public class PerViamInvenireClimberPathNavigator extends PerViamInvenireGroundPa
         return super.setPathJob(job, dest, speed);
     }
 
-    public Path getPathToPos(@NotNull BlockPos pos, int accuracy) {
+    public Path createPath(@NotNull BlockPos pos, int accuracy) {
         this.targetPosition = pos;
-        return super.getPathToPos(pos, accuracy);
+        return super.createPath(pos, accuracy);
     }
 
     /**
      * Returns a path to the given entity or null
      */
-    public Path pathfind(Entity entityIn, int p_75494_2_) {
-        this.targetPosition = entityIn.getPosition();
-        return super.pathfind(entityIn, p_75494_2_);
+    public Path createPath(Entity entityIn, int p_75494_2_) {
+        this.targetPosition = entityIn.blockPosition();
+        return super.createPath(entityIn, p_75494_2_);
     }
 
     /**
      * Try to find and set a path to EntityLiving. Returns true if successful. Args : entity, speed
      */
-    public boolean tryMoveToEntityLiving(Entity entityIn, double speedIn) {
-        Path path = this.pathfind(entityIn, 0);
+    public boolean moveTo(Entity entityIn, double speedIn) {
+        Path path = this.createPath(entityIn, 0);
         if (path != null) {
-            return this.setPath(path, speedIn);
+            return this.moveTo(path, speedIn);
         } else {
-            this.targetPosition = entityIn.getPosition();
-            this.speed = speedIn;
+            this.targetPosition = entityIn.blockPosition();
+            this.speedModifier = speedIn;
             return true;
         }
     }
 
     public void tick() {
-        if (!this.noPath()) {
+        if (!this.isDone()) {
             //Normal pathfinding, so we just follow that.
             super.tick();
         } else {

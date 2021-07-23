@@ -52,7 +52,7 @@ public class PathJobMoveToLocation extends AbstractPathJob {
 
         this.destination = new BlockPos(end);
 
-        startEndDist = Math.sqrt(start.distanceSq(end));
+        startEndDist = Math.sqrt(start.distSqr(end));
     }
 
     /**
@@ -79,7 +79,7 @@ public class PathJobMoveToLocation extends AbstractPathJob {
     @Override
     protected double computeHeuristic(@NotNull final BlockPos pos)
     {
-        return Math.sqrt(destination.distanceSq(pos));
+        return Math.sqrt(destination.distSqr(pos));
     }
 
     /**
@@ -100,10 +100,10 @@ public class PathJobMoveToLocation extends AbstractPathJob {
 
         if (n.pos.getY() == destination.getY() - 1)
         {
-            return destination.withinDistance(new Vector3i(n.pos.getX(), destination.getY(), n.pos.getZ()), DESTINATION_SLACK_ADJACENT);
+            return destination.closerThan(new Vector3i(n.pos.getX(), destination.getY(), n.pos.getZ()), DESTINATION_SLACK_ADJACENT);
         }
 
-        return destination.withinDistance(n.pos, DESTINATION_SLACK_ADJACENT);
+        return destination.closerThan(n.pos, DESTINATION_SLACK_ADJACENT);
     }
 
     /**
@@ -116,6 +116,6 @@ public class PathJobMoveToLocation extends AbstractPathJob {
     protected double getNodeResultScore(@NotNull final Node n)
     {
         //  For Result Score lower is better
-        return destination.distanceSq(n.pos);
+        return destination.distSqr(n.pos);
     }
 }

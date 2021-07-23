@@ -23,38 +23,38 @@ public class SpiderClimbableTickEventHandler
 
         final SpiderEntity spiderEntity = (SpiderEntity) event.getEntity();
 
-        if (!(spiderEntity.getNavigator() instanceof AbstractAdvancedGroundPathNavigator))
+        if (!(spiderEntity.getNavigation() instanceof AbstractAdvancedGroundPathNavigator))
             return;
 
-        final AbstractAdvancedGroundPathNavigator navigator = (AbstractAdvancedGroundPathNavigator) spiderEntity.getNavigator();
-        if (navigator.hasPath() || navigator.getPath() == null) {
-            spiderEntity.setBesideClimbableBlock(false);
+        final AbstractAdvancedGroundPathNavigator navigator = (AbstractAdvancedGroundPathNavigator) spiderEntity.getNavigation();
+        if (navigator.isInProgress() || navigator.getPath() == null) {
+            spiderEntity.setClimbing(false);
             return;
         }
 
         final Path path = navigator.getPath();
-        final PathPoint pathPoint = path.getCurrentPoint();
+        final PathPoint pathPoint = path.getNextNode();
         if (!(pathPoint instanceof PathPointExtended)) {
-            spiderEntity.setBesideClimbableBlock(false);
+            spiderEntity.setClimbing(false);
             return;
         }
 
         final PathPointExtended pathPointExtended = (PathPointExtended) pathPoint;
         final boolean currentIsLadder = pathPointExtended.isOnLadder();
-        if (path.getCurrentPathIndex() == 0)
+        if (path.getNextNodeIndex() == 0)
         {
-            spiderEntity.setBesideClimbableBlock(currentIsLadder);
+            spiderEntity.setClimbing(currentIsLadder);
             return;
         }
 
-        final PathPoint pathPointPrevious = path.getPathPointFromIndex(path.getCurrentPathIndex() - 1);
+        final PathPoint pathPointPrevious = path.getNode(path.getNextNodeIndex() - 1);
         if (!(pathPointPrevious instanceof PathPointExtended)) {
-            spiderEntity.setBesideClimbableBlock(currentIsLadder);
+            spiderEntity.setClimbing(currentIsLadder);
             return;
         }
         final PathPointExtended pathPointPreviousExtended = (PathPointExtended) pathPoint;
         final boolean previousIsLadder = pathPointPreviousExtended.isOnLadder();
 
-        spiderEntity.setBesideClimbableBlock(previousIsLadder || currentIsLadder);
+        spiderEntity.setClimbing(previousIsLadder || currentIsLadder);
     }
 }

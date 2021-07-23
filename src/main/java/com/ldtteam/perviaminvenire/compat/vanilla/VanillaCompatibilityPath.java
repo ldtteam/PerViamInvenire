@@ -31,11 +31,11 @@ public class VanillaCompatibilityPath extends Path
 
         return Lists.newArrayList(
           new PathPointExtended(
-            target.add(Direction.getFacingFromVector(delta.getX(), delta.getY(), delta.getZ()).getDirectionVec())
+            target.offset(Direction.getNearest(delta.getX(), delta.getY(), delta.getZ()).getNormal())
           ),
           new PathPointExtended(
-            target.add(Direction.getFacingFromVector(delta.getX(), delta.getY(), delta.getZ()).getDirectionVec())
-              .add(Direction.getFacingFromVector(delta.getX(), delta.getY(), delta.getZ()).getDirectionVec())
+            target.offset(Direction.getNearest(delta.getX(), delta.getY(), delta.getZ()).getNormal())
+              .offset(Direction.getNearest(delta.getX(), delta.getY(), delta.getZ()).getNormal())
           )
         );
     }
@@ -75,71 +75,71 @@ public class VanillaCompatibilityPath extends Path
 
         isCalculationComplete = true;
 
-        this.points = calculatedPath.points;
+        this.nodes = calculatedPath.nodes;
         this.openSet = calculatedPath.openSet;
         this.closedSet = calculatedPath.closedSet;
-        this.currentPathIndex = calculatedPath.currentPathIndex;
-        this.field_224773_g = calculatedPath.field_224773_g;
-        this.reachesTargetFlag = calculatedPath.reachesTargetFlag;
+        this.nextNodeIndex = calculatedPath.nextNodeIndex;
+        this.distToTarget = calculatedPath.distToTarget;
+        this.reached = calculatedPath.reached;
 
         return false;
     }
 
     @Override
-    public void incrementPathIndex()
+    public void advance()
     {
         if (isNotComplete())
             return;
 
-        super.incrementPathIndex();
+        super.advance();
     }
 
 
 
     @Override
-    public boolean func_242945_b()
+    public boolean notStarted()
     {
         if (isNotComplete())
             return true;
 
-        return super.func_242945_b();
+        return super.notStarted();
     }
 
     @Override
-    public boolean isFinished()
+    public boolean isDone()
     {
         if (isNotComplete())
             return false;
 
-        return super.isFinished();
+        return super.isDone();
     }
 
     @Override
-    public void setCurrentPathIndex(final int currentPathIndexIn)
+    public void setNextNodeIndex(final int currentPathIndexIn)
     {
         if (isNotComplete())
             return;
 
-        super.setCurrentPathIndex(currentPathIndexIn);
+        super.setNextNodeIndex(currentPathIndexIn);
     }
 
     public void setCancelled() {
         if (isCalculationComplete)
             return;
 
-        this.reachesTargetFlag = false;
-        this.points = Collections.emptyList();
-        this.currentPathIndex = 1;
+        this.reached = false;
+        this.nodes = Collections.emptyList();
+        this.nextNodeIndex = 1;
 
         if (!this.calculationFuture.isDone())
             this.calculationFuture.cancel(true);
     }
 
     public BlockPos getDestination() {
-        if (this.getFinalPathPoint() == null)
+        if (this.getEndNode() == null)
             return BlockPos.ZERO;
 
-        return this.getFinalPathPoint().func_224759_a();
+        return this.getEndNode().asBlockPos();
     }
 
     /**
@@ -149,9 +149,9 @@ public class VanillaCompatibilityPath extends Path
      * @param index The index in question.
      */
     @Override
-    public Vector3d getVectorFromIndex(final Entity entityIn, final int index)
+    public Vector3d getEntityPosAtNode(final Entity entityIn, final int index)
     {
-        return super.getVectorFromIndex(entityIn, index);
+        return super.getEntityPosAtNode(entityIn, index);
     }
 
     public boolean isCalculationComplete()

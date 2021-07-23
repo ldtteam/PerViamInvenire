@@ -17,12 +17,12 @@ public class OnCalculationCompleted
     }
 
     public OnCalculationCompleted(final PacketBuffer buffer) {
-        this(buffer.readUniqueId(), new PathingCalculationData());
+        this(buffer.readUUID(), new PathingCalculationData());
         this.data.fromPacketBuffer(buffer);
     }
 
     public void write(final PacketBuffer buffer) {
-        buffer.writeUniqueId(this.entityId);
+        buffer.writeUUID(this.entityId);
         this.data.toPacketBuffer(buffer);
     }
 

@@ -30,7 +30,7 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
       final World worldIn)
     {
         super(entityLiving, worldIn);
-        this.ourEntity = entity;
+        this.ourEntity = mob;
     }
 
     /**

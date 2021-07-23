@@ -29,17 +29,17 @@ public class CalculationResultRenderer implements ICalculationResultRenderer
         data.getWalkedPositions().forEach((source, target) -> {
             BlockPos delta = target.subtract(source);
 
-            world.spawnParticle(ParticleTypes.END_ROD,
+            world.sendParticles(ParticleTypes.END_ROD,
               source.getX() + 0.5, source.getY() + 0.5, source.getZ() + 0.5, 0,
               delta.getX(), delta.getY(), delta.getZ(), 0.1);
 
-            world.spawnParticle(getParticleTypeFor(source, data),
+            world.sendParticles(getParticleTypeFor(source, data),
               source.getX() + 0.5, source.getY() + 0.5, source.getZ() + 0.5, 0,
               0, 0, 0, 0);
 
             if (!data.getWalkedPositions().containsKey(target))
             {
-                world.spawnParticle(getParticleTypeFor(target, data),
+                world.sendParticles(getParticleTypeFor(target, data),
                   target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5, 0,
                   0, 0, 0, 0);
             }

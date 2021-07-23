@@ -73,19 +73,19 @@ public class ImportableResultDataArgument implements ArgumentType<String>
         }
 
         @Override
-        public void write(@NotNull final ImportableResultDataArgument argument, @NotNull final PacketBuffer buffer)
+        public void serializeToNetwork(@NotNull final ImportableResultDataArgument argument, @NotNull final PacketBuffer buffer)
         {
         }
 
         @NotNull
         @Override
-        public ImportableResultDataArgument read(@NotNull final PacketBuffer buffer)
+        public ImportableResultDataArgument deserializeFromNetwork(@NotNull final PacketBuffer buffer)
         {
             return ImportableResultDataArgument.getInstance();
         }
 
         @Override
-        public void write(@NotNull final ImportableResultDataArgument argument, @NotNull final JsonObject jsonObject)
+        public void serializeToJson(@NotNull final ImportableResultDataArgument argument, @NotNull final JsonObject jsonObject)
         {
         }
     }

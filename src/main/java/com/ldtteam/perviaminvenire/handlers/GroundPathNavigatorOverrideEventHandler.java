@@ -23,7 +23,7 @@ public class GroundPathNavigatorOverrideEventHandler
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static Field movementControllerField = ObfuscationReflectionHelper.findField(
-      MobEntity.class, "field_70765_h"
+      MobEntity.class, "moveControl"
     );
 
     @SubscribeEvent
@@ -34,10 +34,10 @@ public class GroundPathNavigatorOverrideEventHandler
             return;
 
         final MobEntity mob = (MobEntity) entity;
-        final Optional<PathNavigator> overrideHandler = PathNavigatorRegistry.getInstance().getRunner().get(mob, mob.getNavigator());
-        overrideHandler.ifPresent(pathNavigator -> mob.navigator = pathNavigator);
+        final Optional<PathNavigator> overrideHandler = PathNavigatorRegistry.getInstance().getRunner().get(mob, mob.getNavigation());
+        overrideHandler.ifPresent(pathNavigator -> mob.navigation = pathNavigator);
 
-        final Optional<MovementController> controllerHandler = MovementControllerRegistry.getInstance().getRunner().get(mob, mob.getMoveHelper());
+        final Optional<MovementController> controllerHandler = MovementControllerRegistry.getInstance().getRunner().get(mob, mob.getMoveControl());
         controllerHandler.ifPresent(controller -> {
             try
             {

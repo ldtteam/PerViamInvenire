@@ -32,8 +32,8 @@ public class DataGenUtils
     public static EntityType<?>[] getCompatibleVanillaOverrideTypes()
     {
         final DynamicRegistries.Impl dynamicRegistries = new DynamicRegistries.Impl();
-        DimensionType.registerTypes(dynamicRegistries);
-        final DimensionType overworldDimension = dynamicRegistries.getRegistry(Registry.DIMENSION_TYPE_KEY).getOrDefault(DimensionType.OVERWORLD_ID);
+        DimensionType.registerBuiltin(dynamicRegistries);
+        final DimensionType overworldDimension = dynamicRegistries.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).get(DimensionType.OVERWORLD_EFFECTS);
 
         @SuppressWarnings("ConstantConditions") //We are creating a dummy world here.
         final ClientWorld clientWorld = new ClientWorld(
@@ -48,7 +48,7 @@ public class DataGenUtils
           0
         ) {
             @Override
-            public DynamicRegistries func_241828_r()
+            public DynamicRegistries registryAccess()
             {
                 return dynamicRegistries;
             }
@@ -66,8 +66,8 @@ public class DataGenUtils
                              return false;
 
                          final MobEntity mob = (MobEntity) entity;
-                         return mob.getNavigator().getClass() == GroundPathNavigator.class ||
-                            mob.getNavigator().getClass() == ClimberPathNavigator.class;
+                         return mob.getNavigation().getClass() == GroundPathNavigator.class ||
+                            mob.getNavigation().getClass() == ClimberPathNavigator.class;
                      }
                      catch (Exception ex)
                      {

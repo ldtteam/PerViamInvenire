@@ -39,7 +39,7 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
      */
     public PathJobMoveToOneOfLocation(final World world, @NotNull final BlockPos start, @NotNull final Set<BlockPos> end, final int range, final LivingEntity entity)
     {
-        super(world, start, end.stream().max(Comparator.comparingInt(start::manhattanDistance)).orElse(start), range, entity);
+        super(world, start, end.stream().max(Comparator.comparingInt(start::distManhattan)).orElse(start), range, entity);
 
         this.destination = end;
     }
@@ -64,7 +64,7 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
     {
         boolean seen = false;
         BlockPos best = null;
-        Comparator<BlockPos> comparator = Comparator.comparingDouble(pos::distanceSq);
+        Comparator<BlockPos> comparator = Comparator.comparingDouble(pos::distSqr);
         for (BlockPos blockPos : destination)
         {
             if (!seen || comparator.compare(blockPos, best) < 0)
@@ -73,7 +73,7 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
                 best = blockPos;
             }
         }
-        return Math.sqrt((seen ? best : pos).distanceSq(pos));
+        return Math.sqrt((seen ? best : pos).distSqr(pos));
     }
 
     /**
@@ -109,7 +109,7 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
         final BlockPos pos = n.pos;
         boolean seen = false;
         BlockPos best = null;
-        Comparator<BlockPos> comparator = Comparator.comparingDouble(pos::distanceSq);
+        Comparator<BlockPos> comparator = Comparator.comparingDouble(pos::distSqr);
         for (BlockPos blockPos : destination)
         {
             if (!seen || comparator.compare(blockPos, best) < 0)
@@ -118,6 +118,6 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
                 best = blockPos;
             }
         }
-        return Math.sqrt((seen ? best : pos).distanceSq(pos));
+        return Math.sqrt((seen ? best : pos).distSqr(pos));
     }
 }

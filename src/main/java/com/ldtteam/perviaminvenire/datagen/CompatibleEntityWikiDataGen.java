@@ -59,7 +59,7 @@ public class CompatibleEntityWikiDataGen implements IDataProvider
     }
 
     @Override
-    public void act(final DirectoryCache cache) throws IOException
+    public void run(final DirectoryCache cache) throws IOException
     {
         final EntityType<?>[] types = DataGenUtils.getCompatibleVanillaOverrideTypes();
         final Path path = this.generator.getOutputFolder().resolve("wiki/" + ModConstants.MOD_ID + "/tags/entity_types/replace_vanilla_navigator.md");
@@ -69,18 +69,18 @@ public class CompatibleEntityWikiDataGen implements IDataProvider
         lines.add("");
         for (final EntityType<?> type : types)
         {
-            lines.add(String.format("- %s", LanguageMap.getInstance().func_230503_a_(type.getTranslationKey())));
+            lines.add(String.format("- %s", LanguageMap.getInstance().getOrDefault(type.getDescriptionId())));
         }
 
         if (path.getParent().toFile().mkdirs())
             LOGGER.info(String.format("Created directory for: %s", path.getParent()));
 
         Files.write(path, lines, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-        final HashCode hash = HASH_FUNCTION.hashUnencodedChars(
+        final HashCode hash = SHA1.hashUnencodedChars(
           lines.stream().reduce("", (s, s2) -> String.format("%s\n%s", s, s2))
         );
 
-        cache.recordHash(path, hash.toString());
+        cache.putNew(path, hash.toString());
 
     }
 

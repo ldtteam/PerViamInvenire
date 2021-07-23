@@ -41,13 +41,13 @@ public class VanillaCompatibilityManager
                     initialNavigator.getClass() == GroundPathNavigator.class))
                   return Optional.empty();
 
-              final PerViamInvenireGroundPathNavigator navigator = new PerViamInvenireGroundPathNavigator(mobEntity, mobEntity.getEntityWorld());
+              final PerViamInvenireGroundPathNavigator navigator = new PerViamInvenireGroundPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
               final GroundPathNavigator existingNavigator = (GroundPathNavigator) initialNavigator;
               navigator.getPathingOptions().setCanUseLadders(false);
-              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeProcessor().getCanSwim());
+              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
               navigator.getPathingOptions().setCanUseRails(false);
-              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeProcessor().getCanOpenDoors());
-              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeProcessor().getCanEnterDoors());
+              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeEvaluator().canOpenDoors());
+              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeEvaluator().canPassDoors());
 
               return Optional.of(navigator);
           }
@@ -61,20 +61,20 @@ public class VanillaCompatibilityManager
                       initialNavigator.getClass() == ClimberPathNavigator.class))
                   return Optional.empty();
 
-              final PerViamInvenireClimberPathNavigator navigator = new PerViamInvenireClimberPathNavigator(mobEntity, mobEntity.getEntityWorld());
+              final PerViamInvenireClimberPathNavigator navigator = new PerViamInvenireClimberPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
               final ClimberPathNavigator existingNavigator = (ClimberPathNavigator) initialNavigator;
               navigator.getPathingOptions().setCanUseLadders(true);
-              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeProcessor().getCanSwim());
+              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
               navigator.getPathingOptions().setCanUseRails(false);
-              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeProcessor().getCanOpenDoors());
-              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeProcessor().getCanEnterDoors());
+              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeEvaluator().canOpenDoors());
+              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeEvaluator().canPassDoors());
 
               return Optional.of(navigator);
           }
         );
 
         IMovementControllerRegistry.getInstance().register((entity, initialController) -> {
-            if (entity instanceof SlimeEntity || !(entity.navigator instanceof AbstractAdvancedGroundPathNavigator))
+            if (entity instanceof SlimeEntity || !(entity.navigation instanceof AbstractAdvancedGroundPathNavigator))
                 return Optional.empty();
 
             return Optional.of(new PVIMovementController(entity));
@@ -89,11 +89,11 @@ public class VanillaCompatibilityManager
                 return Optional.empty();
 
             final MobEntity mobEntity = (MobEntity) entity;
-            if (!(mobEntity.getNavigator() instanceof PerViamInvenireClimberPathNavigator))
+            if (!(mobEntity.getNavigation() instanceof PerViamInvenireClimberPathNavigator))
                 return Optional.empty();
 
-            return Optional.of(block.isAir() && Direction.Plane.HORIZONTAL.getDirectionValues()
-              .anyMatch(direction -> !worldReader.getBlockState(blockPos.add(direction.getDirectionVec())).isAir(worldReader, blockPos.add(direction.getDirectionVec()))));
+            return Optional.of(block.isAir() && Direction.Plane.HORIZONTAL.stream()
+              .anyMatch(direction -> !worldReader.getBlockState(blockPos.offset(direction.getNormal())).isAir(worldReader, blockPos.offset(direction.getNormal()))));
         });
     }
 }

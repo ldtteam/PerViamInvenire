@@ -40,9 +40,9 @@ public class CompatibleEntityDataGen extends EntityTypeTagsProvider
     }
 
     @Override
-    protected void registerTags()
+    protected void addTags()
     {
-        getOrCreateBuilder(ModTags.REPLACE_VANILLA_NAVIGATOR).add(DataGenUtils.getCompatibleVanillaOverrideTypes());
+        tag(ModTags.REPLACE_VANILLA_NAVIGATOR).add(DataGenUtils.getCompatibleVanillaOverrideTypes());
     }
 
     @Override
