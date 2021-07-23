@@ -1,18 +1,18 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavigator implements IAdvancedPathNavigator
+public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavigation implements IAdvancedPathNavigator
 {
     //  Parent class private members
-    protected final MobEntity    ourEntity;
+    protected final Mob    ourEntity;
     @Nullable
     protected       BlockPos     destination;
     protected       double       walkSpeed = 1.0D;
@@ -26,8 +26,8 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
     private PathingOptions pathingOptions = new PathingOptions();
 
     public AbstractAdvancedGroundPathNavigator(
-      final MobEntity entityLiving,
-      final World worldIn)
+      final Mob entityLiving,
+      final Level worldIn)
     {
         super(entityLiving, worldIn);
         this.ourEntity = mob;
@@ -109,7 +109,7 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
      * @return mobentity
      */
     @Override
-    public MobEntity getOurEntity()
+    public Mob getOurEntity()
     {
         return ourEntity;
     }

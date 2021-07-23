@@ -3,8 +3,8 @@ package com.ldtteam.perviaminvenire.network;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.network.message.OnCalculationCompleted;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.NetworkRegistry;
@@ -41,9 +41,9 @@ public class NetworkManager
         });
     }
 
-    public <T> void sendToPlayer(final T packet, final ServerPlayerEntity... players)
+    public <T> void sendToPlayer(final T packet, final ServerPlayer... players)
     {
-        for (final ServerPlayerEntity player : players)
+        for (final ServerPlayer player : players)
         {
             this.channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
         }

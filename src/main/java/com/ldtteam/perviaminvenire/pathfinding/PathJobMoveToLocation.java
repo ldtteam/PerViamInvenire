@@ -5,16 +5,16 @@ import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.DE
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.Node;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.core.Vec3i;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /**
  * Job that handles moving to a location.
@@ -46,7 +46,7 @@ public class PathJobMoveToLocation extends AbstractPathJob {
      * @param range max search range.
      * @param entity the entity.
      */
-    public PathJobMoveToLocation(final World world, @NotNull final BlockPos start, @NotNull final BlockPos end, final int range, final LivingEntity entity)
+    public PathJobMoveToLocation(final Level world, @NotNull final BlockPos start, @NotNull final BlockPos end, final int range, final LivingEntity entity)
     {
         super(world, start, end, range, entity);
 
@@ -100,7 +100,7 @@ public class PathJobMoveToLocation extends AbstractPathJob {
 
         if (n.pos.getY() == destination.getY() - 1)
         {
-            return destination.closerThan(new Vector3i(n.pos.getX(), destination.getY(), n.pos.getZ()), DESTINATION_SLACK_ADJACENT);
+            return destination.closerThan(new Vec3i(n.pos.getX(), destination.getY(), n.pos.getZ()), DESTINATION_SLACK_ADJACENT);
         }
 
         return destination.closerThan(n.pos, DESTINATION_SLACK_ADJACENT);

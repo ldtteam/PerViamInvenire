@@ -3,10 +3,10 @@ package com.ldtteam.perviaminvenire.pathfinding;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.Node;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +37,7 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
      * @param range max search range.
      * @param entity the entity.
      */
-    public PathJobMoveToOneOfLocation(final World world, @NotNull final BlockPos start, @NotNull final Set<BlockPos> end, final int range, final LivingEntity entity)
+    public PathJobMoveToOneOfLocation(final Level world, @NotNull final BlockPos start, @NotNull final Set<BlockPos> end, final int range, final LivingEntity entity)
     {
         super(world, start, end.stream().max(Comparator.comparingInt(start::distManhattan)).orElse(start), range, entity);
 

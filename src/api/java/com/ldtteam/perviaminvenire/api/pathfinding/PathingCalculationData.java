@@ -4,16 +4,11 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.gson.*;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.pathfinder.Path;
 
-import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 public class PathingCalculationData
@@ -82,7 +77,7 @@ public class PathingCalculationData
         this.reachesDestination = false;
     }
 
-    public void fromPacketBuffer(final PacketBuffer buffer)
+    public void fromPacketBuffer(final FriendlyByteBuf buffer)
     {
         reset();
 
@@ -125,7 +120,7 @@ public class PathingCalculationData
         this.reachesDestination = buffer.readBoolean();
     }
 
-    public void toPacketBuffer(final PacketBuffer buffer)
+    public void toPacketBuffer(final FriendlyByteBuf buffer)
     {
         buffer.writeVarInt(this.walkedPositions.keySet().size());
         this.walkedPositions.keySet().forEach(source -> {

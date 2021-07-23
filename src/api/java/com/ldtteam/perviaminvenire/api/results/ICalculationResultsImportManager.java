@@ -1,7 +1,7 @@
 package com.ldtteam.perviaminvenire.api.results;
 
 import com.ldtteam.perviaminvenire.api.IPerViamInvenireApi;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 
 /**
  * Describes systems which can import and render imported
@@ -21,7 +21,7 @@ public interface ICalculationResultsImportManager
      *
      * @param world The world to check and potentially render in.
      */
-    void onPostWorldTick(ServerWorld world);
+    void onPostWorldTick(ServerLevel world);
 
     /**
      * Indicates that the results with the given identifier potentially should be loaded
@@ -30,7 +30,7 @@ public interface ICalculationResultsImportManager
      * @param world The world to render the imported results into.
      * @param resultsIdentifier The identifier of the given results.
      */
-    void startRenderingIn(ServerWorld world, String resultsIdentifier);
+    void startRenderingIn(ServerLevel world, String resultsIdentifier);
 
     /**
      * Indicates that the results with the given identifier should not be rendered
@@ -40,5 +40,5 @@ public interface ICalculationResultsImportManager
      * @param world The world to stop rendering the imported results in.
      * @param resultsIdentifier The identifier of the given results.
      */
-    void stopRenderingIn(ServerWorld world, String resultsIdentifier);
+    void stopRenderingIn(ServerLevel world, String resultsIdentifier);
 }

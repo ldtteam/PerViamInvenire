@@ -1,8 +1,8 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
 import com.ldtteam.perviaminvenire.api.IPerViamInvenireApi;
-import net.minecraft.entity.Entity;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
 
 /**
  * The handler that gets invoked once a pathing result has been determined.
@@ -23,6 +23,6 @@ public interface IPathingResultHandler
     void onCompleted(
       final PathingCalculationData data,
       final Entity entity,
-      final ServerWorld world
+      final ServerLevel world
     );
 }

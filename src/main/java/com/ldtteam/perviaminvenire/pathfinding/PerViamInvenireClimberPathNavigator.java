@@ -2,11 +2,11 @@ package com.ldtteam.perviaminvenire.pathfinding;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,12 +18,12 @@ public class PerViamInvenireClimberPathNavigator extends PerViamInvenireGroundPa
 
     private BlockPos targetPosition = null;
 
-    public PerViamInvenireClimberPathNavigator(@NotNull final MobEntity entity)
+    public PerViamInvenireClimberPathNavigator(@NotNull final Mob entity)
     {
         super(entity);
     }
 
-    public PerViamInvenireClimberPathNavigator(@NotNull final MobEntity entity, final World world)
+    public PerViamInvenireClimberPathNavigator(@NotNull final Mob entity, final Level world)
     {
         super(entity, world);
     }

@@ -2,12 +2,12 @@ package com.ldtteam.perviaminvenire.compat.vanilla;
 
 import com.google.common.collect.Lists;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
-import net.minecraft.entity.Entity;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ public class VanillaCompatibilityPath extends Path
 
     private boolean isCalculationComplete;
 
-    private static List<PathPoint> calculatePathTo(final BlockPos source, final BlockPos target) {
+    private static List<Node> calculatePathTo(final BlockPos source, final BlockPos target) {
         final BlockPos delta = target.subtract(source);
 
         return Lists.newArrayList(
@@ -149,7 +149,7 @@ public class VanillaCompatibilityPath extends Path
      * @param index The index in question.
      */
     @Override
-    public Vector3d getEntityPosAtNode(final Entity entityIn, final int index)
+    public Vec3 getEntityPosAtNode(final Entity entityIn, final int index)
     {
         return super.getEntityPosAtNode(entityIn, index);
     }

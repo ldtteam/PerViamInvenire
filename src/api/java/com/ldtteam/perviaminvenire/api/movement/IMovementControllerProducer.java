@@ -1,7 +1,7 @@
 package com.ldtteam.perviaminvenire.api.movement;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.controller.MovementController;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.pathfinding.PathNavigator;
 
 import java.util.Optional;
@@ -19,5 +19,5 @@ public interface IMovementControllerProducer
      * @param initialController The initial controller.
      * @return The updated controller
      */
-    Optional<MovementController> get(final MobEntity entity, final MovementController initialController);
+    Optional<MoveControl> get(final Mob entity, final MoveControl initialController);
 }

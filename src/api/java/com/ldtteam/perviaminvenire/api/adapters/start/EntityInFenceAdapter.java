@@ -7,8 +7,8 @@ import java.util.Optional;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.core.BlockPos;
 
 public class EntityInFenceAdapter implements IStartPositionAdapter {
     @Override

@@ -1,9 +1,9 @@
 package com.ldtteam.perviaminvenire.api.adapters.ladder;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReader;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelReader;
 
 import java.util.Optional;
 
@@ -22,5 +22,5 @@ public interface IIsLadderBlockCallback
      * @param blockPos The pos.
      * @return An optional indicating if this is a ladder, not a ladder, or this callback does not know or care.
      */
-    Optional<Boolean> isLadder(final Entity entity, final BlockState block, final IWorldReader worldReader, final BlockPos blockPos);
+    Optional<Boolean> isLadder(final Entity entity, final BlockState block, final LevelReader worldReader, final BlockPos blockPos);
 }

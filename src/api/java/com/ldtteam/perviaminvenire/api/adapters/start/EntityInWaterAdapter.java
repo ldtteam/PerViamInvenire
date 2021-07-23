@@ -4,9 +4,9 @@ import java.util.Optional;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.core.BlockPos;
 
 public class EntityInWaterAdapter implements IStartPositionAdapter {
 

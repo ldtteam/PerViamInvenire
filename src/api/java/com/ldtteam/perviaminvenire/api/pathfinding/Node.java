@@ -3,7 +3,7 @@ package com.ldtteam.perviaminvenire.api.pathfinding;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 /**
  * Nodes used in pathfinding.

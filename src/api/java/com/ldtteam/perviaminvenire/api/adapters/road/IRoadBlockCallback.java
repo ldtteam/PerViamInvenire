@@ -1,7 +1,7 @@
 package com.ldtteam.perviaminvenire.api.adapters.road;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.Entity;
 
 /**
  * This interface determines if a given block should be treated as a road

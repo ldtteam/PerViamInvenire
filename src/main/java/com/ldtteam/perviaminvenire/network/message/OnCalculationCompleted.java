@@ -1,7 +1,7 @@
 package com.ldtteam.perviaminvenire.network.message;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingCalculationData;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.UUID;
@@ -16,12 +16,12 @@ public class OnCalculationCompleted
         this.data = data;
     }
 
-    public OnCalculationCompleted(final PacketBuffer buffer) {
+    public OnCalculationCompleted(final FriendlyByteBuf buffer) {
         this(buffer.readUUID(), new PathingCalculationData());
         this.data.fromPacketBuffer(buffer);
     }
 
-    public void write(final PacketBuffer buffer) {
+    public void write(final FriendlyByteBuf buffer) {
         buffer.writeUUID(this.entityId);
         this.data.toPacketBuffer(buffer);
     }

@@ -2,10 +2,10 @@ package com.ldtteam.perviaminvenire.pathfinding;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultRenderer;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingCalculationData;
-import net.minecraft.particles.IParticleData;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 public class CalculationResultRenderer implements ICalculationResultRenderer
 {
@@ -21,7 +21,7 @@ public class CalculationResultRenderer implements ICalculationResultRenderer
     }
 
     @Override
-    public void renderDataIntoWorld(final PathingCalculationData data, final ServerWorld world)
+    public void renderDataIntoWorld(final PathingCalculationData data, final ServerLevel world)
     {
         if (data.getPath().size() == 0)
             return;
@@ -46,7 +46,7 @@ public class CalculationResultRenderer implements ICalculationResultRenderer
         });
     }
 
-    private IParticleData getParticleTypeFor(final BlockPos pos, final PathingCalculationData data) {
+    private ParticleOptions getParticleTypeFor(final BlockPos pos, final PathingCalculationData data) {
         if (data.getPath().getLast().equals(pos))
         {
             return data.isReachesDestination() ? ParticleTypes.HEART : ParticleTypes.DAMAGE_INDICATOR;

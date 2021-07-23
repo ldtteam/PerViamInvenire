@@ -8,8 +8,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.command.arguments.IArgumentSerializer;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.commands.synchronization.ArgumentSerializer;
+import net.minecraft.network.FriendlyByteBuf;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -59,7 +59,7 @@ public class ImportableResultDataArgument implements ArgumentType<String>
         return EXAMPLES;
     }
 
-    public static class Serializer implements IArgumentSerializer<ImportableResultDataArgument>
+    public static class Serializer implements ArgumentSerializer<ImportableResultDataArgument>
     {
         private static final Serializer INSTANCE = new Serializer();
 
@@ -73,13 +73,13 @@ public class ImportableResultDataArgument implements ArgumentType<String>
         }
 
         @Override
-        public void serializeToNetwork(@NotNull final ImportableResultDataArgument argument, @NotNull final PacketBuffer buffer)
+        public void serializeToNetwork(@NotNull final ImportableResultDataArgument argument, @NotNull final FriendlyByteBuf buffer)
         {
         }
 
         @NotNull
         @Override
-        public ImportableResultDataArgument deserializeFromNetwork(@NotNull final PacketBuffer buffer)
+        public ImportableResultDataArgument deserializeFromNetwork(@NotNull final FriendlyByteBuf buffer)
         {
             return ImportableResultDataArgument.getInstance();
         }

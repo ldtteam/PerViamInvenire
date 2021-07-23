@@ -11,11 +11,11 @@ import com.ldtteam.perviaminvenire.api.util.ModTags;
 import com.ldtteam.perviaminvenire.movement.PVIMovementController;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireClimberPathNavigator;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigator;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.monster.SlimeEntity;
-import net.minecraft.pathfinding.ClimberPathNavigator;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.util.Direction;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.core.Direction;
 
 import java.util.Optional;
 
@@ -38,11 +38,11 @@ public class VanillaCompatibilityManager
               if (!(ModTags.REPLACE_VANILLA_NAVIGATOR.contains(mobEntity.getType()) &&
                     ICommonConfig.getInstance().isVanillaReplacementEnabled() &&
                     !(initialNavigator instanceof IAdvancedPathNavigator) &&
-                    initialNavigator.getClass() == GroundPathNavigator.class))
+                    initialNavigator.getClass() == GroundPathNavigation.class))
                   return Optional.empty();
 
               final PerViamInvenireGroundPathNavigator navigator = new PerViamInvenireGroundPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
-              final GroundPathNavigator existingNavigator = (GroundPathNavigator) initialNavigator;
+              final GroundPathNavigation existingNavigator = (GroundPathNavigation) initialNavigator;
               navigator.getPathingOptions().setCanUseLadders(false);
               navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
               navigator.getPathingOptions().setCanUseRails(false);
@@ -58,11 +58,11 @@ public class VanillaCompatibilityManager
               if (!(ModTags.REPLACE_VANILLA_NAVIGATOR.contains(mobEntity.getType()) &&
                       ICommonConfig.getInstance().isVanillaReplacementEnabled() &&
                       !(initialNavigator instanceof IAdvancedPathNavigator) &&
-                      initialNavigator.getClass() == ClimberPathNavigator.class))
+                      initialNavigator.getClass() == WallClimberNavigation.class))
                   return Optional.empty();
 
               final PerViamInvenireClimberPathNavigator navigator = new PerViamInvenireClimberPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
-              final ClimberPathNavigator existingNavigator = (ClimberPathNavigator) initialNavigator;
+              final WallClimberNavigation existingNavigator = (WallClimberNavigation) initialNavigator;
               navigator.getPathingOptions().setCanUseLadders(true);
               navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
               navigator.getPathingOptions().setCanUseRails(false);
@@ -74,7 +74,7 @@ public class VanillaCompatibilityManager
         );
 
         IMovementControllerRegistry.getInstance().register((entity, initialController) -> {
-            if (entity instanceof SlimeEntity || !(entity.navigation instanceof AbstractAdvancedGroundPathNavigator))
+            if (entity instanceof Slime || !(entity.navigation instanceof AbstractAdvancedGroundPathNavigator))
                 return Optional.empty();
 
             return Optional.of(new PVIMovementController(entity));
@@ -85,10 +85,10 @@ public class VanillaCompatibilityManager
         );
 
         IIsLadderBlockRegistry.getInstance().register((entity, block, worldReader, blockPos) -> {
-            if (!(entity instanceof MobEntity))
+            if (!(entity instanceof Mob))
                 return Optional.empty();
 
-            final MobEntity mobEntity = (MobEntity) entity;
+            final Mob mobEntity = (Mob) entity;
             if (!(mobEntity.getNavigation() instanceof PerViamInvenireClimberPathNavigator))
                 return Optional.empty();
 

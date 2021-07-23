@@ -7,10 +7,10 @@ import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityManager;
 import com.ldtteam.perviaminvenire.util.DataGenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.DirectoryCache;
-import net.minecraft.data.IDataProvider;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.text.LanguageMap;
+import net.minecraft.data.HashCache;
+import net.minecraft.data.DataProvider;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.locale.Language;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.function.BinaryOperator;
 
 @Mod.EventBusSubscriber(modid = ModConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-public class CompatibleEntityWikiDataGen implements IDataProvider
+public class CompatibleEntityWikiDataGen implements DataProvider
 {
     private static final Logger LOGGER           = LogManager.getLogger();
 
@@ -59,7 +59,7 @@ public class CompatibleEntityWikiDataGen implements IDataProvider
     }
 
     @Override
-    public void run(final DirectoryCache cache) throws IOException
+    public void run(final HashCache cache) throws IOException
     {
         final EntityType<?>[] types = DataGenUtils.getCompatibleVanillaOverrideTypes();
         final Path path = this.generator.getOutputFolder().resolve("wiki/" + ModConstants.MOD_ID + "/tags/entity_types/replace_vanilla_navigator.md");
@@ -69,7 +69,7 @@ public class CompatibleEntityWikiDataGen implements IDataProvider
         lines.add("");
         for (final EntityType<?> type : types)
         {
-            lines.add(String.format("- %s", LanguageMap.getInstance().getOrDefault(type.getDescriptionId())));
+            lines.add(String.format("- %s", Language.getInstance().getOrDefault(type.getDescriptionId())));
         }
 
         if (path.getParent().toFile().mkdirs())

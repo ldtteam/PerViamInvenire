@@ -10,10 +10,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /**
  * Job that handles moving away from something.
@@ -44,7 +44,7 @@ public class PathJobMoveAwayFromLocation extends AbstractPathJob
      * @param range         max range to search.
      * @param entity the entity.
      */
-    public PathJobMoveAwayFromLocation(final World world, @NotNull final BlockPos start, @NotNull final BlockPos avoid, final int avoidDistance, final int range, final LivingEntity entity)
+    public PathJobMoveAwayFromLocation(final Level world, @NotNull final BlockPos start, @NotNull final BlockPos avoid, final int avoidDistance, final int range, final LivingEntity entity)
     {
         super(world, start, avoid, range, entity);
 

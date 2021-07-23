@@ -2,8 +2,8 @@ package com.ldtteam.perviaminvenire.api.util;
 
 import net.minecraftforge.registries.ObjectHolder;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
 
 @ObjectHolder("per-viam-invenire")
 public final class ModEntities {
@@ -14,5 +14,5 @@ public final class ModEntities {
 
 
     @ObjectHolder("minecart")
-    public static EntityType<AbstractMinecartEntity> MINECART;
+    public static EntityType<AbstractMinecart> MINECART;
 }

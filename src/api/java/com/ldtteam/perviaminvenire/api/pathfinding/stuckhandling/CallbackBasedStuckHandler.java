@@ -1,18 +1,18 @@
 package com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.Direction;
-import net.minecraft.util.EntityDamageSource;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.core.Direction;
+import net.minecraft.world.damagesource.EntityDamageSource;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.Level;
 
 import java.util.Arrays;
 import java.util.List;
@@ -144,7 +144,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
         }
 
         final double distanceToGoal =
-          navigator.getOurEntity().position().distanceTo(new Vector3d(navigator.getDesiredPos().getX(), navigator.getDesiredPos().getY(), navigator.getDesiredPos().getZ()));
+          navigator.getOurEntity().position().distanceTo(new Vec3(navigator.getDesiredPos().getX(), navigator.getDesiredPos().getY(), navigator.getDesiredPos().getZ()));
 
         // Close enough to be considered at the goal
         if (distanceToGoal < MIN_TARGET_DIST)
@@ -226,8 +226,8 @@ public class CallbackBasedStuckHandler implements IStuckHandler
     private void completeStuckAction(final AbstractAdvancedGroundPathNavigator navigator)
     {
         final BlockPos desired = navigator.getDesiredPos();
-        final World world = navigator.getOurEntity().level;
-        final MobEntity entity = navigator.getOurEntity();
+        final Level world = navigator.getOurEntity().level;
+        final Mob entity = navigator.getOurEntity();
 
         if (canTeleportGoal)
         {
@@ -249,7 +249,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
 
         if (completeStuckBlockBreakRange > 0)
         {
-            final Vector3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
+            final Vec3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
             final Direction facing = Direction.getNearest(directionVector.getX(), directionVector.getY(), directionVector.getZ());
 
             for (int i = 1; i <= completeStuckBlockBreakRange; i++)
@@ -304,7 +304,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
                 int index = navigator.getPath().getNextNodeIndex() + teleportRange;
                 if (index < navigator.getPath().getNodeCount())
                 {
-                    final PathPoint togo = navigator.getPath().getNode(index);
+                    final Node togo = navigator.getPath().getNode(index);
                     navigator.getOurEntity().teleportTo(togo.x + 0.5d, togo.y, togo.z + 0.5d);
                     delayToNextUnstuckAction = 300;
                 }
@@ -371,7 +371,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      * @param start the position the entity is at.
      * @param facing the direction the goal is in.
      */
-    private void breakBlocksAhead(final World world, final BlockPos start, final Direction facing)
+    private void breakBlocksAhead(final Level world, final BlockPos start, final Direction facing)
     {
         // Above entity
         if (!world.isEmptyBlock(start.above(3)))
@@ -399,7 +399,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      * @param world the world the block is in.
      * @param pos the pos the block is at.
      */
-    private void setAirIfPossible(final World world, final BlockPos pos)
+    private void setAirIfPossible(final Level world, final BlockPos pos)
     {
         final Block blockAtPos = world.getBlockState(pos).getBlock();
         if (!this.canBeBrokenIfStuck.apply(blockAtPos))
@@ -416,8 +416,8 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      */
     private void placeLadders(final AbstractAdvancedGroundPathNavigator navigator)
     {
-        final World world = navigator.getOurEntity().level;
-        final MobEntity entity = navigator.getOurEntity();
+        final Level world = navigator.getOurEntity().level;
+        final Mob entity = navigator.getOurEntity();
 
         BlockPos entityPos = new BlockPos(entity.position());
 
@@ -438,10 +438,10 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      */
     private void placeLeaves(final AbstractAdvancedGroundPathNavigator navigator)
     {
-        final World world = navigator.getOurEntity().level;
-        final MobEntity entity = navigator.getOurEntity();
+        final Level world = navigator.getOurEntity().level;
+        final Mob entity = navigator.getOurEntity();
 
-        final Vector3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
+        final Vec3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
         final Direction badFacing = Direction.getNearest(directionVector.getX(), directionVector.getY(), directionVector.getZ()).getOpposite();
 
         for (final Direction dir : directions)
@@ -465,10 +465,10 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      */
     private void breakBlocks(final AbstractAdvancedGroundPathNavigator navigator)
     {
-        final World world = navigator.getOurEntity().level;
-        final MobEntity entity = navigator.getOurEntity();
+        final Level world = navigator.getOurEntity().level;
+        final Mob entity = navigator.getOurEntity();
 
-        final Vector3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
+        final Vec3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
         final Direction facing = Direction.getNearest(directionVector.getX(), directionVector.getY(), directionVector.getZ());
 
         breakBlocksAhead(world, new BlockPos(entity.position()), facing);
@@ -480,7 +480,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      * @param world world to use
      * @param pos   position to set
      */
-    private void tryPlaceLadderAt(final World world, final BlockPos pos)
+    private void tryPlaceLadderAt(final Level world, final BlockPos pos)
     {
         final BlockState state = world.getBlockState(pos);
         if (state.getBlock() != Blocks.LADDER && !state.canOcclude() && world.getFluidState(pos).isEmpty())

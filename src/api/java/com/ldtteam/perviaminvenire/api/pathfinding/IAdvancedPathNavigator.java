@@ -1,8 +1,8 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -24,7 +24,7 @@ public interface IAdvancedPathNavigator
      */
     PathingOptions getPathingOptions();
 
-    MobEntity getOurEntity();
+    Mob getOurEntity();
 
     /**
      * Gets the desired to go position

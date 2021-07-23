@@ -4,8 +4,8 @@ import java.util.Optional;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.core.BlockPos;
 
 /**
  * Functional interface used for handling adaptations to the start position of

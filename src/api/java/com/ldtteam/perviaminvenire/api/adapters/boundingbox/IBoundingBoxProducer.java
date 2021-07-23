@@ -1,9 +1,9 @@
 package com.ldtteam.perviaminvenire.api.adapters.boundingbox;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.IWorldReader;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.LevelReader;
 
 import java.util.Optional;
 
@@ -24,5 +24,5 @@ public interface IBoundingBoxProducer
      *
      * @return The bounding box.
      */
-    Optional<AxisAlignedBB> produce(final Entity entity, final Vector3d center, final Vector3d facing, final IWorldReader world);
+    Optional<AABB> produce(final Entity entity, final Vec3 center, final Vec3 facing, final LevelReader world);
 }

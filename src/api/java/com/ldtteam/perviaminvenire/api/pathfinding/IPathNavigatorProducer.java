@@ -1,7 +1,7 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 
 import java.util.Optional;
 
@@ -18,5 +18,5 @@ public interface IPathNavigatorProducer
      * @param initialNavigator The initial navigator.
      * @return The updated navigator
      */
-    Optional<PathNavigator> get(final MobEntity entity, final PathNavigator initialNavigator);
+    Optional<PathNavigation> get(final Mob entity, final PathNavigation initialNavigator);
 }

@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingOptions;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 /**
  * Callback invoked to handle the dismounting of an entity riding a minecart.

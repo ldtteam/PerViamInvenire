@@ -5,7 +5,7 @@ import com.ldtteam.perviaminvenire.api.movement.IMovementControllerProducer;
 import com.ldtteam.perviaminvenire.api.movement.registry.IMovementControllerRegistry;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathNavigatorProducer;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
-import net.minecraft.entity.MobEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.pathfinding.PathNavigator;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public final class MovementControllerRegistry extends AbstractCallbackBasedRegis
         return INSTANCE;
     }
 
-    private final Map<Predicate<MobEntity>, Function<MobEntity, IMovementControllerProducer>> registry = Maps.newConcurrentMap();
+    private final Map<Predicate<Mob>, Function<Mob, IMovementControllerProducer>> registry = Maps.newConcurrentMap();
 
     private MovementControllerRegistry() {
     }

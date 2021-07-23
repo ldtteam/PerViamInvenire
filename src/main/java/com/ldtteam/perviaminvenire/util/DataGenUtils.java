@@ -1,17 +1,17 @@
 package com.ldtteam.perviaminvenire.util;
 
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.ClimberPathNavigator;
-import net.minecraft.pathfinding.GroundPathNavigator;
-import net.minecraft.profiler.EmptyProfiler;
-import net.minecraft.util.registry.DynamicRegistries;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.util.profiling.InactiveProfiler;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.Registry;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.World;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,24 +31,24 @@ public class DataGenUtils
 
     public static EntityType<?>[] getCompatibleVanillaOverrideTypes()
     {
-        final DynamicRegistries.Impl dynamicRegistries = new DynamicRegistries.Impl();
+        final RegistryAccess.RegistryHolder dynamicRegistries = new RegistryAccess.RegistryHolder();
         DimensionType.registerBuiltin(dynamicRegistries);
         final DimensionType overworldDimension = dynamicRegistries.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).get(DimensionType.OVERWORLD_EFFECTS);
 
         @SuppressWarnings("ConstantConditions") //We are creating a dummy world here.
-        final ClientWorld clientWorld = new ClientWorld(
+        final ClientLevel clientWorld = new ClientLevel(
           null,
-          new ClientWorld.ClientWorldInfo(Difficulty.HARD, false, true),
-          World.OVERWORLD,
+          new ClientLevel.ClientLevelData(Difficulty.HARD, false, true),
+          Level.OVERWORLD,
           overworldDimension,
           1,
-          () -> EmptyProfiler.INSTANCE,
+          () -> InactiveProfiler.INSTANCE,
           null,
           true,
           0
         ) {
             @Override
-            public DynamicRegistries registryAccess()
+            public RegistryAccess registryAccess()
             {
                 return dynamicRegistries;
             }
@@ -62,12 +62,12 @@ public class DataGenUtils
                      try
                      {
                          final Entity entity = entityType.create(clientWorld);
-                         if (!(entity instanceof MobEntity))
+                         if (!(entity instanceof Mob))
                              return false;
 
-                         final MobEntity mob = (MobEntity) entity;
-                         return mob.getNavigation().getClass() == GroundPathNavigator.class ||
-                            mob.getNavigation().getClass() == ClimberPathNavigator.class;
+                         final Mob mob = (Mob) entity;
+                         return mob.getNavigation().getClass() == GroundPathNavigation.class ||
+                            mob.getNavigation().getClass() == WallClimberNavigation.class;
                      }
                      catch (Exception ex)
                      {

@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingOptions;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 /**
  * This interface functions as a callback when the path navigate is handling,

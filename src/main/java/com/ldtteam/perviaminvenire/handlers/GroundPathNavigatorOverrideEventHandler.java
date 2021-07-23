@@ -3,10 +3,10 @@ package com.ldtteam.perviaminvenire.handlers;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.pathfinding.registry.MovementControllerRegistry;
 import com.ldtteam.perviaminvenire.pathfinding.registry.PathNavigatorRegistry;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.controller.MovementController;
-import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -23,21 +23,21 @@ public class GroundPathNavigatorOverrideEventHandler
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static Field movementControllerField = ObfuscationReflectionHelper.findField(
-      MobEntity.class, "moveControl"
+      Mob.class, "moveControl"
     );
 
     @SubscribeEvent
     public static void handleModSpawnNavigatorEvent(final EntityJoinWorldEvent event)
     {
         final Entity entity = event.getEntity();
-        if (!(entity instanceof MobEntity))
+        if (!(entity instanceof Mob))
             return;
 
-        final MobEntity mob = (MobEntity) entity;
-        final Optional<PathNavigator> overrideHandler = PathNavigatorRegistry.getInstance().getRunner().get(mob, mob.getNavigation());
+        final Mob mob = (Mob) entity;
+        final Optional<PathNavigation> overrideHandler = PathNavigatorRegistry.getInstance().getRunner().get(mob, mob.getNavigation());
         overrideHandler.ifPresent(pathNavigator -> mob.navigation = pathNavigator);
 
-        final Optional<MovementController> controllerHandler = MovementControllerRegistry.getInstance().getRunner().get(mob, mob.getMoveControl());
+        final Optional<MoveControl> controllerHandler = MovementControllerRegistry.getInstance().getRunner().get(mob, mob.getMoveControl());
         controllerHandler.ifPresent(controller -> {
             try
             {

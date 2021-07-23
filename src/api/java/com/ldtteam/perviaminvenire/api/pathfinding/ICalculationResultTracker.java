@@ -2,8 +2,8 @@ package com.ldtteam.perviaminvenire.api.pathfinding;
 
 import com.ldtteam.perviaminvenire.api.IPerViamInvenireApi;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.Collection;
 
@@ -40,7 +40,7 @@ public interface ICalculationResultTracker
      * @param playerEntity The player that should start tracking.
      * @param entity The entity that is being tracked.
      */
-    void startTracking(PlayerEntity playerEntity, Entity entity);
+    void startTracking(Player playerEntity, Entity entity);
 
     /**
      * Invoked to stop tracking a given entity by a given player.
@@ -48,7 +48,7 @@ public interface ICalculationResultTracker
      * @param playerEntity The player that should stop tracking.
      * @param entity The entity that is being tracked.
      */
-    void stopTracking(PlayerEntity playerEntity, Entity entity);
+    void stopTracking(Player playerEntity, Entity entity);
 
     /**
      * Indicates to start exporting the pathing results of a given entity.
@@ -78,5 +78,5 @@ public interface ICalculationResultTracker
      * @param entity The entity to get the tracking players for.
      * @return The tracking players
      */
-    Collection<PlayerEntity> getTrackingPlayers(final Entity entity);
+    Collection<Player> getTrackingPlayers(final Entity entity);
 }

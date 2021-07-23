@@ -12,7 +12,7 @@ import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.mojang.brigadier.arguments.ArgumentType;
-import net.minecraft.command.arguments.ArgumentTypes;
+import net.minecraft.commands.synchronization.ArgumentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;

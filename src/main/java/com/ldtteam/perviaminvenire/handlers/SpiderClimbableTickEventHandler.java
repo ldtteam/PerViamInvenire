@@ -3,9 +3,9 @@ package com.ldtteam.perviaminvenire.handlers;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
-import net.minecraft.entity.monster.SpiderEntity;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.Node;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -17,11 +17,11 @@ public class SpiderClimbableTickEventHandler
     @SubscribeEvent
     public static void onLivingUpdate(final LivingEvent.LivingUpdateEvent event)
     {
-        if (!(event.getEntity() instanceof SpiderEntity)) {
+        if (!(event.getEntity() instanceof Spider)) {
             return;
         }
 
-        final SpiderEntity spiderEntity = (SpiderEntity) event.getEntity();
+        final Spider spiderEntity = (Spider) event.getEntity();
 
         if (!(spiderEntity.getNavigation() instanceof AbstractAdvancedGroundPathNavigator))
             return;
@@ -33,7 +33,7 @@ public class SpiderClimbableTickEventHandler
         }
 
         final Path path = navigator.getPath();
-        final PathPoint pathPoint = path.getNextNode();
+        final Node pathPoint = path.getNextNode();
         if (!(pathPoint instanceof PathPointExtended)) {
             spiderEntity.setClimbing(false);
             return;
@@ -47,7 +47,7 @@ public class SpiderClimbableTickEventHandler
             return;
         }
 
-        final PathPoint pathPointPrevious = path.getNode(path.getNextNodeIndex() - 1);
+        final Node pathPointPrevious = path.getNode(path.getNextNodeIndex() - 1);
         if (!(pathPointPrevious instanceof PathPointExtended)) {
             spiderEntity.setClimbing(currentIsLadder);
             return;

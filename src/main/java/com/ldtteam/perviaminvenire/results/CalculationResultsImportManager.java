@@ -7,7 +7,7 @@ import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultRenderer;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingCalculationData;
 import com.ldtteam.perviaminvenire.api.results.ICalculationResultsImportManager;
 import com.ldtteam.perviaminvenire.api.results.ICalculationResultsStorageManager;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,7 @@ public class CalculationResultsImportManager implements ICalculationResultsImpor
         return INSTANCE;
     }
 
-    private final Map<ServerWorld, List<String>> worldToRenderedDataMap = new MapMaker().concurrencyLevel(4)
+    private final Map<ServerLevel, List<String>> worldToRenderedDataMap = new MapMaker().concurrencyLevel(4)
         .weakKeys()
         .makeMap();
     private final Map<String, PathingCalculationData> idToDataMap = Maps.newConcurrentMap();
@@ -32,7 +32,7 @@ public class CalculationResultsImportManager implements ICalculationResultsImpor
     }
 
     @Override
-    public void onPostWorldTick(final ServerWorld world)
+    public void onPostWorldTick(final ServerLevel world)
     {
         if (!worldToRenderedDataMap.containsKey(world))
             return;
@@ -48,7 +48,7 @@ public class CalculationResultsImportManager implements ICalculationResultsImpor
     }
 
     @Override
-    public void startRenderingIn(final ServerWorld world, final String resultsIdentifier)
+    public void startRenderingIn(final ServerLevel world, final String resultsIdentifier)
     {
         if (!worldToRenderedDataMap.containsKey(world))
             worldToRenderedDataMap.put(world, Lists.newCopyOnWriteArrayList());
@@ -67,7 +67,7 @@ public class CalculationResultsImportManager implements ICalculationResultsImpor
     }
 
     @Override
-    public void stopRenderingIn(final ServerWorld world, final String resultsIdentifier)
+    public void stopRenderingIn(final ServerLevel world, final String resultsIdentifier)
     {
         if (!worldToRenderedDataMap.containsKey(world))
             return;

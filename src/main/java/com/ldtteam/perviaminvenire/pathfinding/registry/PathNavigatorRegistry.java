@@ -13,8 +13,8 @@ import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNav
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathNavigatorProducer;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 
-import net.minecraft.entity.MobEntity;
-import net.minecraft.pathfinding.PathNavigator;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 
 public final class PathNavigatorRegistry extends AbstractCallbackBasedRegistry<IPathNavigatorRegistry, IPathNavigatorProducer> implements IPathNavigatorRegistry
 {
@@ -24,7 +24,7 @@ public final class PathNavigatorRegistry extends AbstractCallbackBasedRegistry<I
         return INSTANCE;
     }
 
-    private final Map<Predicate<MobEntity>, Function<MobEntity, PathNavigator>> registry = Maps.newConcurrentMap();
+    private final Map<Predicate<Mob>, Function<Mob, PathNavigation>> registry = Maps.newConcurrentMap();
 
     private PathNavigatorRegistry() {
     }

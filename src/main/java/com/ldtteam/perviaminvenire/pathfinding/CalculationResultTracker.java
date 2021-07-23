@@ -11,9 +11,9 @@ import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.network.message.OnCalculationCompleted;
 import com.ldtteam.perviaminvenire.results.CalculationResultsStorageManager;
 import com.ldtteam.perviaminvenire.util.gson.MultimapAdapter;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,8 +33,8 @@ public class CalculationResultTracker implements ICalculationResultTracker
         return INSTANCE;
     }
 
-    private final Multimap<PlayerEntity, Entity> playerToTrackingEntity = Multimaps.synchronizedMultimap(HashMultimap.create());
-    private final Multimap<Entity, PlayerEntity> entityToTrackingPlayer = Multimaps.synchronizedMultimap(HashMultimap.create());
+    private final Multimap<Player, Entity> playerToTrackingEntity = Multimaps.synchronizedMultimap(HashMultimap.create());
+    private final Multimap<Entity, Player> entityToTrackingPlayer = Multimaps.synchronizedMultimap(HashMultimap.create());
     private final Set<Entity> entitiesToExport = Sets.newConcurrentHashSet();
 
     private CalculationResultTracker()
@@ -44,9 +44,9 @@ public class CalculationResultTracker implements ICalculationResultTracker
     @Override
     public void onEntityLeaveWorld(Entity entity)
     {
-        if (entity instanceof PlayerEntity)
+        if (entity instanceof Player)
         {
-            final PlayerEntity playerEntity = (PlayerEntity) entity;
+            final Player playerEntity = (Player) entity;
             playerToTrackingEntity.removeAll(playerEntity);
 
             entityToTrackingPlayer.entries()
@@ -67,13 +67,13 @@ public class CalculationResultTracker implements ICalculationResultTracker
     }
 
     @Override
-    public void startTracking(final PlayerEntity playerEntity, final Entity entity) {
+    public void startTracking(final Player playerEntity, final Entity entity) {
         playerToTrackingEntity.put(playerEntity, entity);
         entityToTrackingPlayer.put(entity, playerEntity);
     }
 
     @Override
-    public void stopTracking(final PlayerEntity playerEntity, final Entity entity) {
+    public void stopTracking(final Player playerEntity, final Entity entity) {
         playerToTrackingEntity.remove(playerEntity, entity);
         entityToTrackingPlayer.remove(entity, playerEntity);
     }
@@ -102,8 +102,8 @@ public class CalculationResultTracker implements ICalculationResultTracker
           new OnCalculationCompleted(entity.getUUID(), data),
           entityToTrackingPlayer.get(entity)
             .stream()
-            .filter(ServerPlayerEntity.class::isInstance)
-            .map(ServerPlayerEntity.class::cast).toArray(ServerPlayerEntity[]::new)
+            .filter(ServerPlayer.class::isInstance)
+            .map(ServerPlayer.class::cast).toArray(ServerPlayer[]::new)
         );
 
         final String storagePathName = entity.getUUID().toString();
@@ -115,7 +115,7 @@ public class CalculationResultTracker implements ICalculationResultTracker
 
 
     @Override
-    public Collection<PlayerEntity> getTrackingPlayers(final Entity entity)
+    public Collection<Player> getTrackingPlayers(final Entity entity)
     {
         return entityToTrackingPlayer.get(entity);
     }

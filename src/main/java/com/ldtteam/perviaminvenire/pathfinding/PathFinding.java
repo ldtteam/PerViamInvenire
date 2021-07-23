@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import net.minecraft.pathfinding.Path;
+import net.minecraft.world.level.pathfinder.Path;
 
 /**
  * Static class the handles all the PathFinding.

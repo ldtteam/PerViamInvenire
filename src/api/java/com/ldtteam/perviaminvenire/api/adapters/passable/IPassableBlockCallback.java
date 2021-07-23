@@ -1,10 +1,7 @@
 package com.ldtteam.perviaminvenire.api.adapters.passable;
 
-import com.ldtteam.perviaminvenire.api.pathfinding.PathingOptions;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Optional;
 

@@ -1,6 +1,6 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
-import net.minecraft.pathfinding.Path;
+import net.minecraft.world.level.pathfinder.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
