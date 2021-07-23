@@ -2,7 +2,7 @@ package com.ldtteam.perviaminvenire.api.adapters.minecart;
 
 import java.util.Optional;
 
-import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
+import com.ldtteam.perviaminvenire.api.pathfinding.ExtendedNode;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingOptions;
 
 import net.minecraft.world.entity.Entity;
@@ -15,5 +15,5 @@ import net.minecraft.world.entity.Entity;
  */
 @FunctionalInterface
 public interface IDismountCartCallback {
-    Optional<Boolean> handle(final Entity entity, final Entity ridingEntity, final PathPointExtended currentPathPoint);
+    Optional<Boolean> handle(final Entity entity, final Entity ridingEntity, final ExtendedNode currentPathPoint);
 }

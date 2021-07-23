@@ -2,7 +2,6 @@ package com.ldtteam.perviaminvenire.api.movement;
 
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.control.MoveControl;
-import net.minecraft.pathfinding.PathNavigator;
 
 import java.util.Optional;
 

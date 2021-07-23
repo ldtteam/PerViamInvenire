@@ -3,10 +3,7 @@ package com.ldtteam.perviaminvenire.pathfinding.registry;
 import com.google.common.collect.Maps;
 import com.ldtteam.perviaminvenire.api.movement.IMovementControllerProducer;
 import com.ldtteam.perviaminvenire.api.movement.registry.IMovementControllerRegistry;
-import com.ldtteam.perviaminvenire.api.pathfinding.IPathNavigatorProducer;
-import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.pathfinding.PathNavigator;
 
 import java.util.List;
 import java.util.Map;
@@ -21,8 +18,6 @@ public final class MovementControllerRegistry extends AbstractCallbackBasedRegis
     public static MovementControllerRegistry getInstance() {
         return INSTANCE;
     }
-
-    private final Map<Predicate<Mob>, Function<Mob, IMovementControllerProducer>> registry = Maps.newConcurrentMap();
 
     private MovementControllerRegistry() {
     }

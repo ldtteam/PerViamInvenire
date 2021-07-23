@@ -11,11 +11,11 @@ import com.ldtteam.perviaminvenire.api.util.ModTags;
 import com.ldtteam.perviaminvenire.movement.PVIMovementController;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireClimberPathNavigator;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigator;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Slime;
-import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
-import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
+import net.minecraft.world.entity.monster.Slime;
 
 import java.util.Optional;
 
@@ -85,15 +85,14 @@ public class VanillaCompatibilityManager
         );
 
         IIsLadderBlockRegistry.getInstance().register((entity, block, worldReader, blockPos) -> {
-            if (!(entity instanceof Mob))
+            if (!(entity instanceof final Mob mobEntity))
                 return Optional.empty();
 
-            final Mob mobEntity = (Mob) entity;
             if (!(mobEntity.getNavigation() instanceof PerViamInvenireClimberPathNavigator))
                 return Optional.empty();
 
             return Optional.of(block.isAir() && Direction.Plane.HORIZONTAL.stream()
-              .anyMatch(direction -> !worldReader.getBlockState(blockPos.offset(direction.getNormal())).isAir(worldReader, blockPos.offset(direction.getNormal()))));
+              .anyMatch(direction -> !worldReader.getBlockState(blockPos.offset(direction.getNormal())).isAir()));
         });
     }
 }

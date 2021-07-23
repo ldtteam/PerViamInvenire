@@ -350,7 +350,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         //noinspection ConstantConditions
         if (this.getPath() != null && lowestRidingEntity != null && lowestRidingEntity != ourEntity)
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
+            @NotNull final ExtendedNode pEx = (ExtendedNode) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
             return IDismountCartRegistry.getInstance()
                      .getRunner().handle(this.ourEntity, lowestRidingEntity, pEx)
                      .orElse(false);
@@ -464,27 +464,27 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
         final int pathLength = path.getNodeCount();
         Path tempPath = null;
-        if (pathLength > 0 && !(path.getNode(0) instanceof PathPointExtended))
+        if (pathLength > 0 && !(path.getNode(0) instanceof ExtendedNode))
         {
             //  Fix vanilla PathPoints to be PathPointExtended
-            @NotNull final PathPointExtended[] newPoints = new PathPointExtended[pathLength];
+            @NotNull final ExtendedNode[] newPoints = new ExtendedNode[pathLength];
 
             for (int i = 0; i < pathLength; ++i)
             {
                 final Node point = path.getNode(i);
-                if (!(point instanceof PathPointExtended))
+                if (!(point instanceof ExtendedNode))
                 {
-                    newPoints[i] = new PathPointExtended(new BlockPos(point.x, point.y, point.z));
+                    newPoints[i] = new ExtendedNode(new BlockPos(point.x, point.y, point.z));
                 }
                 else
                 {
-                    newPoints[i] = (PathPointExtended) point;
+                    newPoints[i] = (ExtendedNode) point;
                 }
             }
 
             tempPath = new Path(Arrays.asList(newPoints), getTargetPos(), false);
 
-            final PathPointExtended finalPoint = newPoints[pathLength - 1];
+            final ExtendedNode finalPoint = newPoints[pathLength - 1];
             destination = new BlockPos(finalPoint.x, finalPoint.y, finalPoint.z);
         }
 
@@ -509,16 +509,16 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         if (!this.isDone() && this.getPath() != null && this.getPath().getNodeCount() > this.getPath().getNextNodeIndex() + 1
               && Objects.requireNonNull(this.getPath()).nodes.size() > this.getPath().getNextNodeIndex())
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
-            final PathPointExtended pExNext = getPath().getNodeCount() > this.getPath().getNextNodeIndex() + 1
-                                                ? (PathPointExtended) this.getPath()
+            @NotNull final ExtendedNode pEx = (ExtendedNode) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
+            final ExtendedNode pExNext = getPath().getNodeCount() > this.getPath().getNextNodeIndex() + 1
+                                                ? (ExtendedNode) this.getPath()
                                                                         .getNode(this.getPath()
                                                                                                  .getNextNodeIndex() + 1)
                                                 : null;
 
             for (int i = this.path.getNextNodeIndex(); i < Math.min(this.path.getNodeCount(), this.path.getNextNodeIndex() + 3); i++)
             {
-                final PathPointExtended nextPoints = (PathPointExtended) this.getPath().getNode(i);
+                final ExtendedNode nextPoints = (ExtendedNode) this.getPath().getNode(i);
                 if (nextPoints.isOnLadder())
                 {
                     Vec3 motion = this.mob.getDeltaMovement();
@@ -591,9 +591,9 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     {
         if (!this.isDone() && Objects.requireNonNull(this.getPath()).nodes.size() > this.getPath().getNextNodeIndex())
         {
-            @NotNull final PathPointExtended pEx = (PathPointExtended) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
-            final PathPointExtended pExNext = getPath().getNodeCount() > this.getPath().getNextNodeIndex() + 1
-                                                ? (PathPointExtended) this.getPath()
+            @NotNull final ExtendedNode pEx = (ExtendedNode) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
+            final ExtendedNode pExNext = getPath().getNodeCount() > this.getPath().getNextNodeIndex() + 1
+                                                ? (ExtendedNode) this.getPath()
                                                                         .getNode(this.getPath()
                                                                                                  .getNextNodeIndex() + 1)
                                                 : null;
@@ -613,14 +613,14 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * @param pExNext the next path point.
      * @return if go to next point.
      */
-    private boolean handlePathOnRails(final PathPointExtended pEx, final PathPointExtended pExNext)
+    private boolean handlePathOnRails(final ExtendedNode pEx, final ExtendedNode pExNext)
     {
         return IRidingOnCartRegistry.getInstance().getRunner().handle(this.ourEntity, pEx, pExNext)
                  .orElseThrow(() -> new IllegalStateException(
                    "Entity : " + this.ourEntity.getType().getRegistryName() + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
     }
 
-    private boolean handlePathPointOnLadder(final PathPointExtended pEx)
+    private boolean handlePathPointOnLadder(final ExtendedNode pEx)
     {
         Vec3 vec3 = Objects.requireNonNull(this.getPath()).getNextEntityPos(this.ourEntity);
 
@@ -692,7 +692,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
                  .orElseGet(() -> blockstate.getBlock().isLadder(this.level.getBlockState(pos), level, pos, mob));
     }
 
-    private boolean handleEntityInWater(int oldIndex, final PathPointExtended pEx)
+    private boolean handleEntityInWater(int oldIndex, final ExtendedNode pEx)
     {
         //  Prevent shortcuts when swimming
         final int curIndex = Objects.requireNonNull(this.getPath()).getNextNodeIndex();
@@ -733,7 +733,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         final int curNodeNext = curNode + 1;
         if (curNodeNext < path.getNodeCount())
         {
-            if (!(path.getNode(curNode) instanceof PathPointExtended))
+            if (!(path.getNode(curNode) instanceof ExtendedNode))
             {
                 path = convertPath(path);
             }

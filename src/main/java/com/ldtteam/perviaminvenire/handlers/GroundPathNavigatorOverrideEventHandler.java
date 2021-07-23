@@ -10,7 +10,7 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,7 +23,7 @@ public class GroundPathNavigatorOverrideEventHandler
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static Field movementControllerField = ObfuscationReflectionHelper.findField(
-      Mob.class, "moveControl"
+      Mob.class, "f_21342_"
     );
 
     @SubscribeEvent

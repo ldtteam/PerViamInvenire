@@ -4,6 +4,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.util.profiling.InactiveProfiler;
@@ -66,8 +67,10 @@ public class DataGenUtils
                              return false;
 
                          final Mob mob = (Mob) entity;
-                         return mob.getNavigation().getClass() == GroundPathNavigation.class ||
-                            mob.getNavigation().getClass() == WallClimberNavigation.class;
+                         return (mob.getNavigation().getClass() == GroundPathNavigation.class ||
+                            mob.getNavigation().getClass() == WallClimberNavigation.class) && (
+                              mob.getMoveControl().getClass() == MoveControl.class
+                           );
                      }
                      catch (Exception ex)
                      {

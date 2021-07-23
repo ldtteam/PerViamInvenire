@@ -1,8 +1,7 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
-import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
-import com.ldtteam.perviaminvenire.api.pathfinding.Node;
+import com.ldtteam.perviaminvenire.api.pathfinding.CalculationNode;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.core.BlockPos;
@@ -14,8 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.Set;
-
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.DEBUG_VERBOSITY_NONE;
 
 public class PathJobMoveToOneOfLocation extends AbstractPathJob
 {
@@ -83,7 +80,7 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
      * @return true if has been reached.
      */
     @Override
-    protected boolean isAtDestination(@NotNull final Node n)
+    protected boolean isAtDestination(@NotNull final CalculationNode n)
     {
         for (BlockPos d : destination)
         {
@@ -104,7 +101,7 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
      * @return double of the distance.
      */
     @Override
-    protected double getNodeResultScore(@NotNull final Node n)
+    protected double getNodeResultScore(@NotNull final CalculationNode n)
     {
         final BlockPos pos = n.pos;
         boolean seen = false;

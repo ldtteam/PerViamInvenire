@@ -1,5 +1,7 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.Entity;
@@ -9,12 +11,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.Biomes;
@@ -58,7 +56,7 @@ public class ChunkCache implements LevelReader
         {
             for (int l = this.chunkZ; l <= j; ++l)
             {
-                if (worldIn.getChunkSource().isEntityTickingChunk(new ChunkPos(k, l)))
+                if ((!(worldIn instanceof ServerLevel)) || ((ServerLevel) worldIn).isPositionEntityTicking(new ChunkPos(k, l)))
                 {
                     this.chunkArray[k - this.chunkX][l - this.chunkZ] = (LevelChunk) worldIn.getChunk(k, l, ChunkStatus.FULL, false);
                 }
@@ -158,7 +156,7 @@ public class ChunkCache implements LevelReader
     public boolean isEmptyBlock(BlockPos pos)
     {
         BlockState state = this.getBlockState(pos);
-        return state.getBlock().isAir(state, this, pos);
+        return state.isAir();
     }
 
     @org.jetbrains.annotations.Nullable

@@ -1,13 +1,10 @@
 package com.ldtteam.perviaminvenire.pathfinding.registry;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.ldtteam.perviaminvenire.api.adapters.minecart.IRidingOnCartCallback;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
-import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
 
-import net.minecraft.entity.Entity;
+import java.util.List;
+import java.util.Optional;
 
 public final class RidingOnCartRegistry extends AbstractCallbackBasedRegistry<IRidingOnCartRegistry, IRidingOnCartCallback> implements IRidingOnCartRegistry {
 

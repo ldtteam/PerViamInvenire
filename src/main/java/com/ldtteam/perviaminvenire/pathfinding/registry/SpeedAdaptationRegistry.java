@@ -1,12 +1,10 @@
 package com.ldtteam.perviaminvenire.pathfinding.registry;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.speed.ISpeedAdaptationCallback;
 
-import net.minecraft.entity.Entity;
+import java.util.List;
+import java.util.Optional;
 
 public final class SpeedAdaptationRegistry extends AbstractCallbackBasedRegistry<ISpeedAdaptationRegistry, ISpeedAdaptationCallback> implements ISpeedAdaptationRegistry {
 

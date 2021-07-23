@@ -9,7 +9,7 @@ import net.minecraft.core.BlockPos;
 /**
  * Class extending pathPoint for our usage with ladders.
  */
-public class PathPointExtended extends Node
+public class ExtendedNode extends Node
 {
     /**
      * Is the point on a ladder.
@@ -33,7 +33,7 @@ public class PathPointExtended extends Node
      *
      * @param pos the position.
      */
-    public PathPointExtended(@NotNull final BlockPos pos)
+    public ExtendedNode(@NotNull final BlockPos pos)
     {
         super(pos.getX(), pos.getY(), pos.getZ());
     }
@@ -146,7 +146,7 @@ public class PathPointExtended extends Node
             return false;
         }
 
-        final PathPointExtended that = (PathPointExtended) o;
+        final ExtendedNode that = (ExtendedNode) o;
 
         if (onLadder != that.onLadder)
         {

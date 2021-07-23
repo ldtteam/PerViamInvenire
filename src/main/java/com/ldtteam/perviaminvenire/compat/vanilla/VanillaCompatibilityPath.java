@@ -1,7 +1,7 @@
 package com.ldtteam.perviaminvenire.compat.vanilla;
 
 import com.google.common.collect.Lists;
-import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
+import com.ldtteam.perviaminvenire.api.pathfinding.ExtendedNode;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.Node;
@@ -30,10 +30,10 @@ public class VanillaCompatibilityPath extends Path
         final BlockPos delta = target.subtract(source);
 
         return Lists.newArrayList(
-          new PathPointExtended(
+          new ExtendedNode(
             target.offset(Direction.getNearest(delta.getX(), delta.getY(), delta.getZ()).getNormal())
           ),
-          new PathPointExtended(
+          new ExtendedNode(
             target.offset(Direction.getNearest(delta.getX(), delta.getY(), delta.getZ()).getNormal())
               .offset(Direction.getNearest(delta.getX(), delta.getY(), delta.getZ()).getNormal())
           )

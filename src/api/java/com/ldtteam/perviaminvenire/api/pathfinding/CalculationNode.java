@@ -8,7 +8,7 @@ import net.minecraft.core.BlockPos;
 /**
  * Nodes used in pathfinding.
  */
-public class Node implements Comparable<Node>
+public class CalculationNode implements Comparable<CalculationNode>
 {
     /**
      * Values used in the generation of the hash of the node.
@@ -32,7 +32,7 @@ public class Node implements Comparable<Node>
      * The parent of the node (Node preceding this node).
      */
     @Nullable
-    public Node parent;
+    public CalculationNode parent;
 
     /**
      * Added counter.
@@ -98,7 +98,7 @@ public class Node implements Comparable<Node>
      * @param pos       coordinates of node.
      * @param heuristic heuristic estimate.
      */
-    public Node(@NotNull final BlockPos pos, final double heuristic)
+    public CalculationNode(@NotNull final BlockPos pos, final double heuristic)
     {
         this(null, pos, 0, heuristic, heuristic);
     }
@@ -112,7 +112,7 @@ public class Node implements Comparable<Node>
      * @param heuristic heuristic estimate.
      * @param score     node total score.
      */
-    public Node(@Nullable final Node parent, @NotNull final BlockPos pos, final double cost, final double heuristic, final double score)
+    public CalculationNode(@Nullable final CalculationNode parent, @NotNull final BlockPos pos, final double cost, final double heuristic, final double score)
     {
         this.parent = parent;
         this.pos = pos;
@@ -124,7 +124,7 @@ public class Node implements Comparable<Node>
     }
 
     @Override
-    public int compareTo(@NotNull final Node o)
+    public int compareTo(@NotNull final CalculationNode o)
     {
         //  Comparing doubles and returning value as int; can't simply cast the result
         if (score < o.score)
@@ -162,7 +162,7 @@ public class Node implements Comparable<Node>
     {
         if (o != null && o.getClass() == this.getClass())
         {
-            @Nullable final Node other = (Node) o;
+            @Nullable final CalculationNode other = (CalculationNode) o;
             return pos.getX() == other.pos.getX()
                      && pos.getY() == other.pos.getY()
                      && pos.getZ() == other.pos.getZ();

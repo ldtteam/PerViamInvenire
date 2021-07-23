@@ -5,9 +5,6 @@ import java.util.Optional;
 
 import com.ldtteam.perviaminvenire.api.adapters.minecart.IDismountCartCallback;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
-import com.ldtteam.perviaminvenire.api.pathfinding.PathPointExtended;
-
-import net.minecraft.entity.Entity;
 
 public final class DismountCartRegistry extends AbstractCallbackBasedRegistry<IDismountCartRegistry, IDismountCartCallback> implements IDismountCartRegistry
 {

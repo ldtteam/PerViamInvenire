@@ -3,15 +3,13 @@ package com.ldtteam.perviaminvenire.collisions;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IBoundingBoxProducerRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.core.Direction;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class CollisionDetectionManager implements ICollisionDetectionManager
 {
@@ -35,7 +33,7 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
               final EntityDimensions entitySize = entity.getDimensions(entity.getPose());
               final float entityHorizontalSize = entitySize.width > 0.75F ? entitySize.width / 2.0F : 0.75F - entitySize.width / 2.0F;;
 
-              return AABB.ofSize(entityHorizontalSize, 0.1F, entityHorizontalSize).move(center.x(), center.y() + (entity.getEyeHeight(entity.getPose()) - entitySize.height / 2), center.z());
+              return AABB.ofSize(Vec3.ZERO, entityHorizontalSize, 0.1F, entityHorizontalSize).move(center.x(), center.y() + (entity.getEyeHeight(entity.getPose()) - entitySize.height / 2), center.z());
           });
 
         if (hasNoCollisions(entity, world, entityBox))

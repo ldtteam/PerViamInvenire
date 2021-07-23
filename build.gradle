@@ -14,16 +14,10 @@ buildscript {
     }
 }
 
-apply from: 'https://raw.githubusercontent.com/ldtteam/OperaPublicaCreator/main/gradle/mod.gradle'
+apply from: 'opc.gradle'
 apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 project.getLogger().lifecycle("Loaded remote build.gradle with version: " + project.modVersion)
 
-if (project.hasProperty('UPDATE_MAPPINGS')) {
-    extractRangeMap {
-        sources sourceSets.api.java.srcDirs
-    }
-    applyRangeMap {
-        sources sourceSets.api.java.srcDirs
-    }
-    sourceSets.api.java.srcDirs.each { extractMappedNew.addTarget it }
+afterEvaluate {
+    tasks.processApiResources.duplicatesStrategy = DuplicatesStrategy.WARN
 }

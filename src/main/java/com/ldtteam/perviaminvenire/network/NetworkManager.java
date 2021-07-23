@@ -2,14 +2,13 @@ package com.ldtteam.perviaminvenire.network;
 
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.network.message.OnCalculationCompleted;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.network.NetworkEvent;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.fmllegacy.network.NetworkRegistry;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
+import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
 
 public class NetworkManager
 {

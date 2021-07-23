@@ -4,10 +4,6 @@ import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingCalculationData;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.particles.IParticleData;
-import net.minecraft.particles.ParticleType;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 public class PathingResultHandler implements IPathingResultHandler

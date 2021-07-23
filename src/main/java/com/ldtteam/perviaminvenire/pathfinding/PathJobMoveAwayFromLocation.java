@@ -1,10 +1,7 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
-import static com.ldtteam.perviaminvenire.api.util.constants.PathingConstants.DEBUG_VERBOSITY_NONE;
-
-import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
-import com.ldtteam.perviaminvenire.api.pathfinding.Node;
+import com.ldtteam.perviaminvenire.api.pathfinding.CalculationNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -87,7 +84,7 @@ public class PathJobMoveAwayFromLocation extends AbstractPathJob
      * @return true if so.
      */
     @Override
-    protected boolean isAtDestination(@NotNull final Node n)
+    protected boolean isAtDestination(@NotNull final CalculationNode n)
     {
         return Math.sqrt(avoid.distSqr(n.pos)) > avoidDistance;
     }
@@ -99,7 +96,7 @@ public class PathJobMoveAwayFromLocation extends AbstractPathJob
      * @return double amount.
      */
     @Override
-    protected double getNodeResultScore(@NotNull final Node n)
+    protected double getNodeResultScore(@NotNull final CalculationNode n)
     {
         return -avoid.distSqr(n.pos);
     }
