@@ -23,7 +23,7 @@ public class GroundPathNavigatorOverrideEventHandler
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static Field movementControllerField = ObfuscationReflectionHelper.findField(
-      MobEntity.class, "moveControl"
+      MobEntity.class, "field_70765_h"
     );
 
     @SubscribeEvent
