@@ -10,9 +10,11 @@ import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegist
 import com.ldtteam.perviaminvenire.api.util.ModTags;
 import com.ldtteam.perviaminvenire.movement.PVIMovementController;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireClimberPathNavigator;
+import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireFlyingPathNavigator;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigator;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
 import net.minecraft.world.entity.monster.Slime;
@@ -64,6 +66,26 @@ public class VanillaCompatibilityManager
               final PerViamInvenireClimberPathNavigator navigator = new PerViamInvenireClimberPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
               final WallClimberNavigation existingNavigator = (WallClimberNavigation) initialNavigator;
               navigator.getPathingOptions().setCanUseLadders(true);
+              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
+              navigator.getPathingOptions().setCanUseRails(false);
+              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeEvaluator().canOpenDoors());
+              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeEvaluator().canPassDoors());
+
+              return Optional.of(navigator);
+          }
+        );
+
+        IPathNavigatorRegistry.getInstance().register(
+          (mobEntity, initialNavigator) -> {
+              if (!(ModTags.REPLACE_VANILLA_NAVIGATOR.contains(mobEntity.getType()) &&
+                      ICommonConfig.getInstance().isVanillaReplacementEnabled() &&
+                      !(initialNavigator instanceof IAdvancedPathNavigator) &&
+                      initialNavigator.getClass() == FlyingPathNavigation.class))
+                  return Optional.empty();
+
+              final PerViamInvenireFlyingPathNavigator navigator = new PerViamInvenireFlyingPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
+              final FlyingPathNavigation existingNavigator = (FlyingPathNavigation) initialNavigator;
+              navigator.getPathingOptions().setCanUseLadders(false);
               navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
               navigator.getPathingOptions().setCanUseRails(false);
               navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeEvaluator().canOpenDoors());

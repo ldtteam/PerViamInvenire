@@ -13,7 +13,6 @@
 - Endermite
 - Evoker
 - Giant
-- Glow Squid
 - Hoglin
 - Horse
 - Husk
@@ -23,6 +22,7 @@
 - Mule
 - Mooshroom
 - Ocelot
+- Parrot
 - Pig
 - Piglin
 - Piglin Brute
@@ -44,6 +44,13 @@
 - Witch
 - Wither
 - Wither Skeleton
+- Wolf
+- Zoglin
+- Zombie
+- Zombie Horse
+- Zombie Villager
+- Zombified Piglin
+on
 - Wolf
 - Zoglin
 - Zombie

@@ -151,6 +151,9 @@ public class VanillaCompatibilityPath extends Path
     @Override
     public Vec3 getEntityPosAtNode(final Entity entityIn, final int index)
     {
+        if (isNotComplete())
+            return new Vec3(entityIn.getX(), entityIn.getY(), entityIn.getZ());
+
         return super.getEntityPosAtNode(entityIn, index);
     }
 

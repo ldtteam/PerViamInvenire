@@ -1,28 +1,37 @@
 package com.ldtteam.perviaminvenire.util;
 
+import com.ldtteam.perviaminvenire.movement.PVIMovementController;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.control.MoveControl;
-import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
-import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.util.profiling.InactiveProfiler;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.Registry;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.entity.ai.control.FlyingMoveControl;
+import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
 import java.util.Objects;
 
 public class DataGenUtils
 {
+    private static final Field movementControllerField = ObfuscationReflectionHelper.findField(
+      Mob.class, "field_70765_h"
+    );
 
-    private static final String MINECRAFT_MOD_ID = "minecraft";
+    private static final String MINECRAFT_MOD_ID        = "minecraft";
     private static final Logger LOGGER           = LogManager.getLogger();
 
     private DataGenUtils()
@@ -49,7 +58,7 @@ public class DataGenUtils
           0
         ) {
             @Override
-            public RegistryAccess registryAccess()
+            public @NotNull RegistryAccess registryAccess()
             {
                 return dynamicRegistries;
             }
@@ -63,14 +72,12 @@ public class DataGenUtils
                      try
                      {
                          final Entity entity = entityType.create(clientWorld);
-                         if (!(entity instanceof Mob))
+                         if (!(entity instanceof final Mob mob))
                              return false;
 
-                         final Mob mob = (Mob) entity;
-                         return (mob.getNavigation().getClass() == GroundPathNavigation.class ||
-                            mob.getNavigation().getClass() == WallClimberNavigation.class) && (
-                              mob.getMoveControl().getClass() == MoveControl.class
-                           );
+                         return isMobEntityASupportedGroundEntity(mob) ||
+                                  isMobEntityASupportedClimberEntity(mob) ||
+                           isMobEntityASupportedFlyingEntity(mob);
                      }
                      catch (Exception ex)
                      {
@@ -80,5 +87,37 @@ public class DataGenUtils
                          return false;
                      }
                  }).toArray(EntityType<?>[]::new);
+    }
+
+    private static Class<?> getMovementControllerClass(final Mob mobEntity) {
+        try
+        {
+            return movementControllerField.get(mobEntity).getClass();
+        }
+        catch (IllegalAccessException e)
+        {
+            return Object.class;
+        }
+    }
+
+    private static boolean isMobEntityASupportedGroundEntity(final Mob mobEntity) {
+        //We only support none overriden movement and ground path navigators.
+        return mobEntity.getNavigation().getClass() == GroundPathNavigation.class &&
+                 getMovementControllerClass(mobEntity) == MoveControl.class;
+
+    }
+
+    private static boolean isMobEntityASupportedClimberEntity(final Mob mobEntity) {
+        //We only support none overriden movement and ground path navigators.
+        return mobEntity.getNavigation().getClass() == WallClimberNavigation.class &&
+                 getMovementControllerClass(mobEntity) == MoveControl.class;
+
+    }
+
+    private static boolean isMobEntityASupportedFlyingEntity(final Mob mobEntity) {
+        //We only support none overriden movement and ground path navigators.
+        return mobEntity.getNavigation().getClass() == FlyingPathNavigation.class &&
+                 getMovementControllerClass(mobEntity) == FlyingMoveControl.class;
+
     }
 }
