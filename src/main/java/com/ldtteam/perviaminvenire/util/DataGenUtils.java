@@ -4,7 +4,10 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.controller.FlyingMovementController;
+import net.minecraft.entity.ai.controller.MovementController;
 import net.minecraft.pathfinding.ClimberPathNavigator;
+import net.minecraft.pathfinding.FlyingPathNavigator;
 import net.minecraft.pathfinding.GroundPathNavigator;
 import net.minecraft.profiler.EmptyProfiler;
 import net.minecraft.util.registry.DynamicRegistries;
@@ -12,16 +15,21 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Field;
 import java.util.Objects;
 
 public class DataGenUtils
 {
+    private static       Field  movementControllerField = ObfuscationReflectionHelper.findField(
+      MobEntity.class, "field_70765_h"
+    );
 
-    private static final String MINECRAFT_MOD_ID = "minecraft";
+    private static final String MINECRAFT_MOD_ID        = "minecraft";
     private static final Logger LOGGER           = LogManager.getLogger();
 
     private DataGenUtils()
@@ -66,8 +74,9 @@ public class DataGenUtils
                              return false;
 
                          final MobEntity mob = (MobEntity) entity;
-                         return mob.getNavigation().getClass() == GroundPathNavigator.class ||
-                            mob.getNavigation().getClass() == ClimberPathNavigator.class;
+                         return isMobEntityASupportedGroundEntity(mob) ||
+                                  isMobEntityASupportedClimberEntity(mob) ||
+                           isMobEntityASupportedFlyingEntity(mob);
                      }
                      catch (Exception ex)
                      {
@@ -77,5 +86,37 @@ public class DataGenUtils
                          return false;
                      }
                  }).toArray(EntityType<?>[]::new);
+    }
+
+    private static Class<?> getMovementControllerClass(final MobEntity mobEntity) {
+        try
+        {
+            return movementControllerField.get(mobEntity).getClass();
+        }
+        catch (IllegalAccessException e)
+        {
+            return Object.class;
+        }
+    }
+
+    private static boolean isMobEntityASupportedGroundEntity(final MobEntity mobEntity) {
+        //We only support none overriden movement and ground path navigators.
+        return mobEntity.getNavigation().getClass() == GroundPathNavigator.class &&
+                 getMovementControllerClass(mobEntity) == MovementController.class;
+
+    }
+
+    private static boolean isMobEntityASupportedClimberEntity(final MobEntity mobEntity) {
+        //We only support none overriden movement and ground path navigators.
+        return mobEntity.getNavigation().getClass() == ClimberPathNavigator.class &&
+                 getMovementControllerClass(mobEntity) == MovementController.class;
+
+    }
+
+    private static boolean isMobEntityASupportedFlyingEntity(final MobEntity mobEntity) {
+        //We only support none overriden movement and ground path navigators.
+        return mobEntity.getNavigation().getClass() == FlyingPathNavigator.class &&
+                 getMovementControllerClass(mobEntity) == FlyingMovementController.class;
+
     }
 }

@@ -1,6 +1,7 @@
 package com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
+import com.ldtteam.perviaminvenire.api.pathfinding.IAdvancedPathNavigator;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -130,7 +131,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      * @param navigator navigator to check
      */
     @Override
-    public void checkStuck(final AbstractAdvancedGroundPathNavigator navigator)
+    public void checkStuck(final IAdvancedPathNavigator navigator)
     {
         if (navigator.getDesiredPos() == null || navigator.getDesiredPos().equals(BlockPos.ZERO))
         {
@@ -223,7 +224,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
     /**
      * Final action when completly stuck before resetting stuck handler and path
      */
-    private void completeStuckAction(final AbstractAdvancedGroundPathNavigator navigator)
+    private void completeStuckAction(final IAdvancedPathNavigator navigator)
     {
         final BlockPos desired = navigator.getDesiredPos();
         final World world = navigator.getOurEntity().level;
@@ -269,7 +270,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
     /**
      * Tries unstuck options depending on the level
      */
-    private void tryUnstuck(final AbstractAdvancedGroundPathNavigator navigator)
+    private void tryUnstuck(final IAdvancedPathNavigator navigator)
     {
         if (delayToNextUnstuckAction-- > 0)
         {
@@ -414,7 +415,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      *
      * @param navigator navigator to use
      */
-    private void placeLadders(final AbstractAdvancedGroundPathNavigator navigator)
+    private void placeLadders(final IAdvancedPathNavigator navigator)
     {
         final World world = navigator.getOurEntity().level;
         final MobEntity entity = navigator.getOurEntity();
@@ -436,7 +437,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      *
      * @param navigator navigator to use
      */
-    private void placeLeaves(final AbstractAdvancedGroundPathNavigator navigator)
+    private void placeLeaves(final IAdvancedPathNavigator navigator)
     {
         final World world = navigator.getOurEntity().level;
         final MobEntity entity = navigator.getOurEntity();
@@ -463,7 +464,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      *
      * @param navigator navigator to use
      */
-    private void breakBlocks(final AbstractAdvancedGroundPathNavigator navigator)
+    private void breakBlocks(final IAdvancedPathNavigator navigator)
     {
         final World world = navigator.getOurEntity().level;
         final MobEntity entity = navigator.getOurEntity();

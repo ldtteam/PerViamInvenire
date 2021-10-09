@@ -149,8 +149,11 @@ public class VanillaCompatibilityPath extends Path
      * @param index The index in question.
      */
     @Override
-    public Vector3d getEntityPosAtNode(final Entity entityIn, final int index)
+    public @NotNull Vector3d getEntityPosAtNode(final @NotNull Entity entityIn, final int index)
     {
+        if (isNotComplete())
+            return new Vector3d(entityIn.getX(), entityIn.getY(), entityIn.getZ());
+
         return super.getEntityPosAtNode(entityIn, index);
     }
 

@@ -46,16 +46,6 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
     }
 
     /**
-     * Used to path away from a position.
-     *
-     * @param currentPosition the position to avoid.
-     * @param range the range he should move out of.
-     * @param speed the speed to run at.
-     * @return the result of the pathing.
-     */
-    public abstract PathResult moveAwayFromXYZ(final BlockPos currentPosition, final double range, final double speed);
-
-    /**
      * Try to move to a certain position.
      *
      * @param x     the x target.

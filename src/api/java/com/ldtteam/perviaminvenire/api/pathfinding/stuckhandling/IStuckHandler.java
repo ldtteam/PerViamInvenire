@@ -1,6 +1,6 @@
 package com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling;
 
-import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
+import com.ldtteam.perviaminvenire.api.pathfinding.IAdvancedPathNavigator;
 
 /**
  * Stuck handler for pathing, gets called to check/deal with stuck status
@@ -12,5 +12,5 @@ public interface IStuckHandler
      *
      * @param navigator navigator to check
      */
-    void checkStuck(final AbstractAdvancedGroundPathNavigator navigator);
+    void checkStuck(final IAdvancedPathNavigator navigator);
 }

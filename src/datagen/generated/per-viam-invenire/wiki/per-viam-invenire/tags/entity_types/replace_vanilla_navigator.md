@@ -8,13 +8,10 @@
 - Cow
 - Creeper
 - Donkey
-- Drowned
 - Ender Dragon
 - Enderman
 - Endermite
 - Evoker
-- Fox
-- Ghast
 - Giant
 - Hoglin
 - Horse
@@ -22,36 +19,38 @@
 - Illusioner
 - Iron Golem
 - Llama
-- Magma Cube
 - Mule
 - Mooshroom
 - Ocelot
-- Panda
-- Phantom
+- Parrot
 - Pig
 - Piglin
 - Piglin Brute
 - Pillager
 - Polar Bear
-- Rabbit
 - Sheep
 - Shulker
 - Silverfish
 - Skeleton
 - Skeleton Horse
-- Slime
 - Snow Golem
 - Spider
 - Squid
 - Stray
 - Trader Llama
-- Vex
 - Villager
 - Vindicator
 - Wandering Trader
 - Witch
 - Wither
 - Wither Skeleton
+- Wolf
+- Zoglin
+- Zombie
+- Zombie Horse
+- Zombie Villager
+- Zombified Piglin
+on
 - Wolf
 - Zoglin
 - Zombie
