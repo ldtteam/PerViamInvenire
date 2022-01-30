@@ -9,10 +9,10 @@ import com.ldtteam.perviaminvenire.config.ConfigurationManager;
 import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import net.minecraft.commands.synchronization.ArgumentTypes;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fmlserverevents.FMLServerStoppingEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,7 +27,7 @@ public class PerViamInvenire
     {
         PerViamInvenireApiProxy.getInstance().setApiInstance(new PerViamInvenireApiImplementation());
 
-        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener((FMLServerStoppingEvent event) -> {
+        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener((ServerStoppingEvent event) -> {
             PathFinding.shutdown();
         });
         Mod.EventBusSubscriber.Bus.MOD.bus().get().addListener(this::initialize);

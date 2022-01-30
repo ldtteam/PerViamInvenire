@@ -28,6 +28,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -216,10 +218,8 @@ public class ChunkCache implements LevelReader
     }
 
     @Override
-    public Stream<VoxelShape> getEntityCollisions(
-      @org.jetbrains.annotations.Nullable final Entity p_230318_1_, final AABB p_230318_2_, final Predicate<Entity> p_230318_3_)
-    {
-        return Stream.empty();
+    public List<VoxelShape> getEntityCollisions(@org.jetbrains.annotations.Nullable Entity p_186427_, AABB p_186428_) {
+        return Collections.emptyList();
     }
 
     @Override

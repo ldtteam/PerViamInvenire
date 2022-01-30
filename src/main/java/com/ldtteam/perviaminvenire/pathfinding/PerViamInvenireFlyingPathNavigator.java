@@ -387,10 +387,9 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
     }
 
     @Override
-    protected boolean canMoveDirectly(final Vec3 start, @NotNull final Vec3 end, final int sizeX, final int sizeY, final int sizeZ)
-    {
+    protected boolean canMoveDirectly(@NotNull final Vec3 start, @NotNull final Vec3 end) {
         return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, level.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
-                 && super.canMoveDirectly(start, end, sizeX, sizeY, sizeZ);
+                && super.canMoveDirectly(start, end);
     }
 
     public double getSpeed()

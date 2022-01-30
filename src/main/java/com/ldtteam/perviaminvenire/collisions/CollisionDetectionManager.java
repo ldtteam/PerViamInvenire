@@ -11,6 +11,10 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.StreamSupport;
+
 public class CollisionDetectionManager implements ICollisionDetectionManager
 {
     private static final CollisionDetectionManager INSTANCE = new CollisionDetectionManager();
@@ -31,7 +35,7 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
           .getRunner().produce(entity, center, facing, world)
           .orElseGet(() -> {
               final EntityDimensions entitySize = entity.getDimensions(entity.getPose());
-              final float entityHorizontalSize = entitySize.width > 0.75F ? entitySize.width / 2.0F : 0.75F - entitySize.width / 2.0F;;
+              final float entityHorizontalSize = entitySize.width > 0.75F ? entitySize.width / 2.0F : 0.75F - entitySize.width / 2.0F;
 
               return AABB.ofSize(Vec3.ZERO, entityHorizontalSize, 0.1F, entityHorizontalSize).move(center.x(), center.y() + (entity.getEyeHeight(entity.getPose()) - entitySize.height / 2), center.z());
           });
@@ -42,7 +46,14 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
         }
 
         final AABB bottomBox = new AABB(entityBox.minX, entityBox.minY, entityBox.minZ, entityBox.maxX, entityBox.minY + 1, entityBox.maxZ);
-        final double maxHeightOfBottom = world.getBlockCollisions(null, bottomBox, (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false))
+        final double maxHeightOfBottom = StreamSupport.stream(
+                        Spliterators.spliteratorUnknownSize(new FilterableBlockCollisions(
+                                world,
+                                entity,
+                                bottomBox,
+                                (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false)
+                        ), Spliterator.ORDERED),
+                        false)
                                              .mapToDouble(shape -> shape.max(Direction.Axis.Y) - bottomBox.minY)
                                              .max()
                                              .orElse(0d);
@@ -61,7 +72,14 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
         }
 
         final AABB belowBox = bottomBox.move(0,-1,0);
-        final double maxBlockHeightBelow = world.getBlockCollisions(null, belowBox, (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false))
+        final double maxBlockHeightBelow = StreamSupport.stream(
+                        Spliterators.spliteratorUnknownSize(new FilterableBlockCollisions(
+                                world,
+                                entity,
+                                belowBox,
+                                (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false)
+                        ), Spliterator.ORDERED),
+                        false)
           .mapToDouble(shape -> shape.max(Direction.Axis.Y) - belowBox.minY)
           .max()
           .orElse(1d);
@@ -76,10 +94,13 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
 
     public boolean hasNoCollisions(final Entity entity, final LevelReader world, final AABB boundingBox)
     {
-        return world.getBlockCollisions(
-          entity,
-          boundingBox,
-          (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false)
-        ).allMatch(VoxelShape::isEmpty);
+        return StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(new FilterableBlockCollisions(
+                        world,
+                        entity,
+                        boundingBox,
+                        (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false)
+                ), Spliterator.ORDERED),
+                false).allMatch(VoxelShape::isEmpty);
     }
 }

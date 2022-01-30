@@ -13,6 +13,7 @@
 - Endermite
 - Evoker
 - Giant
+- Glow Squid
 - Hoglin
 - Horse
 - Husk
@@ -50,9 +51,7 @@
 - Zombie Horse
 - Zombie Villager
 - Zombified Piglin
-on
-- Wolf
-- Zoglin
+Zoglin
 - Zombie
 - Zombie Horse
 - Zombie Villager

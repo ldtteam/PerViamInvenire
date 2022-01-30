@@ -2,7 +2,7 @@ package com.ldtteam.perviaminvenire.network.message;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingCalculationData;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
 
