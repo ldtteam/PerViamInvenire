@@ -172,7 +172,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
       final BlockPos dest,
       final double speed)
     {
-        stop();
+        stopCurrentCalculation();
 
         this.destination = dest;
         this.originalDestination = dest;
@@ -807,7 +807,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      */
     public void onPathFinish()
     {
-        stop();
+        stopCurrentCalculation();
     }
 
     public void recomputePath() {}
@@ -827,7 +827,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         {
             if (positionVec3.distanceToSqr(this.lastStuckCheckPos) < 2.25D)
             {
-                this.stop();
+                this.stopCurrentCalculation();
             }
 
             this.lastStuckCheck = this.tick;
@@ -853,7 +853,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
                 this.timeoutCachedNode = Vec3i.ZERO;
                 this.timeoutTimer = 0L;
                 this.timeoutLimit = 0.0D;
-                this.stop();
+                this.stopCurrentCalculation();
             }
 
             this.lastTimeoutCheck = Util.getMillis();
@@ -916,7 +916,6 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Override
     public void stop()
     {
-
         if (pathResult != null)
         {
             pathResult.cancel();
@@ -926,6 +925,12 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
         destination = null;
         super.stop();
+    }
+
+    @Override
+    public void stopCurrentCalculation()
+    {
+        this.stop();
     }
 
     /**

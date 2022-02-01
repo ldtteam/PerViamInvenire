@@ -1,6 +1,5 @@
 package com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling;
 
-import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
 import com.ldtteam.perviaminvenire.api.pathfinding.IAdvancedPathNavigator;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -263,7 +262,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
             }
         }
 
-        navigator.stop();
+        navigator.stopCurrentCalculation();
         resetGlobalStuckTimers();
     }
 
@@ -282,7 +281,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
         {
             stuckLevel++;
             delayToNextUnstuckAction = 600;
-            navigator.stop();
+            navigator.stopCurrentCalculation();
             return;
         }
 
@@ -291,7 +290,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
         {
             stuckLevel++;
             delayToNextUnstuckAction = 300;
-            navigator.stop();
+            navigator.stopCurrentCalculation();
             navigator.moveAwayFromXYZ(new BlockPos(navigator.getOurEntity().position()), 10, 1.0f);
             return;
         }

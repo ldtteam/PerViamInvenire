@@ -172,7 +172,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
       final BlockPos dest,
       final double speed)
     {
-        stop();
+        stopCurrentCalculation();
 
         this.destination = dest;
         this.originalDestination = dest;
@@ -794,7 +794,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
      */
     public void onPathFinish()
     {
-        stop();
+        stopCurrentCalculation();
     }
 
     public void recomputePath() {}
@@ -814,7 +814,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
         {
             if (positionVec3.distanceToSqr(this.lastStuckCheckPos) < 2.25D)
             {
-                this.stop();
+                this.stopCurrentCalculation();
             }
 
             this.lastStuckCheck = this.tick;
@@ -840,7 +840,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
                 this.timeoutCachedNode = Vec3i.ZERO;
                 this.timeoutTimer = 0L;
                 this.timeoutLimit = 0.0D;
-                this.stop();
+                this.stopCurrentCalculation();
             }
 
             this.lastTimeoutCheck = Util.getMillis();
@@ -903,7 +903,6 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
     @Override
     public void stop()
     {
-
         if (pathResult != null)
         {
             pathResult.cancel();
@@ -913,6 +912,12 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
 
         destination = null;
         super.stop();
+    }
+
+    @Override
+    public void stopCurrentCalculation()
+    {
+        this.stop();
     }
 
     /**

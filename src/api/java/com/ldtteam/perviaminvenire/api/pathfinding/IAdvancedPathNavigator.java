@@ -59,7 +59,7 @@ public interface IAdvancedPathNavigator
     /**
      * Stops the current navigator.
      */
-    void stop();
+    void stopCurrentCalculation();
 
     /**
      * The current path in the navigator.
