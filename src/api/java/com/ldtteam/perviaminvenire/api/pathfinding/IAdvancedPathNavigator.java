@@ -67,5 +67,5 @@ public interface IAdvancedPathNavigator
      * @return The current path, might be null.
      */
     @Nullable
-    Path getPath();
+    Path getCurrentPath();
 }

@@ -172,7 +172,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
 
         prevDestination = navigator.getDesiredPos();
 
-        if (navigator.getPath() == null || navigator.getPath().isDone())
+        if (navigator.getCurrentPath() == null || navigator.getCurrentPath().isDone())
         {
             // With no path reset the last path index point to -1
             lastPathIndex = -1;
@@ -186,16 +186,16 @@ public class CallbackBasedStuckHandler implements IStuckHandler
         }
         else
         {
-            if (navigator.getPath().getNextNodeIndex() == lastPathIndex)
+            if (navigator.getCurrentPath().getNextNodeIndex() == lastPathIndex)
             {
                 // Stuck when we have a path, but are not progressing on it
                 tryUnstuck(navigator);
             }
             else
             {
-                if (lastPathIndex != -1 && navigator.getPath().getTarget().distSqr(prevDestination) < 25)
+                if (lastPathIndex != -1 && navigator.getCurrentPath().getTarget().distSqr(prevDestination) < 25)
                 {
-                    progressedNodes = navigator.getPath().getNextNodeIndex() > lastPathIndex ? progressedNodes + 1 : progressedNodes - 1;
+                    progressedNodes = navigator.getCurrentPath().getNextNodeIndex() > lastPathIndex ? progressedNodes + 1 : progressedNodes - 1;
 
                     if (progressedNodes > 5)
                     {
@@ -206,9 +206,9 @@ public class CallbackBasedStuckHandler implements IStuckHandler
             }
         }
 
-        lastPathIndex = navigator.getPath() != null ? navigator.getPath().getNextNodeIndex() : -1;
+        lastPathIndex = navigator.getCurrentPath() != null ? navigator.getCurrentPath().getNextNodeIndex() : -1;
 
-        hadPath = navigator.getPath() != null && !navigator.getPath().isDone();
+        hadPath = navigator.getCurrentPath() != null && !navigator.getCurrentPath().isDone();
     }
 
     /**
@@ -299,13 +299,13 @@ public class CallbackBasedStuckHandler implements IStuckHandler
         // Skip ahead
         if (stuckLevel == 2)
         {
-            if (hadPath && teleportRange > 0 && navigator.getPath() != null)
+            if (hadPath && teleportRange > 0 && navigator.getCurrentPath() != null)
             {
                 delayToNextUnstuckAction = 100;
-                int index = navigator.getPath().getNextNodeIndex() + teleportRange;
-                if (index < navigator.getPath().getNodeCount())
+                int index = navigator.getCurrentPath().getNextNodeIndex() + teleportRange;
+                if (index < navigator.getCurrentPath().getNodeCount())
                 {
-                    final Node togo = navigator.getPath().getNode(index);
+                    final Node togo = navigator.getCurrentPath().getNode(index);
                     navigator.getOurEntity().teleportTo(togo.x + 0.5d, togo.y, togo.z + 0.5d);
                     delayToNextUnstuckAction = 300;
                 }
