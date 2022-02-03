@@ -43,7 +43,6 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     private static final Logger LOGGER = LogManager.getLogger(PerViamInvenireGroundPathNavigator.class);
 
     private static final double ON_PATH_SPEED_MULTIPLIER = 1.3D;
-    public static final  double MIN_Y_DISTANCE           = 0.001;
     public static final  int    MAX_SPEED_ALLOWED        = 100;
 
     /**
@@ -208,7 +207,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             final VanillaCompatibilityPath cachedPath = this.additionalVanillaPathTasks.get(target, range);
 
             // Same logic vanilla does for results
-            if (cachedPath.isCalculationComplete() && cachedPath.getNodeCount() < 2)
+            if (cachedPath == null || cachedPath.isCalculationComplete() && cachedPath.getNodeCount() < 2)
             {
                 return null;
             }
@@ -501,7 +500,6 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         pathResult.setStatus(PathFindingStatus.IN_PROGRESS_FOLLOWING);
     }
 
-    @SuppressWarnings("ConstantConditions")
     private boolean handleLadders(int oldIndex)
     {
         //  Ladder Workaround
@@ -631,26 +629,17 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             switch (pEx.getLadderFacing())
             {
                 //  Any of these values is climbing, so adjust our direction of travel towards the ladder
-                case NORTH:
-                    vec3 = vec3.add(0, 0, 1);
-                    break;
-                case SOUTH:
-                    vec3 = vec3.add(0, 0, -1);
-                    break;
-                case WEST:
-                    vec3 = vec3.add(1, 0, 0);
-                    break;
-                case EAST:
-                    vec3 = vec3.add(-1, 0, 0);
-                    break;
-                case UP:
-                    vec3 = vec3.add(0, 1, 0);
-                    break;
+                case NORTH -> vec3 = vec3.add(0, 0, 1);
+                case SOUTH -> vec3 = vec3.add(0, 0, -1);
+                case WEST -> vec3 = vec3.add(1, 0, 0);
+                case EAST -> vec3 = vec3.add(-1, 0, 0);
+                case UP -> vec3 = vec3.add(0, 1, 0);
+
                 //  Any other value is going down, so lets not move at all
-                default:
+                default -> {
                     newSpeed = 0;
                     mob.setShiftKeyDown(true);
-                    break;
+                }
             }
 
             if (newSpeed > 0)
@@ -727,47 +716,52 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Override
     protected void followThePath()
     {
-        if (getPath() == null)
+        Path currentPathToFollow = getPath();
+        if (currentPathToFollow == null)
             return;
 
         getSpeed();
-        final int curNode = Objects.requireNonNull(getPath()).getNextNodeIndex();
+        final int curNode = currentPathToFollow.getNextNodeIndex();
         final int curNodeNext = curNode + 1;
-        if (curNodeNext < getPath().getNodeCount())
+        if (curNodeNext < currentPathToFollow.getNodeCount())
         {
-            if (!(getPath().getNode(curNode) instanceof ExtendedNode))
+            if (!(currentPathToFollow.getNode(curNode) instanceof ExtendedNode))
             {
                 path = convertPath(getPath());
+                currentPathToFollow = getPath();
             }
 
             this.maxDistanceToWaypoint = this.mob.getBbWidth() > 0.75F ? this.mob.getBbWidth() / 2.0F : 0.75F - this.mob.getBbWidth() / 2.0F;
         }
 
-        if (getPath().isDone())
+        if (currentPathToFollow.isDone())
         {
             onPathFinish();
             return;
         }
 
-        final Path path = getPath();
+        currentPathToFollow = getPath();
+        if (currentPathToFollow == null)
+            return;
+
         this.maxDistanceToWaypoint = this.mob.getBbWidth() > 0.75F ? this.mob.getBbWidth() / 2.0F : 0.75F - this.mob.getBbWidth() / 2.0F;
         boolean wentAhead = false;
 
 
         // Look at multiple points, incase we're too fast
-        for (int i = path.getNextNodeIndex(); i < Math.min(path.getNodeCount(), path.getNextNodeIndex() + 4); i++)
+        for (int i = currentPathToFollow.getNextNodeIndex(); i < Math.min(currentPathToFollow.getNodeCount(), currentPathToFollow.getNextNodeIndex() + 4); i++)
         {
-            Vec3 next = path.getEntityPosAtNode(this.mob, i);
+            Vec3 next = currentPathToFollow.getEntityPosAtNode(this.mob, i);
             if (Math.abs(this.ourEntity.getX() - next.x) < (double) this.maxDistanceToWaypoint - Math.abs(this.ourEntity.getY() - (next.y)) * 0.1
                   && Math.abs(this.ourEntity.getZ() - next.z) < (double) this.maxDistanceToWaypoint - Math.abs(this.ourEntity.getY() - (next.y)) * 0.1 &&
                   Math.abs(this.ourEntity.getY() - next.y) < 1.0D)
             {
-                path.advance();
+                currentPathToFollow.advance();
                 wentAhead = true;
             }
         }
 
-        if (path.isDone())
+        if (currentPathToFollow.isDone())
         {
             onPathFinish();
             return;
@@ -778,24 +772,24 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return;
         }
 
-        if (curNode >= path.getNodeCount() || curNode <= 1)
+        if (curNode >= currentPathToFollow.getNodeCount() || curNode <= 1)
         {
             return;
         }
 
         // Check some past nodes case we fell behind.
-        final Vec3 curr = path.getEntityPosAtNode(this.mob, curNode - 1);
-        final Vec3 next = path.getEntityPosAtNode(this.mob, curNode);
+        final Vec3 curr = currentPathToFollow.getEntityPosAtNode(this.mob, curNode - 1);
+        final Vec3 next = currentPathToFollow.getEntityPosAtNode(this.mob, curNode);
 
         if (mob.position().distanceTo(curr) >= 2.0 && mob.position().distanceTo(next) >= 2.0)
         {
             int currentIndex = curNode - 1;
             while (currentIndex > 0)
             {
-                final Vec3 tempoPos = path.getEntityPosAtNode(this.mob, currentIndex);
+                final Vec3 tempoPos = currentPathToFollow.getEntityPosAtNode(this.mob, currentIndex);
                 if (mob.position().distanceTo(tempoPos) <= 1.0)
                 {
-                    path.setNextNodeIndex(currentIndex);
+                    currentPathToFollow.setNextNodeIndex(currentIndex);
                 }
                 currentIndex--;
             }
@@ -881,7 +875,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             }
             else if (!super.isDone())
             {
-                return super.getTargetPos();
+                final BlockPos pos = super.getTargetPos();
+                return pos == null ? BlockPos.ZERO : pos;
             }
         }
 
@@ -994,9 +989,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return null;
         }
 
-        if (path instanceof VanillaCompatibilityPath)
+        if (path instanceof final VanillaCompatibilityPath vanillaCompatibilityPath)
         {
-            final VanillaCompatibilityPath vanillaCompatibilityPath = (VanillaCompatibilityPath) path;
             if (positions.contains(vanillaCompatibilityPath.getDestination()))
             {
                 return path;

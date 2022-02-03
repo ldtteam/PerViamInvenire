@@ -208,7 +208,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
             final VanillaCompatibilityPath cachedPath = this.additionalVanillaPathTasks.get(target, range);
 
             // Same logic vanilla does for results
-            if (cachedPath.isCalculationComplete() && cachedPath.getNodeCount() < 2)
+            if (cachedPath == null || cachedPath.isCalculationComplete() && cachedPath.getNodeCount() < 2)
             {
                 return null;
             }
@@ -718,43 +718,52 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
     @Override
     protected void followThePath()
     {
+        Path currentPathToFollow = getPath();
+        if (currentPathToFollow == null)
+            return;
+
         getSpeed();
-        final int curNode = Objects.requireNonNull(path).getNextNodeIndex();
+        final int curNode = currentPathToFollow.getNextNodeIndex();
         final int curNodeNext = curNode + 1;
-        if (curNodeNext < path.getNodeCount())
+        if (curNodeNext < currentPathToFollow.getNodeCount())
         {
-            if (!(path.getNode(curNode) instanceof ExtendedNode))
+            if (!(currentPathToFollow.getNode(curNode) instanceof ExtendedNode))
             {
                 path = convertPath(path);
+                currentPathToFollow = path;
             }
 
             this.maxDistanceToWaypoint = this.mob.getBbWidth() > 0.75F ? this.mob.getBbWidth() / 2.0F : 0.75F - this.mob.getBbWidth() / 2.0F;
         }
 
-        if (path.isDone())
+        if (currentPathToFollow.isDone())
         {
             onPathFinish();
             return;
         }
 
+        currentPathToFollow = getPath();
+        if (currentPathToFollow == null)
+            return;
+
+
         this.maxDistanceToWaypoint = this.mob.getBbWidth() > 0.75F ? this.mob.getBbWidth() / 2.0F : 0.75F - this.mob.getBbWidth() / 2.0F;
         boolean wentAhead = false;
 
-
         // Look at multiple points, incase we're too fast
-        for (int i = this.path.getNextNodeIndex(); i < Math.min(this.path.getNodeCount(), this.path.getNextNodeIndex() + 4); i++)
+        for (int i = currentPathToFollow.getNextNodeIndex(); i < Math.min(currentPathToFollow.getNodeCount(), currentPathToFollow.getNextNodeIndex() + 4); i++)
         {
-            Vec3 next = this.path.getEntityPosAtNode(this.mob, i);
+            Vec3 next = currentPathToFollow.getEntityPosAtNode(this.mob, i);
             if (Math.abs(this.ourEntity.getX() - next.x) < (double) this.maxDistanceToWaypoint - Math.abs(this.ourEntity.getY() - (next.y)) * 0.1
                   && Math.abs(this.ourEntity.getZ() - next.z) < (double) this.maxDistanceToWaypoint - Math.abs(this.ourEntity.getY() - (next.y)) * 0.1 &&
                   Math.abs(this.ourEntity.getY() - next.y) < 1.0D)
             {
-                this.path.advance();
+                currentPathToFollow.advance();
                 wentAhead = true;
             }
         }
 
-        if (path.isDone())
+        if (currentPathToFollow.isDone())
         {
             onPathFinish();
             return;
@@ -765,24 +774,24 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
             return;
         }
 
-        if (curNode >= path.getNodeCount() || curNode <= 1)
+        if (curNode >= currentPathToFollow.getNodeCount() || curNode <= 1)
         {
             return;
         }
 
         // Check some past nodes case we fell behind.
-        final Vec3 curr = this.path.getEntityPosAtNode(this.mob, curNode - 1);
-        final Vec3 next = this.path.getEntityPosAtNode(this.mob, curNode);
+        final Vec3 curr = currentPathToFollow.getEntityPosAtNode(this.mob, curNode - 1);
+        final Vec3 next = currentPathToFollow.getEntityPosAtNode(this.mob, curNode);
 
         if (mob.position().distanceTo(curr) >= 2.0 && mob.position().distanceTo(next) >= 2.0)
         {
             int currentIndex = curNode - 1;
             while (currentIndex > 0)
             {
-                final Vec3 tempoPos = this.path.getEntityPosAtNode(this.mob, currentIndex);
+                final Vec3 tempoPos = currentPathToFollow.getEntityPosAtNode(this.mob, currentIndex);
                 if (mob.position().distanceTo(tempoPos) <= 1.0)
                 {
-                    this.path.setNextNodeIndex(currentIndex);
+                    currentPathToFollow.setNextNodeIndex(currentIndex);
                 }
                 currentIndex--;
             }
