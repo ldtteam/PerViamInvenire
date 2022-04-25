@@ -1,5 +1,6 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -22,16 +23,12 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.LevelLightEngine;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 public class ChunkCache implements LevelReader
 {
@@ -58,7 +55,7 @@ public class ChunkCache implements LevelReader
         {
             for (int l = this.chunkZ; l <= j; ++l)
             {
-                if ((!(worldIn instanceof ServerLevel)) || ((ServerLevel) worldIn).isPositionEntityTicking(new ChunkPos(k, l)))
+                if ((!(worldIn instanceof ServerLevel)) || ((ServerLevel) worldIn).isNaturalSpawningAllowed(new ChunkPos(k, l)))
                 {
                     this.chunkArray[k - this.chunkX][l - this.chunkZ] = (LevelChunk) worldIn.getChunk(k, l, ChunkStatus.FULL, false);
                 }
@@ -70,7 +67,6 @@ public class ChunkCache implements LevelReader
      * set by !chunk.getAreLevelsEmpty
      * @return if so.
      */
-    @OnlyIn(Dist.CLIENT)
     public boolean isEmpty()
     {
         return this.empty;
@@ -137,15 +133,14 @@ public class ChunkCache implements LevelReader
         return Fluids.EMPTY.defaultFluidState();
     }
 
-    @OnlyIn(Dist.CLIENT)
     @Override
-    public Biome getBiome(BlockPos pos)
+    public Holder<Biome> getBiome(BlockPos pos)
     {
-        return ForgeRegistries.BIOMES.getValue(Biomes.PLAINS.location());
+        return ForgeRegistries.BIOMES.getHolder(Biomes.PLAINS.location()).orElseThrow();
     }
 
     @Override
-    public Biome getUncachedNoiseBiome(final int x, final int y, final int z)
+    public Holder<Biome> getUncachedNoiseBiome(final int x, final int y, final int z)
     {
         return null;
     }

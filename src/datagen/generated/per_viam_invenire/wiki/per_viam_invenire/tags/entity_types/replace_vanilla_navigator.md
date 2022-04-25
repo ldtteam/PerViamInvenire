@@ -14,6 +14,7 @@
 - Evoker
 - Giant
 - Glow Squid
+- Goat
 - Hoglin
 - Horse
 - Husk
@@ -51,7 +52,6 @@
 - Zombie Horse
 - Zombie Villager
 - Zombified Piglin
-Zoglin
 - Zombie
 - Zombie Horse
 - Zombie Villager

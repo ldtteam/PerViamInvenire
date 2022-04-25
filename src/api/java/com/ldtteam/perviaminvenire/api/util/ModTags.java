@@ -1,10 +1,10 @@
 package com.ldtteam.perviaminvenire.api.util;
 
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.common.Tags;
 
 public final class ModTags
 {
@@ -14,10 +14,10 @@ public final class ModTags
         throw new IllegalStateException("Can not instantiate an instance of: ModTags. This is a utility class");
     }
 
-    public static final Tags.IOptionalNamedTag<EntityType<?>> REPLACE_VANILLA_NAVIGATOR = tag("replace_vanilla_navigator");
+    public static final TagKey<EntityType<?>> REPLACE_VANILLA_NAVIGATOR = tag("replace_vanilla_navigator");
 
-    private static Tags.IOptionalNamedTag<EntityType<?>> tag(String name)
+    private static TagKey<EntityType<?>> tag(String name)
     {
-        return EntityTypeTags.createOptional(new ResourceLocation(ModConstants.MOD_ID, name));
+        return TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(ModConstants.MOD_ID, name));
     }
 }

@@ -1,10 +1,9 @@
 package com.ldtteam.perviaminvenire.util;
 
-import com.mojang.serialization.Lifecycle;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.util.profiling.InactiveProfiler;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Entity;
@@ -16,7 +15,6 @@ import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -43,12 +41,9 @@ public class DataGenUtils
 
     public static EntityType<?>[] getCompatibleVanillaOverrideTypes()
     {
-        final RegistryAccess.RegistryHolder dynamicRegistries = new RegistryAccess.RegistryHolder();
-        DimensionType.registerBuiltin(dynamicRegistries);
-        dynamicRegistries.ownedRegistryOrThrow(Registry.BIOME_REGISTRY).register(
-                Biomes.PLAINS, net.minecraft.data.worldgen.biome.Biomes.PLAINS, Lifecycle.stable()
-        );
-        final DimensionType overworldDimension = dynamicRegistries.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).get(DimensionType.OVERWORLD_EFFECTS);
+        final RegistryAccess.Writable dynamicRegistries = RegistryAccess.builtinCopy();
+        final Holder<DimensionType> overworldDimension = dynamicRegistries.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY)
+              .getOrCreateHolder(DimensionType.OVERWORLD_LOCATION);
 
         @SuppressWarnings("ConstantConditions") //We are creating a dummy world here.
         final ClientLevel clientWorld = new ClientLevel(

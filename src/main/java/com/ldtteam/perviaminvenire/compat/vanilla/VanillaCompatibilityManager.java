@@ -37,7 +37,7 @@ public class VanillaCompatibilityManager
     public void initialize() {
         IPathNavigatorRegistry.getInstance().register(
           (mobEntity, initialNavigator) -> {
-              if (!(ModTags.REPLACE_VANILLA_NAVIGATOR.contains(mobEntity.getType()) &&
+              if (!(mobEntity.getType().is(ModTags.REPLACE_VANILLA_NAVIGATOR) &&
                     ICommonConfig.getInstance().isVanillaReplacementEnabled() &&
                     !(initialNavigator instanceof IAdvancedPathNavigator) &&
                     initialNavigator.getClass() == GroundPathNavigation.class))
@@ -57,7 +57,7 @@ public class VanillaCompatibilityManager
 
         IPathNavigatorRegistry.getInstance().register(
           (mobEntity, initialNavigator) -> {
-              if (!(ModTags.REPLACE_VANILLA_NAVIGATOR.contains(mobEntity.getType()) &&
+              if (!(mobEntity.getType().is(ModTags.REPLACE_VANILLA_NAVIGATOR) &&
                       ICommonConfig.getInstance().isVanillaReplacementEnabled() &&
                       !(initialNavigator instanceof IAdvancedPathNavigator) &&
                       initialNavigator.getClass() == WallClimberNavigation.class))
@@ -77,7 +77,7 @@ public class VanillaCompatibilityManager
 
         IPathNavigatorRegistry.getInstance().register(
           (mobEntity, initialNavigator) -> {
-              if (!(ModTags.REPLACE_VANILLA_NAVIGATOR.contains(mobEntity.getType()) &&
+              if (!(mobEntity.getType().is(ModTags.REPLACE_VANILLA_NAVIGATOR) &&
                       ICommonConfig.getInstance().isVanillaReplacementEnabled() &&
                       !(initialNavigator instanceof IAdvancedPathNavigator) &&
                       initialNavigator.getClass() == FlyingPathNavigation.class))
@@ -103,7 +103,7 @@ public class VanillaCompatibilityManager
         });
 
         ISpeedAdaptationRegistry.getInstance().register(
-          (entity, walkSpeed) -> ModTags.REPLACE_VANILLA_NAVIGATOR.contains(entity.getType()) ? Optional.of(walkSpeed) : Optional.empty()
+          (entity, walkSpeed) -> entity.getType().is(ModTags.REPLACE_VANILLA_NAVIGATOR) ? Optional.of(walkSpeed) : Optional.empty()
         );
 
         IIsLadderBlockRegistry.getInstance().register((entity, block, worldReader, blockPos) -> {
