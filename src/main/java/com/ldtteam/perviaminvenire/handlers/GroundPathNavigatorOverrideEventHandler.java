@@ -7,7 +7,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
@@ -22,18 +23,17 @@ public class GroundPathNavigatorOverrideEventHandler
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static Field movementControllerField = ObfuscationReflectionHelper.findField(
+    private static final Field movementControllerField = ObfuscationReflectionHelper.findField(
       Mob.class, "f_21342_"
     );
 
     @SubscribeEvent
-    public static void handleModSpawnNavigatorEvent(final EntityJoinWorldEvent event)
+    public static void handleModSpawnNavigatorEvent(final EntityJoinLevelEvent event)
     {
         final Entity entity = event.getEntity();
-        if (!(entity instanceof Mob))
+        if (!(entity instanceof final Mob mob))
             return;
 
-        final Mob mob = (Mob) entity;
         final Optional<PathNavigation> overrideHandler = PathNavigatorRegistry.getInstance().getRunner().get(mob, mob.getNavigation());
         overrideHandler.ifPresent(pathNavigator -> mob.navigation = pathNavigator);
 

@@ -22,6 +22,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -615,7 +616,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     {
         return IRidingOnCartRegistry.getInstance().getRunner().handle(this.ourEntity, pEx, pExNext)
                  .orElseThrow(() -> new IllegalStateException(
-                   "Entity : " + this.ourEntity.getType().getRegistryName() + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
+                   "Entity : " + ForgeRegistries.ENTITY_TYPES.getKey(getOurEntity().getType()) + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
     }
 
     private boolean handlePathPointOnLadder(final ExtendedNode pEx)

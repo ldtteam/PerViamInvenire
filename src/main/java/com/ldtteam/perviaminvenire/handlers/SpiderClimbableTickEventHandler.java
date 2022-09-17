@@ -15,7 +15,7 @@ public class SpiderClimbableTickEventHandler
 {
 
     @SubscribeEvent
-    public static void onLivingUpdate(final LivingEvent.LivingUpdateEvent event)
+    public static void onLivingUpdate(final LivingEvent.LivingTickEvent event)
     {
         if (!(event.getEntity() instanceof final Spider spiderEntity)) {
             return;
@@ -36,8 +36,7 @@ public class SpiderClimbableTickEventHandler
             return;
         }
 
-        final ExtendedNode pathPointExtended = (ExtendedNode) pathPoint;
-        final boolean currentIsLadder = pathPointExtended.isOnLadder();
+        final boolean currentIsLadder = pathPointPreviousExtended.isOnLadder();
         if (path.getNextNodeIndex() == 0)
         {
             spiderEntity.setClimbing(currentIsLadder);

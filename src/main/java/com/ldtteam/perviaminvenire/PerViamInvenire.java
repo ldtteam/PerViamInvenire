@@ -9,11 +9,13 @@ import com.ldtteam.perviaminvenire.config.ConfigurationManager;
 import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import com.ldtteam.perviaminvenire.pathfinding.initialization.StartPositionAdapterInitializer;
-import net.minecraft.commands.synchronization.ArgumentTypes;
+import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegisterEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,10 +30,9 @@ public class PerViamInvenire
     {
         PerViamInvenireApiProxy.getInstance().setApiInstance(new PerViamInvenireApiImplementation());
 
-        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener((ServerStoppingEvent event) -> {
-            PathFinding.shutdown();
-        });
+        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener((ServerStoppingEvent event) -> PathFinding.shutdown());
         Mod.EventBusSubscriber.Bus.MOD.bus().get().addListener(this::initialize);
+        Mod.EventBusSubscriber.Bus.MOD.bus().get().addListener(this::registerCommandArgumentType);
 
         NetworkManager.getInstance().initialize();
         ConfigurationManager.getInstance().ensureInitialized(ModLoadingContext.get().getActiveContainer());
@@ -41,10 +42,12 @@ public class PerViamInvenire
         LOGGER.info("Starting PVI.");
         StartPositionAdapterInitializer.setup();
         VanillaCompatibilityManager.getInstance().initialize();
+    }
 
-        commonSetupEvent.enqueueWork(() -> {
-            LOGGER.info("Registering custom argument types.");
-            ArgumentTypes.register("pvi_importable_results", ImportableResultDataArgument.class, ImportableResultDataArgument.Serializer.getInstance());
+    public void registerCommandArgumentType(final RegisterEvent registerEvent) {
+        registerEvent.register(ForgeRegistries.Keys.COMMAND_ARGUMENT_TYPES, helper -> {
+            ArgumentTypeInfos.registerByClass(ImportableResultDataArgument.class, ImportableResultDataArgument.TypeInfo.getInstance());
+            helper.register("pvi_importable_results", ImportableResultDataArgument.TypeInfo.getInstance());
         });
     }
 

@@ -8,7 +8,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.commands.synchronization.ArgumentSerializer;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.network.FriendlyByteBuf;
 import org.jetbrains.annotations.NotNull;
 
@@ -59,34 +60,48 @@ public class ImportableResultDataArgument implements ArgumentType<String>
         return EXAMPLES;
     }
 
-    public static class Serializer implements ArgumentSerializer<ImportableResultDataArgument>
+    public static class TypeInfo implements ArgumentTypeInfo<ImportableResultDataArgument, TypeInfo.Template>
     {
-        private static final Serializer INSTANCE = new Serializer();
+        private static final TypeInfo INSTANCE = new TypeInfo();
 
-        public static Serializer getInstance()
+        public static TypeInfo getInstance()
         {
             return INSTANCE;
         }
 
-        private Serializer()
+        private TypeInfo()
         {
         }
 
         @Override
-        public void serializeToNetwork(@NotNull final ImportableResultDataArgument argument, @NotNull final FriendlyByteBuf buffer)
-        {
-        }
-
-        @NotNull
-        @Override
-        public ImportableResultDataArgument deserializeFromNetwork(@NotNull final FriendlyByteBuf buffer)
-        {
-            return ImportableResultDataArgument.getInstance();
+        public void serializeToNetwork(@NotNull Template template, @NotNull FriendlyByteBuf buffer) {
         }
 
         @Override
-        public void serializeToJson(@NotNull final ImportableResultDataArgument argument, @NotNull final JsonObject jsonObject)
-        {
+        public @NotNull Template deserializeFromNetwork(@NotNull FriendlyByteBuf buffer) {
+            return new Template();
+        }
+
+        @Override
+        public void serializeToJson(@NotNull Template template, @NotNull JsonObject json) {
+        }
+
+        @Override
+        public @NotNull Template unpack(@NotNull ImportableResultDataArgument argument) {
+            return new Template();
+        }
+
+        public static class Template implements ArgumentTypeInfo.Template<ImportableResultDataArgument> {
+
+            @Override
+            public @NotNull ImportableResultDataArgument instantiate(@NotNull CommandBuildContext context) {
+                return ImportableResultDataArgument.getInstance();
+            }
+
+            @Override
+            public @NotNull ArgumentTypeInfo<ImportableResultDataArgument, ?> type() {
+                return TypeInfo.getInstance();
+            }
         }
     }
 

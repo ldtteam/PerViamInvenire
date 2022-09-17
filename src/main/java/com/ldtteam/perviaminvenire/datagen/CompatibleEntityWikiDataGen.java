@@ -6,6 +6,7 @@ import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityManager;
 import com.ldtteam.perviaminvenire.util.DataGenUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.HashCache;
 import net.minecraft.data.DataProvider;
@@ -13,9 +14,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.locale.Language;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,7 @@ public class CompatibleEntityWikiDataGen implements DataProvider
         LOGGER.info("Starting PVI Compatibility entity wiki datagen.");
         VanillaCompatibilityManager.getInstance().initialize();
 
-        event.getGenerator().addProvider(new CompatibleEntityWikiDataGen(
+        event.getGenerator().addProvider(true, new CompatibleEntityWikiDataGen(
           event.getGenerator(),
           event.getExistingFileHelper()
         ));
@@ -59,7 +60,7 @@ public class CompatibleEntityWikiDataGen implements DataProvider
     }
 
     @Override
-    public void run(final HashCache cache) throws IOException
+    public void run(final @NotNull CachedOutput cachedOutput) throws IOException
     {
         final EntityType<?>[] types = DataGenUtils.getCompatibleVanillaOverrideTypes();
         final Path path = this.generator.getOutputFolder().resolve("wiki/" + ModConstants.MOD_ID + "/tags/entity_types/replace_vanilla_navigator.md");
@@ -75,17 +76,11 @@ public class CompatibleEntityWikiDataGen implements DataProvider
         if (path.getParent().toFile().mkdirs())
             LOGGER.info(String.format("Created directory for: %s", path.getParent()));
 
-        Files.write(path, lines, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-        final HashCode hash = SHA1.hashUnencodedChars(
-          lines.stream().reduce("", (s, s2) -> String.format("%s\n%s", s, s2))
-        );
-
-        cache.putNew(path, hash.toString());
-
+        cachedOutput.writeIfNeeded(path, String.join("\n", lines).getBytes(), HashCode.fromString(String.join("\n", lines)));
     }
 
     @Override
-    public String getName()
+    public @NotNull String getName()
     {
         return "Compatible PVI Navigator Wiki Entries Generator.";
     }

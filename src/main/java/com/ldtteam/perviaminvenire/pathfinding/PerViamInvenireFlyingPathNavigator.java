@@ -22,6 +22,7 @@ import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -616,7 +617,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
     {
         return IRidingOnCartRegistry.getInstance().getRunner().handle(this.ourEntity, pEx, pExNext)
                  .orElseThrow(() -> new IllegalStateException(
-                   "Entity : " + this.ourEntity.getType().getRegistryName() + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
+                   "Entity : " + ForgeRegistries.ENTITY_TYPES.getKey(getOurEntity().getType()) + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
     }
 
     private boolean handlePathPointOnLadder(final ExtendedNode pEx)

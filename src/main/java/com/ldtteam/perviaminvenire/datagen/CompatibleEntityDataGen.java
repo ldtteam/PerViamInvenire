@@ -8,11 +8,12 @@ import net.minecraft.data.DataGenerator;
 import net.minecraft.data.tags.EntityTypeTagsProvider;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Mod.EventBusSubscriber(modid = ModConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -26,7 +27,7 @@ public class CompatibleEntityDataGen extends EntityTypeTagsProvider
         LOGGER.info("Starting PVI Compatibility entity datagen.");
         VanillaCompatibilityManager.getInstance().initialize();
 
-        event.getGenerator().addProvider(new CompatibleEntityDataGen(
+        event.getGenerator().addProvider(true, new CompatibleEntityDataGen(
           event.getGenerator(),
           event.getExistingFileHelper()
         ));
@@ -46,7 +47,7 @@ public class CompatibleEntityDataGen extends EntityTypeTagsProvider
     }
 
     @Override
-    public String getName()
+    public @NotNull String getName()
     {
         return "Compatible PVI Navigator " + super.getName();
     }

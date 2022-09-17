@@ -15,6 +15,7 @@ import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -25,78 +26,69 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
-public class DataGenUtils
-{
+public class DataGenUtils {
     private static final Field movementControllerField = ObfuscationReflectionHelper.findField(
-      Mob.class, "f_21342_"
+            Mob.class, "f_21342_"
     );
 
-    private static final String MINECRAFT_MOD_ID        = "minecraft";
-    private static final Logger LOGGER           = LogManager.getLogger();
+    private static final String MINECRAFT_MOD_ID = "minecraft";
+    private static final Logger LOGGER = LogManager.getLogger();
 
-    private DataGenUtils()
-    {
+    private DataGenUtils() {
         throw new IllegalStateException("Can not instantiate an instance of: DataGenUtils. This is a utility class");
     }
 
-    public static EntityType<?>[] getCompatibleVanillaOverrideTypes()
-    {
+    public static EntityType<?>[] getCompatibleVanillaOverrideTypes() {
         final RegistryAccess.Writable dynamicRegistries = RegistryAccess.builtinCopy();
         final Holder<DimensionType> overworldDimension = dynamicRegistries.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY)
-              .getOrCreateHolder(DimensionType.OVERWORLD_LOCATION);
+                .getOrCreateHolder(BuiltinDimensionTypes.OVERWORLD).getOrThrow(false, message -> {
+                    throw new IllegalStateException("Failed to get overworld during datagen " + message);
+                });
 
         @SuppressWarnings("ConstantConditions") //We are creating a dummy world here.
         final ClientLevel clientWorld = new ClientLevel(
-          null,
-          new ClientLevel.ClientLevelData(Difficulty.HARD, false, true),
-          Level.OVERWORLD,
-          overworldDimension,
-          1,
-          0,
-          () -> InactiveProfiler.INSTANCE,
-          null,
-          true,
-          0
+                null,
+                new ClientLevel.ClientLevelData(Difficulty.HARD, false, true),
+                Level.OVERWORLD,
+                overworldDimension,
+                1,
+                0,
+                () -> InactiveProfiler.INSTANCE,
+                null,
+                true,
+                0
         ) {
             @Override
-            public @NotNull RegistryAccess registryAccess()
-            {
+            public @NotNull RegistryAccess registryAccess() {
                 return dynamicRegistries;
             }
         };
 
-        return ForgeRegistries.ENTITIES.getValues()
-                 .stream()
-                 .filter(entityType -> MINECRAFT_MOD_ID.equals(Objects.requireNonNull(entityType.getRegistryName())
-                                                                 .getNamespace()))
-                 .filter(entityType -> {
-                     try
-                     {
-                         final Entity entity = entityType.create(clientWorld);
-                         if (!(entity instanceof final Mob mob))
-                             return false;
+        return ForgeRegistries.ENTITY_TYPES.getValues()
+                .stream()
+                .filter(entityType -> MINECRAFT_MOD_ID.equals(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(entityType)).getNamespace()))
+                .filter(entityType -> {
+                    try {
+                        final Entity entity = entityType.create(clientWorld);
+                        if (!(entity instanceof final Mob mob))
+                            return false;
 
-                         return isMobEntityASupportedGroundEntity(mob) ||
-                                  isMobEntityASupportedClimberEntity(mob) ||
-                           isMobEntityASupportedFlyingEntity(mob);
-                     }
-                     catch (Exception ex)
-                     {
-                         LOGGER.error(String.format(
-                           "Failed to create and validate entity, of type: '%s' for navigator replacement. Skipping!",
-                           entityType.getRegistryName()), ex);
-                         return false;
-                     }
-                 }).toArray(EntityType<?>[]::new);
+                        return isMobEntityASupportedGroundEntity(mob) ||
+                                isMobEntityASupportedClimberEntity(mob) ||
+                                isMobEntityASupportedFlyingEntity(mob);
+                    } catch (Exception ex) {
+                        LOGGER.error(String.format(
+                                "Failed to create and validate entity, of type: '%s' for navigator replacement. Skipping!",
+                                ForgeRegistries.ENTITY_TYPES.getKey(entityType)), ex);
+                        return false;
+                    }
+                }).toArray(EntityType<?>[]::new);
     }
 
     private static Class<?> getMovementControllerClass(final Mob mobEntity) {
-        try
-        {
+        try {
             return movementControllerField.get(mobEntity).getClass();
-        }
-        catch (IllegalAccessException e)
-        {
+        } catch (IllegalAccessException e) {
             return Object.class;
         }
     }
@@ -104,21 +96,21 @@ public class DataGenUtils
     private static boolean isMobEntityASupportedGroundEntity(final Mob mobEntity) {
         //We only support none overriden movement and ground path navigators.
         return mobEntity.getNavigation().getClass() == GroundPathNavigation.class &&
-                 getMovementControllerClass(mobEntity) == MoveControl.class;
+                getMovementControllerClass(mobEntity) == MoveControl.class;
 
     }
 
     private static boolean isMobEntityASupportedClimberEntity(final Mob mobEntity) {
         //We only support none overriden movement and ground path navigators.
         return mobEntity.getNavigation().getClass() == WallClimberNavigation.class &&
-                 getMovementControllerClass(mobEntity) == MoveControl.class;
+                getMovementControllerClass(mobEntity) == MoveControl.class;
 
     }
 
     private static boolean isMobEntityASupportedFlyingEntity(final Mob mobEntity) {
         //We only support none overriden movement and ground path navigators.
         return mobEntity.getNavigation().getClass() == FlyingPathNavigation.class &&
-                 getMovementControllerClass(mobEntity) == FlyingMoveControl.class;
+                getMovementControllerClass(mobEntity) == FlyingMoveControl.class;
 
     }
 }

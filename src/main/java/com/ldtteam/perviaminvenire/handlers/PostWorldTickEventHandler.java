@@ -12,10 +12,10 @@ public class PostWorldTickEventHandler
 {
 
     @SubscribeEvent
-    public static void onTickWorldTick(final TickEvent.WorldTickEvent event)
+    public static void onTickWorldTick(final TickEvent.LevelTickEvent event)
     {
-        if (event.phase == TickEvent.Phase.END && event.world instanceof ServerLevel) {
-            ICalculationResultsImportManager.getInstance().onPostWorldTick((ServerLevel) event.world);
+        if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel serverLevel) {
+            ICalculationResultsImportManager.getInstance().onPostWorldTick(serverLevel);
         }
     }
 }
