@@ -18,7 +18,6 @@ import java.util.concurrent.Future;
 
 public class VanillaCompatibilityPath extends Path
 {
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull
@@ -70,6 +69,11 @@ public class VanillaCompatibilityPath extends Path
         catch (Exception e)
         {
             LOGGER.error("Failed to get the calculated path even though it was specified to be complete.", e);
+            return true;
+        }
+
+        if (calculatedPath == null) {
+            LOGGER.error("Calculated path was null even though it was specified to be complete.");
             return true;
         }
 

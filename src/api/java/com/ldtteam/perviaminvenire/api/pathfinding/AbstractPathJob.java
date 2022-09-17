@@ -133,7 +133,6 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         this.world = new ChunkCache(world, new BlockPos(minX, MIN_Y, minZ), new BlockPos(maxX, MAX_Y, maxZ), range);
 
-        this.start = new BlockPos(this.prepareStart(entity));
         this.maxRange = range;
 
         this.result = result;
@@ -141,6 +140,9 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         allowJumpPointSearchTypeWalk = false;
         this.entity = new WeakReference<>(entity);
+
+        //This needs to be last since this is what potentially invokes the start handling.
+        this.start = new BlockPos(this.prepareStart(entity, entity.blockPosition()));
     }
 
     /**
@@ -205,7 +207,6 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         this.world = new ChunkCache(world, new BlockPos(minX, MIN_Y, minZ), new BlockPos(maxX, MAX_Y, maxZ), range);
 
-        this.start = start;
         this.maxRange = range;
 
         this.result = result;
@@ -213,6 +214,8 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         this.allowJumpPointSearchTypeWalk = false;
         this.entity = new WeakReference<>(entity);
+
+        this.start = this.prepareStart(entity, start);
     }
 
     private static boolean onLadderGoingUp(@NotNull final CalculationNode currentNode, @NotNull final BlockPos dPos)
@@ -228,9 +231,9 @@ public abstract class AbstractPathJob implements Callable<Path>
      * @param entity Entity for the pathfinding operation.
      * @return ChunkCoordinates for starting location.
      */
-    public BlockPos prepareStart(@NotNull final LivingEntity entity)
+    public BlockPos prepareStart(@NotNull final LivingEntity entity, final BlockPos start)
     {
-        return IStartPositionAdapterRegistry.getInstance().getRunner().apply(this, entity).orElse(entity.blockPosition());
+        return IStartPositionAdapterRegistry.getInstance().getRunner().apply(this, entity, start).orElse(entity.blockPosition());
     }
 
     /**
@@ -406,7 +409,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
 
         final FluidState fluidState = world.getFluidState(pos);
-        if (fluidState == null || fluidState.isEmpty())
+        if (fluidState.isEmpty())
         {
             return false;
         }
@@ -508,10 +511,8 @@ public abstract class AbstractPathJob implements Callable<Path>
         if ((entity = this.entity.get()) != null)
         {
             calculationData.onPathCompleted(path);
-            if (entity.getCommandSenderWorld() instanceof ServerLevel)
+            if (entity.getCommandSenderWorld() instanceof final ServerLevel world)
             {
-                final ServerLevel world = (ServerLevel) entity.getCommandSenderWorld();
-
                 world.getServer().execute(() -> IPathingResultHandler.getInstance().onCompleted(
                   calculationData,
                   this.entity.get(),
@@ -552,7 +553,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
 
         // Walk downwards node if passable
-        if (!isNotPassable(currentNode.pos, currentNode.pos.below()))
+        if (!isNotPassable(currentNode.pos, currentNode.pos.below()) && (!currentNode.isSwimming() && isLiquid(world.getBlockState(currentNode.pos.below()))))
         {
             walk(currentNode, BLOCKPOS_DOWN);
         }
@@ -580,6 +581,16 @@ public abstract class AbstractPathJob implements Callable<Path>
         {
             walk(currentNode, BLOCKPOS_WEST);
         }
+    }
+
+    /**
+     * Check if this is a liquid state for swimming.
+     * @param state the state to check.
+     * @return true if so.
+     */
+    public boolean isLiquid(final BlockState state)
+    {
+        return state.getMaterial().isLiquid() || (!state.getMaterial().blocksMotion() && !state.getFluidState().isEmpty());
     }
 
     private boolean onLadderGoingDown(@NotNull final CalculationNode currentNode, @NotNull final BlockPos dPos)
@@ -763,7 +774,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         //  Can we traverse into this node?  Fix the y up
         final int newY = getGroundHeight(parent, pos);
 
-        if (newY < 0)
+        if (newY < world.getMinBuildHeight())
         {
             return;
         }
@@ -911,7 +922,7 @@ public abstract class AbstractPathJob implements Callable<Path>
      * @param pos    coordinate of block.
      * @return y height of first open, viable block above ground, or -1 if blocked or too far a drop.
      */
-    protected int getGroundHeight(final CalculationNode parent, @NotNull final BlockPos pos)
+    public int getGroundHeight(@Nullable final CalculationNode parent, @NotNull final BlockPos pos)
     {
         final Entity entity;
         if ((entity = this.entity.get()) == null)

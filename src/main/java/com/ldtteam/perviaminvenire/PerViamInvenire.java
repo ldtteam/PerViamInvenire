@@ -8,6 +8,7 @@ import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityManager;
 import com.ldtteam.perviaminvenire.config.ConfigurationManager;
 import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
+import com.ldtteam.perviaminvenire.pathfinding.initialization.StartPositionAdapterInitializer;
 import net.minecraft.commands.synchronization.ArgumentTypes;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -38,6 +39,7 @@ public class PerViamInvenire
 
     public void initialize(FMLCommonSetupEvent commonSetupEvent) {
         LOGGER.info("Starting PVI.");
+        StartPositionAdapterInitializer.setup();
         VanillaCompatibilityManager.getInstance().initialize();
 
         commonSetupEvent.enqueueWork(() -> {

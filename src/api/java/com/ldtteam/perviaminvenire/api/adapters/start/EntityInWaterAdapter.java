@@ -11,8 +11,8 @@ import net.minecraft.core.BlockPos;
 public class EntityInWaterAdapter implements IStartPositionAdapter {
 
     @Override
-    public Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity) {
-        BlockPos workingPos = entity.blockPosition();
+    public Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity, final BlockPos startPos) {
+        BlockPos workingPos = startPos;
         BlockState liquidState = entity.getCommandSenderWorld().getBlockState(workingPos);
 
         if (!liquidState.getMaterial().isLiquid())

@@ -209,6 +209,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             // Same logic vanilla does for results
             if (cachedPath == null || cachedPath.isCalculationComplete() && cachedPath.getNodeCount() < 2)
             {
+                this.additionalVanillaPathTasks.remove(target, range);
                 return null;
             }
             return cachedPath;

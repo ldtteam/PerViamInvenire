@@ -7,6 +7,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.server.level.ServerPlayer;
@@ -43,12 +46,13 @@ public class PerViamInvenireCommand
                                                           {
                                                               for (final Entity entity : entities)
                                                               {
-                                                                  if (entity instanceof Mob)
+                                                                  if (entity instanceof final Mob mobEntity)
                                                                   {
-                                                                      final Mob mobEntity = (Mob) entity;
                                                                       if (mobEntity.getNavigation() instanceof AbstractAdvancedGroundPathNavigator)
                                                                       {
                                                                           ICalculationResultTracker.getInstance().startTracking(player, entity);
+
+                                                                          mobEntity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 60));
                                                                           addedTrackingEntries++;
                                                                       }
                                                                   }
@@ -69,9 +73,8 @@ public class PerViamInvenireCommand
                                                           {
                                                               for (final Entity entity : entities)
                                                               {
-                                                                  if (entity instanceof Mob)
+                                                                  if (entity instanceof final Mob mobEntity)
                                                                   {
-                                                                      final Mob mobEntity = (Mob) entity;
                                                                       if (mobEntity.getNavigation() instanceof AbstractAdvancedGroundPathNavigator)
                                                                       {
                                                                           ICalculationResultTracker.getInstance().stopTracking(player, entity);
@@ -111,9 +114,8 @@ public class PerViamInvenireCommand
 
                                                   for (final Entity entity : entities)
                                                   {
-                                                      if (entity instanceof Mob)
+                                                      if (entity instanceof final Mob mobEntity)
                                                       {
-                                                          final Mob mobEntity = (Mob) entity;
                                                           if (mobEntity.getNavigation() instanceof AbstractAdvancedGroundPathNavigator)
                                                           {
                                                               ICalculationResultTracker.getInstance().startExporting(entity);
@@ -132,9 +134,8 @@ public class PerViamInvenireCommand
 
                                                   for (final Entity entity : entities)
                                                   {
-                                                      if (entity instanceof Mob)
+                                                      if (entity instanceof final Mob mobEntity)
                                                       {
-                                                          final Mob mobEntity = (Mob) entity;
                                                           if (mobEntity.getNavigation() instanceof AbstractAdvancedGroundPathNavigator)
                                                           {
                                                               ICalculationResultTracker.getInstance().stopExporting(entity);

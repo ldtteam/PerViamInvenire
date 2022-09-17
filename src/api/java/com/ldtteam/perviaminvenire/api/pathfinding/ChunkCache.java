@@ -1,6 +1,7 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -40,6 +41,7 @@ public class ChunkCache implements LevelReader
     /** Reference to the World object. */
     protected Level     world;
     protected WorldBorder worldBorder = new WorldBorder();
+    private final BiomeManager biomeManager;
 
     public ChunkCache(Level worldIn, BlockPos posFromIn, BlockPos posToIn, int subIn)
     {
@@ -50,6 +52,7 @@ public class ChunkCache implements LevelReader
         int j = posToIn.getZ() + subIn >> 4;
         this.chunkArray = new LevelChunk[i - this.chunkX + 1][j - this.chunkZ + 1];
         this.empty = true;
+        this.biomeManager = worldIn.getBiomeManager();
 
         for (int k = this.chunkX; k <= i; ++k)
         {
@@ -112,7 +115,7 @@ public class ChunkCache implements LevelReader
     }
 
     @Override
-    public FluidState getFluidState(final BlockPos pos)
+    public @NotNull FluidState getFluidState(final BlockPos pos)
     {
         if (pos.getY() >= 0 && pos.getY() < 256)
         {
@@ -134,15 +137,15 @@ public class ChunkCache implements LevelReader
     }
 
     @Override
-    public Holder<Biome> getBiome(BlockPos pos)
+    public @NotNull Holder<Biome> getBiome(@NotNull BlockPos pos)
     {
         return ForgeRegistries.BIOMES.getHolder(Biomes.PLAINS.location()).orElseThrow();
     }
 
     @Override
-    public Holder<Biome> getUncachedNoiseBiome(final int x, final int y, final int z)
+    public @NotNull Holder<Biome> getUncachedNoiseBiome(final int x, final int y, final int z)
     {
-        return null;
+        return ForgeRegistries.BIOMES.getHolder(Biomes.PLAINS.location()).orElseThrow();
     }
 
     /**
@@ -150,7 +153,7 @@ public class ChunkCache implements LevelReader
      * material is set to air, meaning it is possible for non-vanilla blocks to still pass this check.
      */
     @Override
-    public boolean isEmptyBlock(BlockPos pos)
+    public boolean isEmptyBlock(@NotNull BlockPos pos)
     {
         BlockState state = this.getBlockState(pos);
         return state.isAir();
@@ -160,67 +163,65 @@ public class ChunkCache implements LevelReader
     @Override
     public BlockGetter getChunkForCollisions(final int chunkX, final int chunkZ)
     {
-        return this;
+        return getChunk(chunkX, chunkZ, ChunkStatus.FULL, false);
     }
 
     @Nullable
     @Override
-    public ChunkAccess getChunk(final int x, final int z, final ChunkStatus requiredStatus, final boolean nonnull)
+    public ChunkAccess getChunk(final int x, final int z, final @NotNull ChunkStatus requiredStatus, final boolean nonnull)
     {
+        if (x >= this.chunkX && x < this.chunkX + this.chunkArray.length && z >= this.chunkZ && z < this.chunkZ + this.chunkArray[0].length)
+        {
+            return this.chunkArray[x - this.chunkX][z - this.chunkZ];
+        }
+
         return null;
     }
 
     @Override
     public boolean hasChunk(final int chunkX, final int chunkZ)
     {
-        return false;
+        return withinBounds(chunkX - this.chunkX, chunkZ - this.chunkZ);
     }
 
     @Override
-    public BlockPos getHeightmapPos(final Heightmap.Types heightmapType, final BlockPos pos)
+    public int getHeight(final Heightmap.@NotNull Types heightmapType, final int x, final int z)
     {
-        return null;
-    }
+        int i;
+        if (this.withinBlockBounds(x,z)) {
+            if (this.hasChunk(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z))) {
+                i = this.getChunk(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z)).getHeight(heightmapType, x & 15, z & 15) + 1;
+            } else {
+                i = this.getMinBuildHeight();
+            }
+        } else {
+            i = this.getSeaLevel() + 1;
+        }
 
-    @Override
-    public int getHeight(final Heightmap.Types heightmapType, final int x, final int z)
-    {
-        return 0;
+        return i;
     }
 
     @Override
     public int getSkyDarken()
     {
-        return 0;
+        return world.getSkyDarken();
     }
 
     @Override
-    public BiomeManager getBiomeManager()
+    public @NotNull BiomeManager getBiomeManager()
     {
-        return null;
+        return this.biomeManager;
     }
 
     @Override
-    public WorldBorder getWorldBorder()
+    public @NotNull WorldBorder getWorldBorder()
     {
         return worldBorder;
     }
 
     @Override
-    public boolean isUnobstructed(@Nullable final Entity entityIn, final VoxelShape shape)
-    {
-        return false;
-    }
-
-    @Override
-    public List<VoxelShape> getEntityCollisions(@org.jetbrains.annotations.Nullable Entity p_186427_, AABB p_186428_) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public int getDirectSignal(BlockPos pos, Direction direction)
-    {
-        return this.getBlockState(pos).getDirectSignal(this, pos, direction);
+    public @NotNull List<VoxelShape> getEntityCollisions(@Nullable Entity p_186427_, @NotNull AABB p_186428_) {
+        return world.getEntityCollisions(p_186427_, p_186428_);
     }
 
     @Override
@@ -232,13 +233,18 @@ public class ChunkCache implements LevelReader
     @Override
     public int getSeaLevel()
     {
-        return 0;
+        return world.getSeaLevel();
     }
 
     @Override
-    public DimensionType dimensionType()
+    public @NotNull DimensionType dimensionType()
     {
-        return null;
+        return world.dimensionType();
+    }
+
+    private boolean withinBlockBounds(int x, int z)
+    {
+        return withinBounds((x >> 4) - this.chunkX, (z >> 4) - this.chunkZ);
     }
 
     private boolean withinBounds(int x, int z)
@@ -247,14 +253,14 @@ public class ChunkCache implements LevelReader
     }
 
     @Override
-    public float getShade(final Direction p_230487_1_, final boolean p_230487_2_)
+    public float getShade(final @NotNull Direction direction, final boolean shade)
     {
-        return 0;
+        return world.getShade(direction, shade);
     }
 
     @Override
-    public LevelLightEngine getLightEngine()
+    public @NotNull LevelLightEngine getLightEngine()
     {
-        return null;
+        return world.getLightEngine();
     }
 }

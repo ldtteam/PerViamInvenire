@@ -35,9 +35,10 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
           .getRunner().produce(entity, center, facing, world)
           .orElseGet(() -> {
               final EntityDimensions entitySize = entity.getDimensions(entity.getPose());
+              final float entityVerticalSize = entitySize.height > 0.75F ? entitySize.height / 2.0F : 0.75F - entitySize.height / 2.0F;
               final float entityHorizontalSize = entitySize.width > 0.75F ? entitySize.width / 2.0F : 0.75F - entitySize.width / 2.0F;
 
-              return AABB.ofSize(Vec3.ZERO, entityHorizontalSize, 0.1F, entityHorizontalSize).move(center.x(), center.y() + (entity.getEyeHeight(entity.getPose()) - entitySize.height / 2), center.z());
+              return AABB.ofSize(Vec3.ZERO, entityHorizontalSize, entityVerticalSize, entityHorizontalSize).move(center.x(), center.y(), center.z());
           });
 
         if (hasNoCollisions(entity, world, entityBox))

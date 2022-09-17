@@ -14,5 +14,5 @@ import net.minecraft.core.BlockPos;
  */
 @FunctionalInterface
 public interface IStartPositionAdapter {
-    Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity);
+    Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity, final BlockPos current);
 }

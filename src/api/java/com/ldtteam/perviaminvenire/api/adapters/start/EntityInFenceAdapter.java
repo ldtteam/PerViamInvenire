@@ -12,8 +12,8 @@ import net.minecraft.core.BlockPos;
 
 public class EntityInFenceAdapter implements IStartPositionAdapter {
     @Override
-    public Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity) {
-        BlockPos entityPos = entity.blockPosition();
+    public Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity, final BlockPos startPos) {
+        BlockPos entityPos = startPos;
 
         //Push away from fence
         final double dX = entity.getX() - Math.floor(entity.getX());
