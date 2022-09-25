@@ -110,4 +110,9 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
     {
         return getPath();
     }
+
+    @Override
+    public void moveTo(BlockPos target) {
+        moveTo(target.getX(), target.getY(), target.getZ(), 1);
+    }
 }

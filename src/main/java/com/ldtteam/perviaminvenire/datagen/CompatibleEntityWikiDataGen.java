@@ -4,11 +4,9 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityManager;
-import com.ldtteam.perviaminvenire.util.DataGenUtils;
-import net.minecraft.client.Minecraft;
+import com.ldtteam.perviaminvenire.util.EntityTypeUtils;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
-import net.minecraft.data.HashCache;
 import net.minecraft.data.DataProvider;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.locale.Language;
@@ -22,14 +20,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.function.BinaryOperator;
 
 @Mod.EventBusSubscriber(modid = ModConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class CompatibleEntityWikiDataGen implements DataProvider
@@ -62,7 +55,7 @@ public class CompatibleEntityWikiDataGen implements DataProvider
     @Override
     public void run(final @NotNull CachedOutput cachedOutput) throws IOException
     {
-        final EntityType<?>[] types = DataGenUtils.getCompatibleVanillaOverrideTypes();
+        final EntityType<?>[] types = EntityTypeUtils.getCompatibleVanillaOverrideTypes();
         final Path path = this.generator.getOutputFolder().resolve("wiki/" + ModConstants.MOD_ID + "/tags/entity_types/replace_vanilla_navigator.md");
 
         final List<String> lines = Lists.newArrayList();

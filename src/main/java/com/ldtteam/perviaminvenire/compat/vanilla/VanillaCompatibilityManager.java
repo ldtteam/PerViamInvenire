@@ -1,6 +1,8 @@
 package com.ldtteam.perviaminvenire.compat.vanilla;
 
+import com.ldtteam.perviaminvenire.api.adapters.passable.IPassableBlockCallback;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IIsLadderBlockRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.movement.registry.IMovementControllerRegistry;
@@ -13,11 +15,17 @@ import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireClimberPathNavigat
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireFlyingPathNavigator;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigator;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
+import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
 
 import java.util.Optional;
 
@@ -115,6 +123,14 @@ public class VanillaCompatibilityManager
 
             return Optional.of(block.isAir() && Direction.Plane.HORIZONTAL.stream()
               .anyMatch(direction -> !worldReader.getBlockState(blockPos.offset(direction.getNormal())).isAir()));
+        });
+
+        IPassableBlockRegistry.getInstance().register((entity, block) -> {
+            if (entity.getType().is(ModTags.REPLACE_VANILLA_NAVIGATOR) && entity instanceof WaterAnimal) {
+                return Optional.of(block.getFluidState().is(FluidTags.WATER));
+            }
+
+            return Optional.empty();
         });
     }
 }

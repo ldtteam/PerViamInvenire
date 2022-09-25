@@ -3,7 +3,7 @@ package com.ldtteam.perviaminvenire.datagen;
 import com.ldtteam.perviaminvenire.api.util.ModTags;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityManager;
-import com.ldtteam.perviaminvenire.util.DataGenUtils;
+import com.ldtteam.perviaminvenire.util.EntityTypeUtils;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.tags.EntityTypeTagsProvider;
 import net.minecraftforge.api.distmarker.Dist;
@@ -43,7 +43,7 @@ public class CompatibleEntityDataGen extends EntityTypeTagsProvider
     @Override
     protected void addTags()
     {
-        tag(ModTags.REPLACE_VANILLA_NAVIGATOR).add(DataGenUtils.getCompatibleVanillaOverrideTypes());
+        tag(ModTags.REPLACE_VANILLA_NAVIGATOR).add(EntityTypeUtils.getCompatibleVanillaOverrideTypes());
     }
 
     @Override

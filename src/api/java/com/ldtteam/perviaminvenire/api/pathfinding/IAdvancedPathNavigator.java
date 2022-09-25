@@ -68,4 +68,10 @@ public interface IAdvancedPathNavigator
      */
     @Nullable
     Path getCurrentPath();
+
+    /**
+     * Forces the navigation to redirect the entity to the given target, potentially replacing the currently followed path with a new one to this target.
+     * @param target The target.
+     */
+    void moveTo(BlockPos target);
 }

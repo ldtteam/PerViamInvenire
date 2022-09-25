@@ -1,0 +1,50 @@
+minecraft {
+    runs {
+        gameTestServer {
+            workingDirectory project.file('run/gametest/server')
+
+            property 'forge.logging.markers', ''
+            property 'forge.logging.console.level', 'info'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
+            forceExit false
+
+            mods {
+                perviaminvenire {
+                    source sourceSets.api
+                    source sourceSets.main
+                    source sourceSets.gametest
+                }
+            }
+        }
+
+        gameTestClient {
+            parent runs.client
+            workingDirectory project.file('run/gametest/client')
+
+            property 'forge.logging.markers', ''
+            property 'forge.logging.console.level', 'info'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
+            forceExit false
+
+            mods {
+                perviaminvenire {
+                    source sourceSets.api
+                    source sourceSets.main
+                    source sourceSets.gametest
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    gametestLibrary ("com.google.jimfs:jimfs:${jimfs_version}") {
+        transitive = false
+    }
+}

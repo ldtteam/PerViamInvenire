@@ -95,19 +95,16 @@ public class ChunkCache implements LevelReader
     @Override
     public BlockState getBlockState(BlockPos pos)
     {
-        if (pos.getY() >= 0 && pos.getY() < 256)
+        int i = (pos.getX() >> 4) - this.chunkX;
+        int j = (pos.getZ() >> 4) - this.chunkZ;
+
+        if (i >= 0 && i < this.chunkArray.length && j >= 0 && j < this.chunkArray[i].length)
         {
-            int i = (pos.getX() >> 4) - this.chunkX;
-            int j = (pos.getZ() >> 4) - this.chunkZ;
+            LevelChunk chunk = this.chunkArray[i][j];
 
-            if (i >= 0 && i < this.chunkArray.length && j >= 0 && j < this.chunkArray[i].length)
+            if (chunk != null)
             {
-                LevelChunk chunk = this.chunkArray[i][j];
-
-                if (chunk != null)
-                {
-                    return chunk.getBlockState(pos);
-                }
+                return chunk.getBlockState(pos);
             }
         }
 
@@ -117,19 +114,16 @@ public class ChunkCache implements LevelReader
     @Override
     public @NotNull FluidState getFluidState(final BlockPos pos)
     {
-        if (pos.getY() >= 0 && pos.getY() < 256)
+        int i = (pos.getX() >> 4) - this.chunkX;
+        int j = (pos.getZ() >> 4) - this.chunkZ;
+
+        if (i >= 0 && i < this.chunkArray.length && j >= 0 && j < this.chunkArray[i].length)
         {
-            int i = (pos.getX() >> 4) - this.chunkX;
-            int j = (pos.getZ() >> 4) - this.chunkZ;
+            LevelChunk chunk = this.chunkArray[i][j];
 
-            if (i >= 0 && i < this.chunkArray.length && j >= 0 && j < this.chunkArray[i].length)
+            if (chunk != null)
             {
-                LevelChunk chunk = this.chunkArray[i][j];
-
-                if (chunk != null)
-                {
-                    return chunk.getFluidState(pos);
-                }
+                return chunk.getFluidState(pos);
             }
         }
 

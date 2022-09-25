@@ -1,7 +1,6 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+import com.google.common.collect.Maps;
 import com.ldtteam.perviaminvenire.api.adapters.registry.*;
 import com.ldtteam.perviaminvenire.api.pathfinding.*;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.CallbackBasedStuckHandler;
@@ -28,10 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -47,11 +43,19 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * Amount of ticks before vanilla stuck handling is allowed to discard an existing path
      */
     private static final long MIN_KEEP_TIME = 100;
+
+    /**
+     * Key type for the additional vanilla paths that need to be calculated.
+     * @param source The source of the calculation (likely a single BlockPos, might be a set or a stream, see {@link net.minecraft.world.entity.ai.navigation.PathNavigation#createPath(BlockPos, int)} and overrides).
+     * @param regionOffset The region offset.
+     * @param range The range.
+     */
+    private record AdditionalVanillaPathTaskKey(Object source, Integer regionOffset, boolean offsetUpward, Integer range) {};
     /**
      * These are additional tasks that are currently being run in case vanilla asks for path finding data.
      */
     @NotNull
-    private final Table<Object, Integer, VanillaCompatibilityPath> additionalVanillaPathTasks = HashBasedTable.create();
+    private final Map<AdditionalVanillaPathTaskKey, VanillaCompatibilityPath> additionalVanillaPathTasks = Maps.newHashMap();
     /**
      * The current result of the calculation
      */
@@ -183,16 +187,19 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Nullable
     public <T> VanillaCompatibilityPath scheduleAdditionalPath(
             @NotNull final T target,
+            final int regionOffset,
+            final boolean offsetUpward,
             final int range,
             final BiFunction<T, Integer, AbstractPathJob> jobBuilder,
             final Function<T, BlockPos> altTargetBuilder
     ) {
-        if (this.additionalVanillaPathTasks.contains(target, range)) {
-            final VanillaCompatibilityPath cachedPath = this.additionalVanillaPathTasks.get(target, range);
+        final AdditionalVanillaPathTaskKey key = new AdditionalVanillaPathTaskKey(target, regionOffset, offsetUpward, range);
+        if (this.additionalVanillaPathTasks.containsKey(key)) {
+            final VanillaCompatibilityPath cachedPath = this.additionalVanillaPathTasks.get(key);
 
             // Same logic vanilla does for results
             if (cachedPath == null || cachedPath.isCalculationComplete() && cachedPath.getNodeCount() < 2) {
-                this.additionalVanillaPathTasks.remove(target, range);
+                this.additionalVanillaPathTasks.remove(key);
                 return null;
             }
             return cachedPath;
@@ -207,7 +214,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
                 altTargetBuilder.apply(target),
                 future
         );
-        this.additionalVanillaPathTasks.put(target, range, path);
+        this.additionalVanillaPathTasks.put(key, path);
 
         return path;
     }
@@ -337,14 +344,22 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
         return scheduleAdditionalPath(
                 pos,
+                0,
+                false,
                 range,
                 (blockPos, integer) -> new PathJobMoveToLocation(ourEntity.getCommandSenderWorld(),
                         ourEntity.blockPosition(),
                         blockPos,
-                        (int) followRangeAttribute.getValue(),
+                        (int) Math.min(followRangeAttribute.getValue(), integer),
                         ourEntity),
                 Function.identity()
         );
+    }
+
+    @Nullable
+    @Override
+    public Path createPath(@NotNull BlockPos pos, int regionOffset, int range) {
+        return this.createPath(Set.of(pos), regionOffset, false, range);
     }
 
     @Override
@@ -372,10 +387,6 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      */
     @Override
     public boolean moveTo(final double x, final double y, final double z, final double speed) {
-        if (x == 0 && y == 0 && z == 0) {
-            return false;
-        }
-
         moveToXYZ(x, y, z, speed);
         return true;
     }
@@ -748,6 +759,10 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      */
     @Override
     public boolean isDone() {
+        if (path != null) {
+            return path.isDone();
+        }
+
         return (pathResult == null || pathResult.isDone() && pathResult.getStatus() != PathFindingStatus.CALCULATION_COMPLETE) && super.isDone();
     }
 
@@ -872,6 +887,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
         return scheduleAdditionalPath(
                 positions,
+                regionOffset,
+                offsetUpward,
                 (int) followRangeAttribute.getValue() + regionOffset,
                 (blockPos, integer) -> new PathJobMoveToOneOfLocation(ourEntity.getCommandSenderWorld(),
                         ourEntity.blockPosition(),
