@@ -4,6 +4,7 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.*;
 import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.movement.registry.IMovementControllerRegistry;
+import com.ldtteam.perviaminvenire.api.movement.registry.IWantedMovementHandlerRegistry;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultRenderer;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
@@ -129,5 +130,10 @@ public final class PerViamInvenireApiProxy implements IPerViamInvenireApi
     public ICalculationResultsImportManager getCalculationResultsImportManager()
     {
         return this.apiInstance.getCalculationResultsImportManager();
+    }
+
+    @Override
+    public IWantedMovementHandlerRegistry getWantedMovementHandlerRegistry() {
+        return this.apiInstance.getWantedMovementHandlerRegistry();
     }
 }

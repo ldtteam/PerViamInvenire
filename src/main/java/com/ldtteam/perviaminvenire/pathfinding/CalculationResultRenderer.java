@@ -54,13 +54,10 @@ public class CalculationResultRenderer implements ICalculationResultRenderer
 
         if (data.getInvalidNodeReasons().containsKey(pos))
         {
-            switch (data.getInvalidNodeReasons().get(pos))
-            {
-                case SWIMMING_NODE:
-                    return ParticleTypes.UNDERWATER;
-                default:
-                    return ParticleTypes.ANGRY_VILLAGER;
+            if (data.getInvalidNodeReasons().get(pos) == PathingCalculationData.InvalidNodeReason.SWIMMING_NODE) {
+                return ParticleTypes.UNDERWATER;
             }
+            return ParticleTypes.ANGRY_VILLAGER;
         }
 
         if (data.getPath().contains(pos))

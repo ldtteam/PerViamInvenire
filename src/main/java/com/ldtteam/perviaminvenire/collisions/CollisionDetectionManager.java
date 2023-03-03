@@ -3,6 +3,7 @@ package com.ldtteam.perviaminvenire.collisions;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IBoundingBoxProducerRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
@@ -29,68 +30,21 @@ public class CollisionDetectionManager implements ICollisionDetectionManager
     }
 
     @Override
-    public boolean canFit(final Entity entity, final Vec3 center, final Vec3 facing, final LevelReader world)
+    public boolean canFit(final Entity entity, final BlockPos targetPos, final Vec3 facing, final LevelReader world)
     {
-        final AABB entityBox = IBoundingBoxProducerRegistry.getInstance()
-          .getRunner().produce(entity, center, facing, world)
-          .orElseGet(() -> {
-              final EntityDimensions entitySize = entity.getDimensions(entity.getPose());
-              final float entityVerticalSize = entitySize.height > 0.75F ? entitySize.height / 2.0F : 0.75F - entitySize.height / 2.0F;
-              final float entityHorizontalSize = entitySize.width > 0.75F ? entitySize.width / 2.0F : 0.75F - entitySize.width / 2.0F;
+        final AABB centeredEntityBox = IBoundingBoxProducerRegistry.getInstance()
+          .getRunner().produce(entity)
+          .orElseGet(() -> entity.getDimensions(entity.getPose()).makeBoundingBox(Vec3.ZERO));
 
-              return AABB.ofSize(Vec3.ZERO, entityHorizontalSize, entityVerticalSize, entityHorizontalSize).move(center.x(), center.y(), center.z());
-          });
+        final AABB centeredBox = new AABB(
+                targetPos.getX() + 0.5D - (centeredEntityBox.getXsize() / 2),
+                targetPos.getY(),
+                targetPos.getZ() + 0.5D - (centeredEntityBox.getZsize() / 2),
+                targetPos.getX() + 0.5D + (centeredEntityBox.getXsize() / 2),
+                targetPos.getY() + centeredEntityBox.getYsize(),
+                targetPos.getZ() + 0.5D + (centeredEntityBox.getZsize() / 2));
 
-        if (hasNoCollisions(entity, world, entityBox))
-        {
-            return true;
-        }
-
-        final AABB bottomBox = new AABB(entityBox.minX, entityBox.minY, entityBox.minZ, entityBox.maxX, entityBox.minY + 1, entityBox.maxZ);
-        final double maxHeightOfBottom = StreamSupport.stream(
-                        Spliterators.spliteratorUnknownSize(new FilterableBlockCollisions(
-                                world,
-                                entity,
-                                bottomBox,
-                                (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false)
-                        ), Spliterator.ORDERED),
-                        false)
-                                             .mapToDouble(shape -> shape.max(Direction.Axis.Y) - bottomBox.minY)
-                                             .max()
-                                             .orElse(0d);
-        if (maxHeightOfBottom >= 1 - bottomBox.minY)
-        {
-            return false;
-        }
-
-        if(maxHeightOfBottom != 0d)
-        {
-            final AABB entityStandingOnBlockBox = entityBox.move(0, maxHeightOfBottom, 0);
-            if (hasNoCollisions(entity, world, entityStandingOnBlockBox))
-            {
-                return true;
-            }
-        }
-
-        final AABB belowBox = bottomBox.move(0,-1,0);
-        final double maxBlockHeightBelow = StreamSupport.stream(
-                        Spliterators.spliteratorUnknownSize(new FilterableBlockCollisions(
-                                world,
-                                entity,
-                                belowBox,
-                                (blockState, blockPos) -> !IPassableBlockRegistry.getInstance().getRunner().isPassable(entity, blockState).orElse(false)
-                        ), Spliterator.ORDERED),
-                        false)
-          .mapToDouble(shape -> shape.max(Direction.Axis.Y) - belowBox.minY)
-          .max()
-          .orElse(1d);
-
-        final double toShift = 1d - maxBlockHeightBelow;
-        if (toShift < 0.0001d)
-            return false;
-
-        final AABB shiftedBox = entityBox.move(0,-1 * toShift, 0);
-        return hasNoCollisions(entity, world, shiftedBox);
+        return hasNoCollisions(entity, world, centeredBox);
     }
 
     public boolean hasNoCollisions(final Entity entity, final LevelReader world, final AABB boundingBox)

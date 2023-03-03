@@ -1,11 +1,12 @@
 package com.ldtteam.perviaminvenire.compat.vanilla;
 
-import com.ldtteam.perviaminvenire.api.adapters.passable.IPassableBlockCallback;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IBoundingBoxProducerRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IIsLadderBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.movement.registry.IMovementControllerRegistry;
+import com.ldtteam.perviaminvenire.api.movement.registry.IWantedMovementHandlerRegistry;
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
 import com.ldtteam.perviaminvenire.api.pathfinding.IAdvancedPathNavigator;
 import com.ldtteam.perviaminvenire.api.pathfinding.registry.IPathNavigatorRegistry;
@@ -15,17 +16,18 @@ import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireClimberPathNavigat
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireFlyingPathNavigator;
 import com.ldtteam.perviaminvenire.pathfinding.PerViamInvenireGroundPathNavigator;
 import net.minecraft.core.Direction;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
+import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.monster.Slime;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import org.checkerframework.checker.units.qual.A;
 
 import java.util.Optional;
 
@@ -126,11 +128,27 @@ public class VanillaCompatibilityManager
         });
 
         IPassableBlockRegistry.getInstance().register((entity, block) -> {
-            if (entity.getType().is(ModTags.REPLACE_VANILLA_NAVIGATOR) && entity instanceof WaterAnimal) {
-                return Optional.of(block.getFluidState().is(FluidTags.WATER));
+            if (entity.getType().is(ModTags.REPLACE_VANILLA_NAVIGATOR)) {
+                if (entity instanceof WaterAnimal) {
+                    return Optional.of(block.getFluidState().is(FluidTags.WATER));
+                }
+
+                return Optional.of(block.isAir());
             }
 
             return Optional.empty();
+        });
+
+        IWantedMovementHandlerRegistry.getInstance().register((entity, x, y, z, speed) -> {
+            if (!(entity instanceof Squid squid))
+                return false;
+
+            final Vec3 requested = new Vec3(x,y,z);
+            final Vec3 delta = requested.subtract(entity.position());
+
+            squid.setMovementVector((float) delta.x, (float) delta.y, (float) delta.z);
+            squid.setSpeed((float) speed);
+            return true;
         });
     }
 }

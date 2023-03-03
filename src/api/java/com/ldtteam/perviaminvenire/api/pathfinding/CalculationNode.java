@@ -1,5 +1,6 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,6 +23,9 @@ public class CalculationNode implements Comparable<CalculationNode>
      */
     @NotNull
     public final BlockPos pos;
+
+    @NotNull
+    public final BlockState state;
 
     /**
      * The hash of the node.
@@ -96,11 +100,12 @@ public class CalculationNode implements Comparable<CalculationNode>
      * Create initial Node.
      *
      * @param pos       coordinates of node.
+     * @param state     the state at the position.
      * @param heuristic heuristic estimate.
      */
-    public CalculationNode(@NotNull final BlockPos pos, final double heuristic)
+    public CalculationNode(@NotNull final BlockPos pos, @NotNull BlockState state, final double heuristic)
     {
-        this(null, pos, 0, heuristic, heuristic);
+        this(null, pos, state, 0, heuristic, heuristic);
     }
 
     /**
@@ -108,15 +113,17 @@ public class CalculationNode implements Comparable<CalculationNode>
      *
      * @param parent    parent node arrives from.
      * @param pos       coordinate of node.
+     * @param state     the state at the position.
      * @param cost      node cost.
      * @param heuristic heuristic estimate.
      * @param score     node total score.
      */
-    public CalculationNode(@Nullable final CalculationNode parent, @NotNull final BlockPos pos, final double cost, final double heuristic, final double score)
+    public CalculationNode(@Nullable final CalculationNode parent, @NotNull final BlockPos pos, @NotNull BlockState state, final double cost, final double heuristic, final double score)
     {
         this.parent = parent;
         this.pos = pos;
         this.steps = parent == null ? 0 : (parent.steps + 1);
+        this.state = state;
         this.cost = cost;
         this.heuristic = heuristic;
         this.score = score;

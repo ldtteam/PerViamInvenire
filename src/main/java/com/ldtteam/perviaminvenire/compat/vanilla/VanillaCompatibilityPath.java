@@ -1,6 +1,7 @@
 package com.ldtteam.perviaminvenire.compat.vanilla;
 
 import com.google.common.collect.Lists;
+import com.ldtteam.perviaminvenire.api.compat.vanilla.ICompatibilityPath;
 import com.ldtteam.perviaminvenire.api.pathfinding.ExtendedNode;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.pathfinder.Path;
@@ -16,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
-public class VanillaCompatibilityPath extends Path
+public class VanillaCompatibilityPath extends Path implements ICompatibilityPath
 {
     private static final Logger LOGGER = LogManager.getLogger();
 

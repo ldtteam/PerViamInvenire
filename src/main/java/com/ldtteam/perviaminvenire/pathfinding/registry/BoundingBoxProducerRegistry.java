@@ -25,6 +25,6 @@ public class BoundingBoxProducerRegistry extends AbstractCallbackBasedRegistry<I
 
     @Override
     protected IBoundingBoxProducer getRunnerInternal(final List<IBoundingBoxProducer> callbacks) {
-        return (entity, center, facing, world) -> callbacks.stream().map(callback -> callback.produce(entity, center, facing, world)).filter(Optional::isPresent).map(Optional::get).findFirst();
+        return (entity) -> callbacks.stream().map(callback -> callback.produce(entity)).filter(Optional::isPresent).map(Optional::get).findFirst();
     }
 }

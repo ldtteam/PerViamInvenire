@@ -1,10 +1,20 @@
 package com.ldtteam.perviaminvenire.pathfinding;
 
 import com.google.common.collect.Maps;
-import com.ldtteam.perviaminvenire.api.adapters.registry.*;
-import com.ldtteam.perviaminvenire.api.pathfinding.*;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IDismountCartRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IIsLadderBlockRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IRidingOnCartRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.IRoadBlockRegistry;
+import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
+import com.ldtteam.perviaminvenire.api.compat.vanilla.ICompatibilityPath;
+import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNavigator;
+import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
+import com.ldtteam.perviaminvenire.api.pathfinding.ExtendedNode;
+import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
+import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.CallbackBasedStuckHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
+import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityJobBasedPath;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -27,7 +37,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -50,7 +64,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * @param regionOffset The region offset.
      * @param range The range.
      */
-    private record AdditionalVanillaPathTaskKey(Object source, Integer regionOffset, boolean offsetUpward, Integer range) {};
+    private record AdditionalVanillaPathTaskKey(Object source, Integer regionOffset, boolean offsetUpward, Integer range) {}
     /**
      * These are additional tasks that are currently being run in case vanilla asks for path finding data.
      */
@@ -420,7 +434,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * @return resulting path
      */
     private Path convertPath(final Path path) {
-        if (path instanceof VanillaCompatibilityPath) {
+        if (path instanceof ICompatibilityPath) {
             return path;
         }
 
@@ -445,7 +459,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             destination = new BlockPos(finalPoint.x, finalPoint.y, finalPoint.z);
         }
 
-        return tempPath == null ? path : tempPath;
+        return tempPath == null ? path : tempPath; //new VanillaCompatibilityJobBasedPath(tempPath == null ? path : tempPath);
     }
 
     private void processCompletedCalculationResult() {

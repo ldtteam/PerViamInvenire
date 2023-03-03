@@ -39,10 +39,10 @@ import java.util.function.Predicate;
 @SuppressWarnings("ConstantConditions")
 final class TemplateConstructionWorld extends Level {
 
-    private final Map<BlockPos, Block> blocks;
+    private final Map<BlockPos, BlockState> blocks;
     private final Map<BlockPos, BlockEntity> blockEntities;
 
-    TemplateConstructionWorld(Map<BlockPos, Block> blocks, Map<BlockPos, BlockEntity> blockEntities) {
+    TemplateConstructionWorld(Map<BlockPos, BlockState> blocks, Map<BlockPos, BlockEntity> blockEntities) {
         super(new ClientLevel.ClientLevelData(Difficulty.PEACEFUL, true, true),
                 ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(ModConstants.MOD_ID, "pvi_template")),
                 BuiltinRegistries.DIMENSION_TYPE.getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
@@ -170,7 +170,7 @@ final class TemplateConstructionWorld extends Level {
 
     @Override
     public @NotNull BlockState getBlockState(@NotNull BlockPos position) {
-        return this.blocks.getOrDefault(position, Blocks.AIR).defaultBlockState();
+        return this.blocks.getOrDefault(position, Blocks.AIR.defaultBlockState());
     }
 
     @Nullable

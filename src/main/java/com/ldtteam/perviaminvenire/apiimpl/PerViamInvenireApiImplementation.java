@@ -5,6 +5,7 @@ import com.ldtteam.perviaminvenire.api.adapters.registry.*;
 import com.ldtteam.perviaminvenire.api.collisions.ICollisionDetectionManager;
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
 import com.ldtteam.perviaminvenire.api.movement.registry.IMovementControllerRegistry;
+import com.ldtteam.perviaminvenire.api.movement.registry.IWantedMovementHandlerRegistry;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultRenderer;
 import com.ldtteam.perviaminvenire.api.pathfinding.ICalculationResultTracker;
 import com.ldtteam.perviaminvenire.api.pathfinding.IPathingResultHandler;
@@ -13,6 +14,7 @@ import com.ldtteam.perviaminvenire.api.results.ICalculationResultsImportManager;
 import com.ldtteam.perviaminvenire.api.results.ICalculationResultsStorageManager;
 import com.ldtteam.perviaminvenire.collisions.CollisionDetectionManager;
 import com.ldtteam.perviaminvenire.config.ConfigurationManager;
+import com.ldtteam.perviaminvenire.movement.registry.WantedMovementHandlerRegistry;
 import com.ldtteam.perviaminvenire.pathfinding.CalculationResultRenderer;
 import com.ldtteam.perviaminvenire.pathfinding.CalculationResultTracker;
 import com.ldtteam.perviaminvenire.pathfinding.PathingResultHandler;
@@ -119,5 +121,10 @@ public class PerViamInvenireApiImplementation implements IPerViamInvenireApi {
     public ICalculationResultsImportManager getCalculationResultsImportManager()
     {
         return CalculationResultsImportManager.getInstance();
+    }
+
+    @Override
+    public IWantedMovementHandlerRegistry getWantedMovementHandlerRegistry() {
+        return WantedMovementHandlerRegistry.getInstance();
     }
 }

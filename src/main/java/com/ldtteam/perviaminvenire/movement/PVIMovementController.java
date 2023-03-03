@@ -1,6 +1,7 @@
 package com.ldtteam.perviaminvenire.movement;
 
 import com.ldtteam.perviaminvenire.api.adapters.registry.IIsLadderBlockRegistry;
+import com.ldtteam.perviaminvenire.api.movement.registry.IWantedMovementHandlerRegistry;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.Mob;
@@ -74,7 +75,7 @@ public class PVIMovementController extends MoveControl
             final double zDif = this.wantedZ - this.mob.getZ();
             final double yDif = this.wantedY - this.mob.getY();
             final double dist = xDif * xDif + yDif * yDif + zDif * zDif;
-            if (dist < (double) 2.5000003E-7F)
+            if (dist < (double) 0.01f)
             {
                 this.mob.setZza(0.0F);
                 return;
@@ -116,8 +117,10 @@ public class PVIMovementController extends MoveControl
     @Override
     public void setWantedPosition(final double x, final double y, final double z, final double speedIn)
     {
-        super.setWantedPosition(x, y, z, speedIn);
-        this.operation = Operation.MOVE_TO;
+        if (!IWantedMovementHandlerRegistry.getInstance().getRunner().apply(this.mob, x, y, z, speedIn)) {
+            super.setWantedPosition(x, y, z, speedIn);
+            this.operation = Operation.MOVE_TO;
+        }
     }
 
     private boolean isLadder(final BlockState blockState, final BlockPos pos) {

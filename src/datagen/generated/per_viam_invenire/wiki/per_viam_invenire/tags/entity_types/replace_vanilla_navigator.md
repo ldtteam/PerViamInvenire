@@ -1,5 +1,6 @@
 #### Compatible Entities:
 
+- Allay
 - Bat
 - Blaze
 - Cat
@@ -8,11 +9,9 @@
 - Cow
 - Creeper
 - Donkey
-- Ender Dragon
 - Enderman
 - Endermite
 - Evoker
-- Giant
 - Glow Squid
 - Goat
 - Hoglin
@@ -31,7 +30,6 @@
 - Pillager
 - Polar Bear
 - Sheep
-- Shulker
 - Silverfish
 - Skeleton
 - Skeleton Horse
@@ -44,14 +42,9 @@
 - Vindicator
 - Wandering Trader
 - Witch
-- Wither
 - Wither Skeleton
 - Wolf
 - Zoglin
-- Zombie
-- Zombie Horse
-- Zombie Villager
-- Zombified Piglin
 - Zombie
 - Zombie Horse
 - Zombie Villager

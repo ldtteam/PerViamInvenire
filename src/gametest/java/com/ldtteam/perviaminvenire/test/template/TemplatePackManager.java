@@ -4,6 +4,7 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
@@ -18,6 +19,7 @@ import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraftforge.resource.PathPackResources;
 import org.jetbrains.annotations.NotNull;
@@ -35,8 +37,9 @@ import java.util.function.Consumer;
 
 public final class TemplatePackManager implements RepositorySource {
 
-    private static final int SIMPLE_WALK_PATH_LENGTH = 12;
+    public static final int SIMPLE_WALK_PATH_LENGTH = 12;
     private static final TemplatePackManager INSTANCE = new TemplatePackManager();
+    private static final BlockState GLASS = Blocks.GLASS.defaultBlockState();
 
     public static TemplatePackManager getInstance() {
         return INSTANCE;
@@ -78,14 +81,14 @@ public final class TemplatePackManager implements RepositorySource {
         return new PathPackResources("pvi_templates", rootTemplateResourcesPath);
     }
 
-    public void createSimpleWalkTemplateFor(final ResourceLocation name, final Block baseWalkBlock, final Block airBlock, final int width, final int height) {
-        final Map<BlockPos, Block> blocks = new HashMap<>();
+    public void createWalkThroughTemplateFor(final ResourceLocation name, final Block baseWalkBlock, final Block airBlock, final BlockState groundCollisionBlock, final BlockState noneGroundCollisionBlock, final BlockState soilBlock, final int width, final int height) {
+        final Map<BlockPos, BlockState> blocks = new HashMap<>();
 
         //Creates the end caps on both ends along the X axis.
         for (int z = -1 ; z < width + 1; z++) {
             for (int y = 0; y < height + 2; y++) {
-                blocks.put(new BlockPos(0, y, z), Blocks.GLASS);
-                blocks.put(new BlockPos(SIMPLE_WALK_PATH_LENGTH, y, z), Blocks.GLASS);
+                blocks.put(new BlockPos(0, y, z), GLASS);
+                blocks.put(new BlockPos(SIMPLE_WALK_PATH_LENGTH, y, z), GLASS);
             }
         }
 
@@ -93,21 +96,28 @@ public final class TemplatePackManager implements RepositorySource {
         for (int x = 1; x < SIMPLE_WALK_PATH_LENGTH; x++) {
             //Create walls upwards.
             for (int y = 0; y < height + 2; y++) {
-                blocks.put(new BlockPos(x, y, -1), Blocks.GLASS);
-                blocks.put(new BlockPos(x, y, width+1), Blocks.GLASS);
+                blocks.put(new BlockPos(x, y, -1), GLASS);
+                blocks.put(new BlockPos(x, y, width), GLASS);
             }
 
             //Create a floor and a ceiling
             for (int z = -1; z < width + 1; z++) {
-                blocks.put(new BlockPos(x, 0, z), baseWalkBlock);
-                blocks.put(new BlockPos(x, height + 1, z), Blocks.GLASS);
+                blocks.put(new BlockPos(x, 0, z), baseWalkBlock.defaultBlockState());
+                blocks.put(new BlockPos(x, height + 1, z), GLASS);
             }
 
-            //Fill in the content, but only if it is not air.
-            if (!airBlock.defaultBlockState().isAir()) {
-                for (int y = 1; y < height + 1; y++) {
-                    for (int z = 0; z < width; z++) {
-                        blocks.put(new BlockPos(x, y, z), airBlock);
+            //Fill in the content
+            for (int y = 1; y < height + 1; y++) {
+                for (int z = 0; z < width; z++) {
+                    if (x != (SIMPLE_WALK_PATH_LENGTH / 2)) {
+                        blocks.put(new BlockPos(x, y, z), airBlock.defaultBlockState());
+                    } else {
+                        if (y == 1) {
+                            blocks.put(new BlockPos(x, y, z), groundCollisionBlock);
+                            blocks.put(new BlockPos(x, 0, z), soilBlock);
+                        } else {
+                            blocks.put(new BlockPos(x, y, z), noneGroundCollisionBlock);
+                        }
                     }
                 }
             }
@@ -120,11 +130,135 @@ public final class TemplatePackManager implements RepositorySource {
                 blocks,
                 blockEntities,
                 new BlockPos(0,0,-1),
-                new BlockPos(SIMPLE_WALK_PATH_LENGTH, height + 1, width + 1)
+                new BlockPos(SIMPLE_WALK_PATH_LENGTH, height + 1, width)
         );
     }
 
-    private void createTemplateFor(ResourceLocation name, Map<BlockPos, Block> blocks, Map<BlockPos, BlockEntity> blockEntities, BlockPos startPosition, BlockPos endPosition) {
+    public void createVerticalOffsetTemplateFor(final ResourceLocation name, final Block baseWalkBlock, final Block airBlock, final Direction offSetDirection, final int stepLength, final int stepCount, final BlockState stair, final int width, final int height) {
+        if (offSetDirection.getAxis() != Direction.Axis.Y) {
+            throw new IllegalArgumentException("The offset direction must be vertical");
+        }
+
+        final int totalHeight = height + stepCount;
+        final int totalLength = stepLength * stepCount + SIMPLE_WALK_PATH_LENGTH;
+        
+        final Map<BlockPos, BlockState> blocks = new HashMap<>();
+
+        //Creates the end caps on both ends along the X axis.
+        for (int z = -1 ; z < width + 2; z++) {
+            for (int y = 0; y < totalHeight + 2; y++) {
+                blocks.put(new BlockPos(0, y, z), GLASS);
+                blocks.put(new BlockPos(totalLength, y, z), GLASS);
+            }
+        }
+
+        //For each slice along X between the end caps:
+        for (int x = 1; x < totalLength; x++) {
+            //Create walls upwards.
+            for (int y = 0; y < totalHeight + 2; y++) {
+                blocks.put(new BlockPos(x, y, -1), GLASS);
+                blocks.put(new BlockPos(x, y, width), GLASS);
+            }
+
+            //Create a floor and a ceiling
+            for (int z = -1; z < width + 1; z++) {
+                blocks.put(new BlockPos(x, 0, z), baseWalkBlock.defaultBlockState());
+                blocks.put(new BlockPos(x, totalHeight + 1, z), GLASS);
+            }
+
+            //Fill in the content
+            for (int y = 1; y < totalHeight + 1; y++) {
+                for (int z = 0; z < width; z++) {
+                    blocks.put(new BlockPos(x, y, z), airBlock.defaultBlockState());
+                }
+            }
+        }
+
+        final int xOffSet = SIMPLE_WALK_PATH_LENGTH / 2;
+        if (offSetDirection == Direction.UP) {
+            //Now create the steps
+            for (int y = 1; y <= stepCount; y++) {
+                for (int z = 0; z < width; z++) {
+                    final int currentStepXOffset = xOffSet + (y - 1) * stepLength;
+                    for (int x = currentStepXOffset; x < totalLength; x++) {
+                        blocks.put(new BlockPos(x,y,z), baseWalkBlock.defaultBlockState());
+                    }
+                    blocks.put(new BlockPos(currentStepXOffset - 1, y, z), stair);
+                }
+            }
+        }
+        else {
+            //Now create the steps
+            for (int y = 1; y <= stepCount; y++) {
+                for (int z = 0; z < width; z++) {
+                    final int currentStepXOffset = xOffSet + (stepCount - y - 1) * stepLength;
+                    for (int x = 1; x <= currentStepXOffset; x++) {
+                        blocks.put(new BlockPos(x,y,z), baseWalkBlock.defaultBlockState());
+                    }
+                    blocks.put(new BlockPos(currentStepXOffset + 1, y, z), stair);
+                }
+            }
+        }
+
+        final Map<BlockPos, BlockEntity> blockEntities = Map.of();
+
+        createTemplateFor(
+                name,
+                blocks,
+                blockEntities,
+                new BlockPos(0,0,-1),
+                new BlockPos(totalLength, totalHeight + 1, width)
+        );
+    }
+
+    
+    public void createSimpleWalkTemplateFor(final ResourceLocation name, final Block baseWalkBlock, final Block airBlock, final int width, final int height) {
+        final Map<BlockPos, BlockState> blocks = new HashMap<>();
+
+        //Creates the end caps on both ends along the X axis.
+        for (int z = -1 ; z < width + 1; z++) {
+            for (int y = 0; y < height + 2; y++) {
+                blocks.put(new BlockPos(0, y, z), GLASS);
+                blocks.put(new BlockPos(SIMPLE_WALK_PATH_LENGTH, y, z), GLASS);
+            }
+        }
+
+        //For each slice along X between the end caps:
+        for (int x = 1; x < SIMPLE_WALK_PATH_LENGTH; x++) {
+            //Create walls upwards.
+            for (int y = 0; y < height + 2; y++) {
+                blocks.put(new BlockPos(x, y, -1), GLASS);
+                blocks.put(new BlockPos(x, y, width), GLASS);
+            }
+
+            //Create a floor and a ceiling
+            for (int z = -1; z < width + 1; z++) {
+                blocks.put(new BlockPos(x, 0, z), baseWalkBlock.defaultBlockState());
+                blocks.put(new BlockPos(x, height + 1, z), GLASS);
+            }
+
+            //Fill in the content, but only if it is not air.
+            if (!airBlock.defaultBlockState().isAir()) {
+                for (int y = 1; y < height + 1; y++) {
+                    for (int z = 0; z < width; z++) {
+                        blocks.put(new BlockPos(x, y, z), airBlock.defaultBlockState());
+                    }
+                }
+            }
+        }
+
+        final Map<BlockPos, BlockEntity> blockEntities = Map.of();
+
+        createTemplateFor(
+                name,
+                blocks,
+                blockEntities,
+                new BlockPos(0,0,-1),
+                new BlockPos(SIMPLE_WALK_PATH_LENGTH, height + 1, width)
+        );
+    }
+
+    private void createTemplateFor(ResourceLocation name, Map<BlockPos, BlockState> blocks, Map<BlockPos, BlockEntity> blockEntities, BlockPos startPosition, BlockPos endPosition) {
         final Path outputPath = templateResourceFileSystems.getPath( "/","data", name.getNamespace(), "structures", name.getPath() + ".nbt");
         final Path parentDirectory = outputPath.getParent();
         try {
@@ -132,6 +266,10 @@ public final class TemplatePackManager implements RepositorySource {
         } catch (IOException e) {
             throw new RuntimeException("Failed to create in-memory directories!", e);
         }
+        if (Files.exists(outputPath)) {
+            return;
+        }
+
         try (final TemplateConstructionWorld level = new TemplateConstructionWorld(blocks, blockEntities);
              final OutputStream outputStream = Files.newOutputStream(outputPath, StandardOpenOption.CREATE_NEW);
              final DataOutputStream dataOutputStream = new DataOutputStream(outputStream)) {

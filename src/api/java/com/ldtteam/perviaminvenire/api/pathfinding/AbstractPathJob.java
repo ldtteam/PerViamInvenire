@@ -12,6 +12,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
@@ -54,6 +55,7 @@ public abstract class AbstractPathJob implements Callable<Path>
 
     //  May be faster, but can produce strange results
     private final boolean allowJumpPointSearchTypeWalk;
+    private final int invalidYLevel;
     private       int     totalNodesAdded   = 0;
     private       int     totalNodesVisited = 0;
 
@@ -128,6 +130,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         final int maxX = Math.max(start.getX(), end.getX()) + (range / 2);
         final int maxZ = Math.max(start.getZ(), end.getZ()) + (range / 2);
 
+        this.invalidYLevel = world.getMinBuildHeight() - 1;
         this.xzRestricted = false;
         this.hardXzRestriction = false;
 
@@ -143,6 +146,7 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         //This needs to be last since this is what potentially invokes the start handling.
         this.start = new BlockPos(this.prepareStart(entity, entity.blockPosition()));
+
     }
 
     /**
@@ -202,6 +206,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         this.maxX = Math.max(startRestriction.getX(), endRestriction.getX()) + grow.getX();
         this.maxZ = Math.max(startRestriction.getZ(), endRestriction.getZ()) + grow.getZ();
 
+        this.invalidYLevel = world.getMinBuildHeight() - 1;
         this.xzRestricted = true;
         this.hardXzRestriction = hardRestriction;
 
@@ -218,6 +223,13 @@ public abstract class AbstractPathJob implements Callable<Path>
         this.start = this.prepareStart(entity, start);
     }
 
+    /**
+     * Indicates if the given node is a ladder going up.
+     *
+     * @param currentNode the current node.
+     * @param dPos the delta position.
+     * @return true if so.
+     */
     private static boolean onLadderGoingUp(@NotNull final CalculationNode currentNode, @NotNull final BlockPos dPos)
     {
         return currentNode.isLadder() && (dPos.getY() >= 0 || dPos.getX() != 0 || dPos.getZ() != 0);
@@ -380,16 +392,29 @@ public abstract class AbstractPathJob implements Callable<Path>
         return cost;
     }
 
+    /**
+     * Indicates if the node is closed.
+     *
+     * @param node the node.
+     * @return true if so.
+     */
     private static boolean nodeClosed(@Nullable final CalculationNode node)
     {
         return node != null && node.isClosed();
     }
 
+    /**
+     * Indicates if the node is a swimming node.
+     *
+     * @param world the world.
+     * @param pos the position.
+     * @param node the node.
+     * @return true if so.
+     */
     private static boolean calculateSwimming(@NotNull final LevelReader world, @NotNull final BlockPos pos, @Nullable final CalculationNode node)
     {
         return (node == null) ? isWater(world, pos.below()) : node.isSwimming();
     }
-
 
     /**
      * Check if the block at this position is actually some kind of waterly fluid.
@@ -418,6 +443,11 @@ public abstract class AbstractPathJob implements Callable<Path>
         return fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER;
     }
 
+    /**
+     * Gives access to the calculated path result.
+     *
+     * @return the result.
+     */
     public PathResult<? extends AbstractPathJob> getResult()
     {
         return result;
@@ -602,13 +632,13 @@ public abstract class AbstractPathJob implements Callable<Path>
     private CalculationNode getAndSetupStartNode()
     {
         @NotNull final CalculationNode startNode = new CalculationNode(start,
-          computeHeuristic(start));
+                world.getBlockState(start), computeHeuristic(start));
 
         if (isLadder(start))
         {
             startNode.setLadder();
         }
-        else if (world.getBlockState(start.below()).getMaterial().isLiquid())
+        else if (isLiquid(world.getBlockState(start.below())) || (getEntity() instanceof WaterAnimal && isLiquid(world.getBlockState(start))))
         {
             startNode.setSwimming();
         }
@@ -877,7 +907,7 @@ public abstract class AbstractPathJob implements Callable<Path>
       final boolean isSwimming, final double heuristic, final double cost, final double score)
     {
         final CalculationNode node;
-        node = new CalculationNode(parent, pos, cost, heuristic, score);
+        node = new CalculationNode(parent, pos, world.getBlockState(pos), cost, heuristic, score);
         nodesVisited.put(nodeKey, node);
 
         if (isLadder(pos))
@@ -920,19 +950,19 @@ public abstract class AbstractPathJob implements Callable<Path>
      *
      * @param parent parent node.
      * @param pos    coordinate of block.
-     * @return y height of first open, viable block above ground, or -1 if blocked or too far a drop.
+     * @return y height of first open, viable block above ground, or {@link AbstractPathJob#invalidYLevel} if blocked or too far a drop.
      */
     public int getGroundHeight(@Nullable final CalculationNode parent, @NotNull final BlockPos pos)
     {
         final Entity entity;
         if ((entity = this.entity.get()) == null)
-            return -1;
+            return invalidYLevel;
 
         final Vec3 facing = Vec3.atLowerCornerOf(pos.subtract(parent == null ? pos : parent.pos));
 
         if (!ICollisionDetectionManager.getInstance().canFit(
           entity,
-          Vec3.atCenterOf(pos),
+          pos,
           facing,
           this.world
         ))
@@ -950,7 +980,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
         else if (surfaceType == SurfaceType.NOT_PASSABLE)
         {
-            return -1;
+            return invalidYLevel;
         }
 
         return handleNotStanding(parent, pos, below);
@@ -980,7 +1010,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         if (!canDrop || isSwimming || ((parent.pos.getX() != pos.getX() || parent.pos.getZ() != pos.getZ()) && !isNotPassable(parent.pos, parent.pos.below())
                                          && isWalkableSurface(world.getBlockState(parent.pos.below()), parent.pos.below()) == SurfaceType.DROPABLE))
         {
-            return -1;
+            return invalidYLevel;
         }
 
         for (int i = 2; i <= 10; i++)
@@ -993,11 +1023,11 @@ public abstract class AbstractPathJob implements Callable<Path>
             }
             else if (below.getMaterial() != Material.AIR)
             {
-                return -1;
+                return invalidYLevel;
             }
         }
 
-        return -1;
+        return invalidYLevel;
     }
 
     private int handleInLiquid(@NotNull final BlockPos pos, @NotNull final BlockState below, final boolean isSwimming)
@@ -1015,7 +1045,7 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
 
         //  Not allowed to swim or this isn't water, and we're on dry land
-        return -1;
+        return invalidYLevel;
     }
 
     private int handleTargetNotPassable(@Nullable final CalculationNode parent, @NotNull final BlockPos pos)
@@ -1024,16 +1054,16 @@ public abstract class AbstractPathJob implements Callable<Path>
         //  Need to try jumping up one, if we can
         if (!canJump)
         {
-            return -1;
+            return invalidYLevel;
         }
 
         //  Check for jump room from the origin space
         if (isNotPassable(parent.pos, parent.pos.above()))
         {
-            return -1;
+            return invalidYLevel;
         }
 
-        return !isNotPassable(parent.pos.above(), pos.above()) ? pos.above().getY() : -1;
+        return !isNotPassable(parent.pos.above(), pos.above()) ? pos.above().getY() : invalidYLevel;
     }
 
     protected boolean isNotPassable(final BlockPos parent, final BlockPos pos)
@@ -1044,7 +1074,7 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         return !ICollisionDetectionManager.getInstance().canFit(
           entity,
-          Vec3.atCenterOf(pos),
+          pos,
           Vec3.atLowerCornerOf(pos.subtract(parent)),
           this.world
         );
