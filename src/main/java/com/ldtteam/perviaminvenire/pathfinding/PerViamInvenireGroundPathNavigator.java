@@ -14,7 +14,6 @@ import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.CallbackBasedStuckHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
-import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityJobBasedPath;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -148,27 +147,31 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     /**
      * Used to path away from a position.
      *
-     * @param avoid the position to avoid.
-     * @param range the range he should move out of.
-     * @param speed the speed to run at.
+     * @param avoid    the position to avoid.
+     * @param accuracy the accuracy of the pathing.
+     * @param range    the range he should move out of.
+     * @param speed    the speed to run at.
      * @return the result of the pathing.
      */
     @Nullable
-    public PathResult<? extends AbstractPathJob> moveAwayFromXYZ(final BlockPos avoid, final double range, final double speed) {
+    public PathResult<? extends AbstractPathJob> moveAwayFromXYZ(final BlockPos avoid, double accuracy, final double range, final double speed) {
         if (pathResult != null && !pathResult.isDone() && pathResult.getJob() instanceof PathJobMoveAwayFromLocation) {
             return pathResult;
         }
 
-        final AttributeInstance followRangeAttribute;
-        if ((followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE)) == null) {
-            return null;
-        }
+        final AttributeInstance followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE);
+
+        final int workingRange = (int) Math.min(
+                range,
+                followRangeAttribute == null ? Integer.MAX_VALUE : followRangeAttribute.getValue()
+        );
 
         return setPathJob(new PathJobMoveAwayFromLocation(ourEntity.getCommandSenderWorld(),
                 ourEntity.blockPosition(),
                 avoid,
-                (int) range,
-                (int) followRangeAttribute.getValue(),
+                (int) accuracy,
+                workingRange,
+                workingRange,
                 ourEntity), null, speed);
     }
 
@@ -203,11 +206,11 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             @NotNull final T target,
             final int regionOffset,
             final boolean offsetUpward,
-            final int range,
+            final int accuracy,
             final BiFunction<T, Integer, AbstractPathJob> jobBuilder,
             final Function<T, BlockPos> altTargetBuilder
     ) {
-        final AdditionalVanillaPathTaskKey key = new AdditionalVanillaPathTaskKey(target, regionOffset, offsetUpward, range);
+        final AdditionalVanillaPathTaskKey key = new AdditionalVanillaPathTaskKey(target, regionOffset, offsetUpward, accuracy);
         if (this.additionalVanillaPathTasks.containsKey(key)) {
             final VanillaCompatibilityPath cachedPath = this.additionalVanillaPathTasks.get(key);
 
@@ -219,7 +222,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return cachedPath;
         }
 
-        final AbstractPathJob job = jobBuilder.apply(target, range);
+        final AbstractPathJob job = jobBuilder.apply(target, accuracy);
         job.setPathingOptions(getPathingOptions());
 
         final Future<Path> future = PathFinding.enqueue(job);
@@ -283,14 +286,15 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     /**
      * Try to move to a certain position.
      *
-     * @param x     the x target.
-     * @param y     the y target.
-     * @param z     the z target.
-     * @param speed the speed to walk.
+     * @param x        the x target.
+     * @param y        the y target.
+     * @param z        the z target.
+     * @param accuracy the accuracy of the pathing.
+     * @param speed    the speed to walk.
      * @return the PathResult.
      */
     @Nullable
-    public PathResult<? extends AbstractPathJob> moveToXYZ(final double x, final double y, final double z, final double speed) {
+    public PathResult<? extends AbstractPathJob> moveToXYZ(final double x, final double y, final double z, double accuracy, final double speed) {
         final BlockPos target = new BlockPos(x, y, z);
 
         if (pathResult != null && pathResult.getJob() instanceof PathJobMoveToLocation &&
@@ -303,22 +307,19 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             return pathResult;
         }
 
-        final AttributeInstance followRangeAttribute;
-        if ((followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE)) == null) {
-            return null;
-        }
-
+        final AttributeInstance followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE);
         return setPathJob(
                 new PathJobMoveToLocation(ourEntity.getCommandSenderWorld(),
                         ourEntity.blockPosition(),
                         target,
-                        (int) followRangeAttribute.getValue(),
+                        (int) accuracy,
+                        followRangeAttribute == null ? Integer.MAX_VALUE : (int) followRangeAttribute.getValue(),
                         ourEntity),
                 target, speed);
     }
 
-    public boolean tryMoveToBlockPos(final BlockPos pos, final double speed) {
-        moveToXYZ(pos.getX(), pos.getY(), pos.getZ(), speed);
+    public boolean tryMoveToBlockPos(final BlockPos pos, double accuracy, final double speed) {
+        moveToXYZ(pos.getX(), pos.getY(), pos.getZ(), accuracy, speed);
         return true;
     }
 
@@ -350,21 +351,19 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     }
 
     @Override
-    public Path createPath(@NotNull final BlockPos pos, final int range) {
-        final AttributeInstance followRangeAttribute;
-        if ((followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE)) == null) {
-            return null;
-        }
+    public Path createPath(@NotNull final BlockPos pos, final int accuracy) {
+        final AttributeInstance followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE);
 
         return scheduleAdditionalPath(
                 pos,
                 0,
                 false,
-                range,
+                accuracy,
                 (blockPos, integer) -> new PathJobMoveToLocation(ourEntity.getCommandSenderWorld(),
                         ourEntity.blockPosition(),
                         blockPos,
-                        (int) Math.min(followRangeAttribute.getValue(), integer),
+                        accuracy,
+                        followRangeAttribute == null ? Integer.MAX_VALUE : (int) followRangeAttribute.getValue(),
                         ourEntity),
                 Function.identity()
         );
@@ -372,8 +371,8 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
 
     @Nullable
     @Override
-    public Path createPath(@NotNull BlockPos pos, int regionOffset, int range) {
-        return this.createPath(Set.of(pos), regionOffset, false, range);
+    public Path createPath(@NotNull BlockPos pos, int regionOffset, int accuracy) {
+        return this.createPath(Set.of(pos), regionOffset, false, accuracy);
     }
 
     @Override
@@ -401,13 +400,13 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      */
     @Override
     public boolean moveTo(final double x, final double y, final double z, final double speed) {
-        moveToXYZ(x, y, z, speed);
+        moveToXYZ(x, y, z, 1, speed);
         return true;
     }
 
     @Override
     public boolean moveTo(final Entity entityIn, final double speedIn) {
-        return tryMoveToBlockPos(entityIn.blockPosition(), speedIn);
+        return tryMoveToBlockPos(entityIn.blockPosition(), 1, speedIn);
     }
 
     // Removes stupid vanilla stuff, causing our pathpoints to occasionally be replaced by vanilla ones.
@@ -837,16 +836,9 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         this.stop();
     }
 
-    /**
-     * Used to move a living ourEntity with a speed.
-     *
-     * @param e     the ourEntity.
-     * @param speed the speed.
-     * @return the result.
-     */
     @Nullable
-    public PathResult<? extends AbstractPathJob> moveToLivingEntity(@NotNull final Entity e, final double speed) {
-        return moveToXYZ(e.getX(), e.getY(), e.getZ(), speed);
+    public PathResult<? extends AbstractPathJob> moveToLivingEntity(@NotNull final Entity e, double accuracy, final double speed) {
+        return moveToXYZ(e.getX(), e.getY(), e.getZ(), accuracy, speed);
     }
 
     @Override
@@ -863,13 +855,14 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      * Used to path away from a ourEntity.
      *
      * @param e        the ourEntity.
-     * @param distance the distance to move to.
+     * @param accuracy the accuracy to path to.
+     * @param range    the distance to move to.
      * @param speed    the speed to run at.
      * @return the result of the pathing.
      */
     @Nullable
-    public PathResult<? extends AbstractPathJob> moveAwayFromLivingEntity(@NotNull final Entity e, final double distance, final double speed) {
-        return moveAwayFromXYZ(e.blockPosition(), distance, speed);
+    public PathResult<? extends AbstractPathJob> moveAwayFromLivingEntity(@NotNull final Entity e, double accuracy, final double range, final double speed) {
+        return moveAwayFromXYZ(e.blockPosition(), accuracy, range, speed);
     }
 
     @Override
@@ -878,7 +871,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
         getPathingOptions().setCanSwim(canSwim);
     }
 
-    protected Path createPath(Set<BlockPos> positions, int regionOffset, boolean offsetUpward, int distance) {
+    protected Path createPath(Set<BlockPos> positions, int regionOffset, boolean offsetUpward, int accuracy) {
         if (positions.isEmpty()) {
             return null;
         } else if (this.mob.getY() < 0.0D) {
@@ -893,21 +886,20 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
             }
         }
 
-        final AttributeInstance followRangeAttribute;
-        if ((followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE)) == null) {
-            return null;
-        }
+        final AttributeInstance followRangeAttribute = ourEntity.getAttribute(Attributes.FOLLOW_RANGE);
 
+        final int range = followRangeAttribute == null ? Integer.MAX_VALUE : (int) (followRangeAttribute.getValue() + regionOffset);
 
         return scheduleAdditionalPath(
                 positions,
                 regionOffset,
                 offsetUpward,
-                (int) followRangeAttribute.getValue() + regionOffset,
-                (blockPos, integer) -> new PathJobMoveToOneOfLocation(ourEntity.getCommandSenderWorld(),
+                accuracy,
+                (blockPos, pathingAccuracy) -> new PathJobMoveToOneOfLocation(ourEntity.getCommandSenderWorld(),
                         ourEntity.blockPosition(),
                         blockPos,
-                        (int) followRangeAttribute.getValue(),
+                        pathingAccuracy,
+                        range,
                         ourEntity),
                 blockPos -> blockPos.stream().max(Comparator.comparing(ourEntity.blockPosition()::distSqr)).orElse(ourEntity.blockPosition())
         );

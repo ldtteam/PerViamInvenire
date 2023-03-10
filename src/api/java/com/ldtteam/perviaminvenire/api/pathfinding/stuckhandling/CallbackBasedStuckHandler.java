@@ -291,7 +291,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
             stuckLevel++;
             delayToNextUnstuckAction = 300;
             navigator.stopCurrentCalculation();
-            navigator.moveAwayFromXYZ(new BlockPos(navigator.getOurEntity().position()), 10, 1.0f);
+            navigator.moveAwayFromXYZ(new BlockPos(navigator.getOurEntity().position()),1, 10, 1.0f);
             return;
         }
 

@@ -2,15 +2,14 @@ package com.ldtteam.perviaminvenire.pathfinding;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.CalculationNode;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.pathfinder.Path;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 
 /**
  * Job that handles moving away from something.
@@ -19,17 +18,10 @@ public class PathJobMoveAwayFromLocation extends AbstractPathJob
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final double TIE_BREAKER = 1.001D;
-
-    /**
-     * Position to run to, in order to avoid something.
-     */
     @NotNull
     protected final BlockPos avoid;
-    /**
-     * Required avoidDistance.
-     */
     protected final int      avoidDistance;
+    private final int accuracy;
 
     /**
      * Prepares the PathJob for the path finding system.
@@ -38,15 +30,18 @@ public class PathJobMoveAwayFromLocation extends AbstractPathJob
      * @param start         starting location.
      * @param avoid         location to avoid.
      * @param avoidDistance how far to move away.
+     * @param accuracy      the block range that needs to be fulfilled to be at the destination.
      * @param range         max range to search.
      * @param entity the entity.
      */
-    public PathJobMoveAwayFromLocation(final Level world, @NotNull final BlockPos start, @NotNull final BlockPos avoid, final int avoidDistance, final int range, final LivingEntity entity)
+    public PathJobMoveAwayFromLocation(final Level world, @NotNull final BlockPos start, @NotNull final BlockPos avoid, final int avoidDistance, final int accuracy, final int range, final LivingEntity entity)
     {
         super(world, start, avoid, range, entity);
 
         this.avoid = new BlockPos(avoid);
         this.avoidDistance = avoidDistance;
+
+        this.accuracy = accuracy;
     }
 
     /**
@@ -86,7 +81,7 @@ public class PathJobMoveAwayFromLocation extends AbstractPathJob
     @Override
     protected boolean isAtDestination(@NotNull final CalculationNode n)
     {
-        return Math.sqrt(avoid.distSqr(n.pos)) > avoidDistance;
+        return Math.sqrt(avoid.distSqr(n.pos)) > (avoidDistance - accuracy);
     }
 
     /**

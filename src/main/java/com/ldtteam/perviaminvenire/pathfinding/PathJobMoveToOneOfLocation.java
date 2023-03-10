@@ -2,10 +2,11 @@ package com.ldtteam.perviaminvenire.pathfinding;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.AbstractPathJob;
 import com.ldtteam.perviaminvenire.api.pathfinding.CalculationNode;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.pathfinder.Path;
+import com.ldtteam.perviaminvenire.util.CalculationNodeUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -14,31 +15,30 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Comparator;
 import java.util.Set;
 
-public class PathJobMoveToOneOfLocation extends AbstractPathJob
-{
+public class PathJobMoveToOneOfLocation extends AbstractPathJob {
     private static final Logger LOGGER = LogManager.getLogger();
-
-    private static final float    DESTINATION_SLACK_NONE = 0.1F;
-    // 1^2 + 1^2 + 1^2 + (epsilon of 0.1F)
-    private static final float    DESTINATION_SLACK_ADJACENT = (float) Math.sqrt(2f);
-    private static final double        TIE_BREAKER = 1.001D;
     @NotNull
-    private final        Set<BlockPos> destination;
+    private final Set<BlockPos> destination;
+    private final int accuracy;
+    @NotNull
+    private float destinationSlack;
 
     /**
      * Prepares the PathJob for the path finding system.
      *
-     * @param world world the entity is in.
-     * @param start starting location.
-     * @param end   target location.
-     * @param range max search range.
-     * @param entity the entity.
+     * @param world    world the entity is in.
+     * @param start    starting location.
+     * @param end      target location.
+     * @param accuracy the block range that needs to be fulfilled to be at the destination.
+     * @param range    max search range.
+     * @param entity   the entity.
      */
-    public PathJobMoveToOneOfLocation(final Level world, @NotNull final BlockPos start, @NotNull final Set<BlockPos> end, final int range, final LivingEntity entity)
-    {
+    public PathJobMoveToOneOfLocation(final Level world, @NotNull final BlockPos start, @NotNull final Set<BlockPos> end, final int accuracy, final int range, final LivingEntity entity) {
         super(world, start, end.stream().max(Comparator.comparingInt(start::distManhattan)).orElse(start), range, entity);
 
         this.destination = end;
+        this.accuracy = accuracy;
+        this.destinationSlack = accuracy;
     }
 
     /**
@@ -48,24 +48,20 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
      */
     @Nullable
     @Override
-    protected Path search()
-    {
+    protected Path search() {
         LOGGER.debug(String.format("Pathfinding from [%d,%d,%d] to any of [%s]",
-          start.getX(), start.getY(), start.getZ(), destination));
+                start.getX(), start.getY(), start.getZ(), destination));
 
         return super.search();
     }
 
     @Override
-    protected double computeHeuristic(@NotNull final BlockPos pos)
-    {
+    protected double computeHeuristic(@NotNull final BlockPos pos) {
         boolean seen = false;
         BlockPos best = null;
         Comparator<BlockPos> comparator = Comparator.comparingDouble(pos::distSqr);
-        for (BlockPos blockPos : destination)
-        {
-            if (!seen || comparator.compare(blockPos, best) < 0)
-            {
+        for (BlockPos blockPos : destination) {
+            if (!seen || comparator.compare(blockPos, best) < 0) {
                 seen = true;
                 best = blockPos;
             }
@@ -80,14 +76,16 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
      * @return true if has been reached.
      */
     @Override
-    protected boolean isAtDestination(@NotNull final CalculationNode n)
-    {
-        for (BlockPos d : destination)
-        {
-            if (n.pos.getX() == d.getX()
-                  && n.pos.getY() == d.getY()
-                  && n.pos.getZ() == d.getZ())
-            {
+    protected boolean isAtDestination(@NotNull final CalculationNode n) {
+        for (BlockPos d : destination) {
+            float workingSlack = destinationSlack;
+
+            //  Compute destination slack - if the destination point cannot be stood in
+            if (getGroundHeight(null, d) != d.getY()) {
+                workingSlack = this.accuracy + CalculationNodeUtils.DESTINATION_SLACK_ADJACENT;
+            }
+
+            if (CalculationNodeUtils.isADestination(n, workingSlack, d)) {
                 return true;
             }
         }
@@ -101,16 +99,13 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob
      * @return double of the distance.
      */
     @Override
-    protected double getNodeResultScore(@NotNull final CalculationNode n)
-    {
+    protected double getNodeResultScore(@NotNull final CalculationNode n) {
         final BlockPos pos = n.pos;
         boolean seen = false;
         BlockPos best = null;
         Comparator<BlockPos> comparator = Comparator.comparingDouble(pos::distSqr);
-        for (BlockPos blockPos : destination)
-        {
-            if (!seen || comparator.compare(blockPos, best) < 0)
-            {
+        for (BlockPos blockPos : destination) {
+            if (!seen || comparator.compare(blockPos, best) < 0) {
                 seen = true;
                 best = blockPos;
             }
