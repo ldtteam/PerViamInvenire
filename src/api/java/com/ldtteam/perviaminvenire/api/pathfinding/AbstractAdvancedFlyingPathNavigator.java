@@ -42,6 +42,11 @@ public abstract class AbstractAdvancedFlyingPathNavigator extends FlyingPathNavi
     }
 
     @Override
+    public void setPathingOptions(PathingOptions pathingOptions) {
+        this.pathingOptions = pathingOptions;
+    }
+
+    @Override
     public Mob getOurEntity()
     {
         return ourEntity;

@@ -81,6 +81,8 @@ public interface IAdvancedPathNavigator {
      */
     PathingOptions getPathingOptions();
 
+    void setPathingOptions(PathingOptions pathingOptions);
+
     /**
      * The entity for which the navigation is occurring.
      *

@@ -1,15 +1,13 @@
 package com.ldtteam.perviaminvenire.test;
 
-import com.google.common.collect.ImmutableMap;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IBoundingBoxProducerRegistry;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.test.execution.WalkTestExecutor;
-import com.ldtteam.perviaminvenire.test.level.EmptyLevelReader;
 import com.ldtteam.perviaminvenire.test.template.TemplatePackManager;
 import com.ldtteam.perviaminvenire.util.EntityTypeUtils;
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestFunction;
@@ -22,6 +20,7 @@ import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.AddPackFindersEvent;
@@ -29,6 +28,7 @@ import net.minecraftforge.event.RegisterGameTestsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -48,7 +48,6 @@ public class PVITestFramework {
     );
 
     private static final int PASSABLE_BLOCK_COUNT = 2;
-
     private static final int MAX_JUMP_STEP_COUNT = 2;
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -223,13 +222,32 @@ public class PVITestFramework {
         return tests;
     }
 
+    @SuppressWarnings("unused")
+    @GameTest
+    public static <V extends Entity> Collection<TestFunction> generateWadingThroughWaterTests() {
+        LOGGER.info("Creating wading tests.");
+
+        //TODO: Determine what to test.
+
+        return Lists.newArrayList();
+    }
+
+    @SuppressWarnings("unused")
+    @GameTest
+    public static <V extends Entity> Collection<TestFunction> generateDeepWadingThroughWaterTests() {
+        LOGGER.info("Creating wading tests.");
+
+        //TODO: Determine what to test.
+
+        return Lists.newArrayList();
+    }
+
     @GameTestGenerator
     public static Collection<TestFunction> generateManualTests() {
         final List<TestFunction> tests = new ArrayList<>();
 
-        tests.addAll(buildSimpleWalkingTestsFunctionFor(EntityType.SPIDER, "Spider", true));
-        tests.addAll(buildSimpleWalkingTestsFunctionFor(EntityType.VILLAGER, "Villager", true));
-        tests.addAll(buildSimpleWalkingTestsFunctionFor(EntityType.POLAR_BEAR, "PolarBear", true));
+        tests.addAll(buildDeepWadeThroughWalkingTestsFunctionFor(EntityType.SKELETON, "Skeleton", Blocks.STONE.defaultBlockState(), Fluids.WATER.defaultFluidState().createLegacyBlock(), true, 4, true));
+        tests.addAll(buildNoneReachableDeepWadeThroughWalkingTestsFunctionFor(EntityType.SKELETON, "Skeleton", Blocks.STONE.defaultBlockState(), Fluids.WATER.defaultFluidState().createLegacyBlock(), true, 4, true));
 
         return tests;
     }
@@ -260,6 +278,48 @@ public class PVITestFramework {
     }
 
     @NotNull
+    private static <V extends Entity> Collection<TestFunction> buildWadeThroughWalkingTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final BlockState groundLevelCollisionBlock, final BlockState fluidState, final boolean startOnSolid, boolean manual) {
+        final String groundCollisionBlockName = ForgeRegistries.BLOCKS.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
+        final String fluidCollisionBlockName = ForgeRegistries.BLOCKS.getKey(fluidState.getBlock()).toString().replace(":", "_");
+        final String startOnSolidBlockName = String.valueOf(startOnSolid);
+        return buildFunctionsFor(
+                supportedEntityType,
+                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
+                (testName, ground, filler, facing, width, height) -> TemplatePackManager.getInstance().createWadeThroughTemplateFor(testName, ground, fluidState, startOnSolid, width, height),
+                rotationName -> "%s wading %s through %s and %s on %s".formatted(batchPrefix, rotationName, groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName),
+                (mobEntityType, width) -> WalkTestExecutor.getInstance().createSimpleWadeTestExecutionFor(mobEntityType, width),
+                manual);
+    }
+
+    @NotNull
+    private static <V extends Entity> Collection<TestFunction> buildDeepWadeThroughWalkingTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final BlockState groundLevelCollisionBlock, final BlockState fluidState, final boolean startOnSolid, final int wadeDepth, boolean manual) {
+        final String groundCollisionBlockName = ForgeRegistries.BLOCKS.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
+        final String fluidCollisionBlockName = ForgeRegistries.BLOCKS.getKey(fluidState.getBlock()).toString().replace(":", "_");
+        final String startOnSolidBlockName = String.valueOf(startOnSolid);
+        return buildFunctionsFor(
+                supportedEntityType,
+                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "deep_wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
+                (testName, ground, filler, facing, width, height) -> TemplatePackManager.getInstance().createDeepWadeThroughTemplateFor(testName, ground, fluidState, startOnSolid, width, height, wadeDepth),
+                rotationName -> "%s deep wading %s through %s and %s on %s".formatted(batchPrefix, rotationName, groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName),
+                (mobEntityType, width) -> WalkTestExecutor.getInstance().createSimpleDeepWadeTestExecutionFor(mobEntityType, width, wadeDepth, TestUtils.doesEntityTypeFloat(supportedEntityType)),
+                manual);
+    }
+
+    @NotNull
+    private static <V extends Entity> Collection<TestFunction> buildNoneReachableDeepWadeThroughWalkingTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final BlockState groundLevelCollisionBlock, final BlockState fluidState, final boolean startOnSolid, final int wadeDepth, boolean manual) {
+        final String groundCollisionBlockName = ForgeRegistries.BLOCKS.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
+        final String fluidCollisionBlockName = ForgeRegistries.BLOCKS.getKey(fluidState.getBlock()).toString().replace(":", "_");
+        final String startOnSolidBlockName = String.valueOf(startOnSolid);
+        return buildFunctionsFor(
+                supportedEntityType,
+                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "none_reachable_deep_wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
+                (testName, ground, filler, facing, width, height) -> TemplatePackManager.getInstance().createDeepWadeThroughTemplateFor(testName, ground, fluidState, startOnSolid, width, height, wadeDepth),
+                rotationName -> "%s none reachable deep wading %s through %s and %s on %s".formatted(batchPrefix, rotationName, groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName),
+                (mobEntityType, width) -> WalkTestExecutor.getInstance().createNoneReachableDeepWadeTestExecutionFor(mobEntityType, width, wadeDepth, TestUtils.doesEntityTypeFloat(supportedEntityType)),
+                manual);
+    }
+
+    @NotNull
     private static <V extends Entity> Collection<TestFunction> buildJumpTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final Direction direction, final int stepCount, final Function<Direction, BlockState> stairBuilder, boolean manual) {
         return buildFunctionsFor(
                 supportedEntityType,
@@ -270,7 +330,6 @@ public class PVITestFramework {
                 manual
         );
     }
-
 
     @SuppressWarnings("unchecked")
     @NotNull

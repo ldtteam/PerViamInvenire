@@ -5,45 +5,21 @@ package com.ldtteam.perviaminvenire.api.pathfinding;
  */
 public class PathingOptions
 {
-    /**
-     * Additional cost of jumping and dropping - base 1.
-     */
-    public double jumpDropCost = 2.0D;
+    private double jumpDropCost = 2.0D;
 
-    /**
-     * Cost improvement of paths - base 1.
-     */
-    public double onPathCost = 0.1D;
+    private double onPathCost = 0.1D;
 
-    /**
-     * Cost improvement of ladders - base 1.
-     */
-    public double onLadderCost = 1D;
+    private double onLadderCost = 1D;
 
-    /**
-     * Cost improvement of paths - base 1.
-     */
-    public double onRailCost = 0.01D;
+    private double onRailCost = 0.01D;
 
-    /**
-     * The rails exit cost.
-     */
-    public double railsExitCost = 5;
+    private double railsExitCost = 5;
 
-    /**
-     * Additional cost of swimming - base 1.
-     */
-    public double swimCost = 1.5D;
+    private double swimCost = 1.5D;
 
-    /**
-     * Additional cost enter entering water
-     */
-    public double swimCostEnter = 25D;
+    private double swimCostEnter = 25D;
 
-    /**
-     * Cost to traverse trap doors
-     */
-    public double traverseToggleAbleCost = 2D;
+    private double traverseToggleAbleCost = 2D;
 
     /**
      * Wether to use ladders during pathing.
@@ -66,6 +42,10 @@ public class PathingOptions
      * Allowed to open doors?
      */
     private boolean canOpenDoors = false;
+    /**
+     * Allowed to float?
+     */
+    private boolean canFloat = false;
 
     public PathingOptions()
     {}
@@ -120,51 +100,147 @@ public class PathingOptions
         this.enterDoors = enterDoors;
     }
 
+    public boolean canFloat() {
+        return canFloat;
+    }
+
+    public void setCanFloat(boolean canFloat) {
+        this.canFloat = canFloat;
+    }
+
     public PathingOptions withStartSwimCost(final double startSwimCost)
     {
-        swimCostEnter = startSwimCost;
+        setSwimCostEnter(startSwimCost);
         return this;
     }
 
     public PathingOptions withSwimCost(final double swimCost)
     {
-        this.swimCost = swimCost;
+        this.setSwimCost(swimCost);
         return this;
     }
 
     public PathingOptions withJumpDropCost(final double jumpDropCost)
     {
-        this.jumpDropCost = jumpDropCost;
+        this.setJumpDropCost(jumpDropCost);
         return this;
     }
 
     public PathingOptions withOnPathCost(final double onPathCost)
     {
-        this.onPathCost = onPathCost;
+        this.setOnPathCost(onPathCost);
         return this;
     }
 
     public PathingOptions withOnRailCost(final double onRailCost)
     {
-        this.onRailCost = onRailCost;
+        this.setOnRailCost(onRailCost);
         return this;
     }
 
     public PathingOptions withRailExitCost(final double railExitCost)
     {
-        railsExitCost = railExitCost;
+        setRailsExitCost(railExitCost);
         return this;
     }
 
     public PathingOptions withLadderCost(final double onLadderCost)
     {
-        this.onLadderCost = onLadderCost;
+        this.setOnLadderCost(onLadderCost);
         return this;
     }
 
     public PathingOptions withToggleCost(final double toggleCost)
     {
-        traverseToggleAbleCost = toggleCost;
+        setTraverseToggleAbleCost(toggleCost);
         return this;
+    }
+
+    /**
+     * Additional cost of jumping and dropping - base 1.
+     */
+    public double jumpDropCost() {
+        return jumpDropCost;
+    }
+
+    public void setJumpDropCost(double jumpDropCost) {
+        this.jumpDropCost = jumpDropCost;
+    }
+
+    /**
+     * Cost improvement of paths - base 1.
+     */
+    public double onPathCost() {
+        return onPathCost;
+    }
+
+    public void setOnPathCost(double onPathCost) {
+        this.onPathCost = onPathCost;
+    }
+
+    /**
+     * Cost improvement of ladders - base 1.
+     */
+    public double onLadderCost() {
+        return onLadderCost;
+    }
+
+    public void setOnLadderCost(double onLadderCost) {
+        this.onLadderCost = onLadderCost;
+    }
+
+    /**
+     * Cost improvement of paths - base 1.
+     */
+    public double onRailCost() {
+        return onRailCost;
+    }
+
+    public void setOnRailCost(double onRailCost) {
+        this.onRailCost = onRailCost;
+    }
+
+    /**
+     * The rails exit cost.
+     */
+    public double railsExitCost() {
+        return railsExitCost;
+    }
+
+    public void setRailsExitCost(double railsExitCost) {
+        this.railsExitCost = railsExitCost;
+    }
+
+    /**
+     * Additional cost of swimming - base 1.
+     */
+    public double swimCost() {
+        return swimCost;
+    }
+
+    public void setSwimCost(double swimCost) {
+        this.swimCost = swimCost;
+    }
+
+    /**
+     * Additional cost enter entering water
+     */
+    public double swimCostEnter() {
+        return swimCostEnter;
+    }
+
+    public void setSwimCostEnter(double swimCostEnter) {
+        this.swimCostEnter = swimCostEnter;
+    }
+
+    /**
+     * Cost to traverse trap doors
+     */
+    public double traverseToggleAbleCost() {
+        return traverseToggleAbleCost;
+    }
+
+    public void setTraverseToggleAbleCost(double traverseToggleAbleCost) {
+        this.traverseToggleAbleCost = traverseToggleAbleCost;
     }
 }

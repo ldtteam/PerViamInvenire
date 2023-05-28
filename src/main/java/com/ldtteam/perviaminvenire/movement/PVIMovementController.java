@@ -87,7 +87,7 @@ public class PVIMovementController extends MoveControl
             final BlockPos blockpos = new BlockPos(this.mob.position());
             final BlockState blockstate = this.mob.level.getBlockState(blockpos);
             final VoxelShape voxelshape = blockstate.getOcclusionShape(this.mob.level, blockpos);
-            if ((yDif > (double) this.mob.maxUpStep && xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()))
+            if ((yDif > (double) this.mob.getStepHeight() && xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()))
                   || (!voxelshape.isEmpty() && this.mob.getY() < voxelshape.max(Direction.Axis.Y) + (double) blockpos.getY() && !blockstate.is(BlockTags.DOORS) && !blockstate.is(
               BlockTags.FENCES))
                        && !this.isLadder(blockstate, blockpos))

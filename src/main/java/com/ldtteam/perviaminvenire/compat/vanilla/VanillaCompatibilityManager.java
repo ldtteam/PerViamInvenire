@@ -1,6 +1,5 @@
 package com.ldtteam.perviaminvenire.compat.vanilla;
 
-import com.ldtteam.perviaminvenire.api.adapters.registry.IBoundingBoxProducerRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IIsLadderBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.IPassableBlockRegistry;
 import com.ldtteam.perviaminvenire.api.adapters.registry.ISpeedAdaptationRegistry;
@@ -24,10 +23,7 @@ import net.minecraft.world.entity.ai.navigation.WallClimberNavigation;
 import net.minecraft.world.entity.animal.Squid;
 import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.entity.monster.Slime;
-import net.minecraft.world.entity.monster.Spider;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.checkerframework.checker.units.qual.A;
 
 import java.util.Optional;
 
@@ -54,12 +50,7 @@ public class VanillaCompatibilityManager
                   return Optional.empty();
 
               final PerViamInvenireGroundPathNavigator navigator = new PerViamInvenireGroundPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
-              final GroundPathNavigation existingNavigator = (GroundPathNavigation) initialNavigator;
-              navigator.getPathingOptions().setCanUseLadders(false);
-              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
-              navigator.getPathingOptions().setCanUseRails(false);
-              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeEvaluator().canOpenDoors());
-              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeEvaluator().canPassDoors());
+              navigator.setPathingOptions(new VanillaCompatibilityPathingOptions(mobEntity));
 
               return Optional.of(navigator);
           }
@@ -74,12 +65,7 @@ public class VanillaCompatibilityManager
                   return Optional.empty();
 
               final PerViamInvenireClimberPathNavigator navigator = new PerViamInvenireClimberPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
-              final WallClimberNavigation existingNavigator = (WallClimberNavigation) initialNavigator;
-              navigator.getPathingOptions().setCanUseLadders(true);
-              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
-              navigator.getPathingOptions().setCanUseRails(false);
-              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeEvaluator().canOpenDoors());
-              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeEvaluator().canPassDoors());
+              navigator.setPathingOptions(new VanillaCompatibilityPathingOptions(mobEntity));
 
               return Optional.of(navigator);
           }
@@ -94,12 +80,7 @@ public class VanillaCompatibilityManager
                   return Optional.empty();
 
               final PerViamInvenireFlyingPathNavigator navigator = new PerViamInvenireFlyingPathNavigator(mobEntity, mobEntity.getCommandSenderWorld());
-              final FlyingPathNavigation existingNavigator = (FlyingPathNavigation) initialNavigator;
-              navigator.getPathingOptions().setCanUseLadders(false);
-              navigator.getPathingOptions().setCanSwim(existingNavigator.getNodeEvaluator().canFloat());
-              navigator.getPathingOptions().setCanUseRails(false);
-              navigator.getPathingOptions().setCanOpenDoors(existingNavigator.getNodeEvaluator().canOpenDoors());
-              navigator.getPathingOptions().setEnterDoors(existingNavigator.getNodeEvaluator().canPassDoors());
+              navigator.setPathingOptions(new VanillaCompatibilityPathingOptions(mobEntity));
 
               return Optional.of(navigator);
           }

@@ -50,6 +50,11 @@ public abstract class AbstractAdvancedGroundPathNavigator extends GroundPathNavi
         return pathingOptions;
     }
 
+    @Override
+    public void setPathingOptions(PathingOptions pathingOptions) {
+        this.pathingOptions = pathingOptions;
+    }
+
     /**
      * Get the entity of this navigator
      *

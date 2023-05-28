@@ -349,43 +349,43 @@ public abstract class AbstractPathJob implements Callable<Path>
         if (dPos.getY() != 0 && (dPos.getX() != 0 || dPos.getZ() != 0) && !(Math.abs(dPos.getY()) <= 1 && world.getBlockState(blockPos).getBlock() instanceof StairBlock))
         {
             //  Tax the cost for jumping, dropping
-            cost *= pathingOptions.jumpDropCost * Math.abs(dPos.getY());
+            cost *= pathingOptions.jumpDropCost() * Math.abs(dPos.getY());
         }
 
         if (world.getBlockState(blockPos).hasProperty(BlockStateProperties.OPEN))
         {
-            cost *= pathingOptions.traverseToggleAbleCost;
+            cost *= pathingOptions.traverseToggleAbleCost();
         }
 
         if (onPath)
         {
-            cost *= pathingOptions.onPathCost;
+            cost *= pathingOptions.onPathCost();
         }
 
         if (onRails)
         {
-            cost *= pathingOptions.onRailCost;
+            cost *= pathingOptions.onRailCost();
         }
 
         if (railsExit)
         {
-            cost *= pathingOptions.railsExitCost;
+            cost *= pathingOptions.railsExitCost();
         }
 
         if (isLadder)
         {
-            cost *= pathingOptions.onLadderCost;
+            cost *= pathingOptions.onLadderCost();
         }
 
         if (isSwimming)
         {
             if (swimStart)
             {
-                cost *= pathingOptions.swimCostEnter;
+                cost *= pathingOptions.swimCostEnter();
             }
             else
             {
-                cost *= pathingOptions.swimCost;
+                cost *= pathingOptions.swimCost();
             }
         }
 
@@ -569,6 +569,15 @@ public abstract class AbstractPathJob implements Callable<Path>
             walk(currentNode, BLOCKPOS_UP);
         }
 
+        // Walk upwards node if swimming and floating
+        if (!isNotPassable(currentNode.pos, currentNode.pos.above()) && currentNode.isSwimming() && isLiquid(world.getBlockState(currentNode.pos.above())) && pathingOptions.canFloat())
+        {
+            walk(currentNode, BLOCKPOS_UP);
+            //Since we can swim upwards, we need to check that.
+            //But we do not need to abort because we can float.
+            //In contrast to the if switch for checking below a couple lines after this, which needs to abort if we can't float.
+        }
+
         //  We can also go down 1, if the lower block is a ladder
         if (onLadderGoingDown(currentNode, dPos) && pathingOptions.canUseLadders())
         {
@@ -583,9 +592,17 @@ public abstract class AbstractPathJob implements Callable<Path>
         }
 
         // Walk downwards node if passable
-        if (!isNotPassable(currentNode.pos, currentNode.pos.below()) && (!currentNode.isSwimming() && isLiquid(world.getBlockState(currentNode.pos.below()))))
+        if (!isNotPassable(currentNode.pos, currentNode.pos.below()) && (!currentNode.isSwimming() || (currentNode.isSwimming() && isLiquid(world.getBlockState(currentNode.pos.below())))))
         {
             walk(currentNode, BLOCKPOS_DOWN);
+
+            if (currentNode.isSwimming() && isLiquid(world.getBlockState(currentNode.pos.below())) && !pathingOptions.canFloat())
+            {
+                // We searched downwards because we are in a fluid we can swim in. But we can not float.
+                // so we are not proceeding horizontally.
+                // This would not trigger if the block below our feed is not a fluid, because we would not have searched downwards.
+                return;
+            }
         }
 
         // N
@@ -1040,8 +1057,11 @@ public abstract class AbstractPathJob implements Callable<Path>
 
         if (pathingOptions.canSwim() && below.getMaterial() == Material.WATER)
         {
-            //  This is water, and we are allowed to swim
-            return pos.getY();
+            if (pathingOptions.canFloat())
+                //  This is water, and we are allowed to swim
+                return pos.getY();
+
+            return pos.getY() - 1;
         }
 
         //  Not allowed to swim or this isn't water, and we're on dry land

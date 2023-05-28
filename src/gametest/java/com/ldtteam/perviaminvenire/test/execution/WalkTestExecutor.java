@@ -26,6 +26,27 @@ public final class WalkTestExecutor {
         return createWalkTestExecutionFor(entityType, width, (midPoint) -> new BlockPos(midPoint,2,midPoint), (midPoint) -> new BlockPos(TemplatePackManager.SIMPLE_WALK_PATH_LENGTH - 1,2,midPoint));
     }
 
+    public <E extends Mob> Consumer<GameTestHelper> createSimpleWadeTestExecutionFor(final EntityType<E> entityType, int width) {
+        return createWalkTestExecutionFor(entityType, width, (midPoint) -> new BlockPos(midPoint,3,midPoint), (midPoint) -> new BlockPos(TemplatePackManager.SIMPLE_WALK_PATH_LENGTH - 1,3,midPoint));
+    }
+
+    public <E extends Mob> Consumer<GameTestHelper> createSimpleDeepWadeTestExecutionFor(final EntityType<E> entityType, int width, int wadeDepth, boolean floats) {
+        return createWalkTestExecutionFor(entityType, width, (midPoint) -> new BlockPos(midPoint,wadeDepth + 3,midPoint), (midPoint) -> new BlockPos(TemplatePackManager.SIMPLE_WALK_PATH_LENGTH - 1 - (floats ? 0 : 1) , (floats ? wadeDepth : 0) + 3,midPoint));
+    }
+
+    public <E extends Mob> Consumer<GameTestHelper> createNoneReachableDeepWadeTestExecutionFor(final EntityType<E> entityType, int width, int wadeDepth, boolean floats) {
+        if (floats) {
+            //We can't test this, as the entity will just float up and reach the target.
+            //So we consider this a success, when the entity is present at the target, which is a normal deep float test.
+            return createSimpleDeepWadeTestExecutionFor(entityType, width, wadeDepth, true);
+        }
+
+        return createWalkTestExecutionFor(entityType,
+                width,
+                (midPoint) -> new BlockPos(midPoint,wadeDepth + 3,midPoint),
+                (midPoint) -> new BlockPos(midPoint,wadeDepth + 3,midPoint));
+    }
+
     public <E extends Mob> Consumer<GameTestHelper> createJumpWalkTestExecutionFor(final EntityType<E> entityType, int width, final Direction direction, final int stepCount) {
         return createWalkTestExecutionFor(entityType, width, (midPoint) -> {
             final int startYOffset = direction == Direction.DOWN ? stepCount : 0;
