@@ -159,6 +159,20 @@ public class VanillaCompatibilityPath extends Path implements ICompatibilityPath
         return super.getEntityPosAtNode(entityIn, index);
     }
 
+    @Override
+    public Node getNode(int pIndex) {
+        if (this.nodes.size() == 0) {
+            return new ExtendedNode(target);
+        }
+
+        if (pIndex < 0) {
+            return getNode(0);
+        } else if (pIndex >= this.nodes.size()) {
+            getNode(this.nodes.size() - 1);
+        }
+        return super.getNode(pIndex);
+    }
+
     public boolean isCalculationComplete() {
         return isCalculationComplete;
     }

@@ -537,6 +537,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
      *
      * @return true if block.
      */
+
     private boolean handleRails() {
         if (!this.isDone() && Objects.requireNonNull(this.getPath()).nodes.size() > this.getPath().getNextNodeIndex()) {
             @NotNull final ExtendedNode pEx = (ExtendedNode) Objects.requireNonNull(this.getPath()).getNode(this.getPath().getNextNodeIndex());
