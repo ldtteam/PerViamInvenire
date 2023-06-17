@@ -23,6 +23,7 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.AddPackFindersEvent;
 import net.minecraftforge.event.RegisterGameTestsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -246,8 +247,7 @@ public class PVITestFramework {
     public static Collection<TestFunction> generateManualTests() {
         final List<TestFunction> tests = new ArrayList<>();
 
-        tests.addAll(buildDeepWadeThroughWalkingTestsFunctionFor(EntityType.SKELETON, "Skeleton", Blocks.STONE.defaultBlockState(), Fluids.WATER.defaultFluidState().createLegacyBlock(), true, 4, true));
-        tests.addAll(buildNoneReachableDeepWadeThroughWalkingTestsFunctionFor(EntityType.SKELETON, "Skeleton", Blocks.STONE.defaultBlockState(), Fluids.WATER.defaultFluidState().createLegacyBlock(), true, 4, true));
+        tests.addAll(buildWalkThroughWalkingTestsFunctionFor(EntityType.CHICKEN, "Ground", Blocks.GRASS.defaultBlockState(), Blocks.AIR.defaultBlockState(), Blocks.GRASS_BLOCK.defaultBlockState(), true));
 
         return tests;
     }
