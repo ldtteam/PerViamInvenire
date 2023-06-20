@@ -49,7 +49,7 @@ public class PathJobMoveToOneOfLocation extends AbstractPathJob {
     @Nullable
     @Override
     protected Path search() {
-        LOGGER.debug(String.format("Pathfinding from [%d,%d,%d] to any of [%s]",
+        LOGGER.trace(String.format("Pathfinding from [%d,%d,%d] to any of [%s]",
                 start.getX(), start.getY(), start.getZ(), destination));
 
         return super.search();

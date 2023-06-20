@@ -51,7 +51,7 @@ public class PathJobMoveToLocation extends AbstractPathJob {
     @Nullable
     @Override
     protected Path search() {
-        LOGGER.debug(String.format("Pathfinding from [%d,%d,%d] to [%d,%d,%d]",
+        LOGGER.trace(String.format("Pathfinding from [%d,%d,%d] to [%d,%d,%d]",
                 start.getX(), start.getY(), start.getZ(), destination.getX(), destination.getY(), destination.getZ()));
 
         //  Compute destination slack - if the destination point cannot be stood in
