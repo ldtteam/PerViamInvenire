@@ -14,6 +14,7 @@ import com.ldtteam.perviaminvenire.api.pathfinding.PathFindingStatus;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathResult;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.CallbackBasedStuckHandler;
 import com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling.IStuckHandler;
+import com.ldtteam.perviaminvenire.compat.util.PathLengthAwarePath;
 import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -798,6 +799,16 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     @Nullable
     @Override
     public Path getPath() {
+        final Path innerPath = getPathInternal();
+        if (innerPath != null) {
+            return new PathLengthAwarePath(path);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private Path getPathInternal() {
         if (!isDone()) {
             if (pathResult != null) {
                 return pathResult.getPath();
