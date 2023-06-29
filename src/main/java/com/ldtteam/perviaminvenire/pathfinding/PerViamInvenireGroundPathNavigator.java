@@ -801,7 +801,7 @@ public class PerViamInvenireGroundPathNavigator extends AbstractAdvancedGroundPa
     public Path getPath() {
         final Path innerPath = getPathInternal();
         if (innerPath != null) {
-            return new PathLengthAwarePath(path);
+            return new PathLengthAwarePath(innerPath);
         }
 
         return null;
