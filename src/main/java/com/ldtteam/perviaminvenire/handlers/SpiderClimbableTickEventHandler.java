@@ -30,6 +30,10 @@ public class SpiderClimbableTickEventHandler
         }
 
         final Path path = navigator.getPath();
+        if (path == null || path.getNodeCount() <= path.getNextNodeIndex()) {
+            spiderEntity.setClimbing(false);
+            return;
+        }
         final Node pathPoint = path.getNextNode();
         if (!(pathPoint instanceof final ExtendedNode pathPointPreviousExtended)) {
             spiderEntity.setClimbing(false);
