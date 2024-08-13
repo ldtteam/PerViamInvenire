@@ -15,9 +15,13 @@ public final class PathingConstants
     public static final BlockPos BLOCKPOS_UP          = new BlockPos(0, 1, 0);
     public static final BlockPos BLOCKPOS_DOWN        = new BlockPos(0, -1, 0);
     public static final BlockPos BLOCKPOS_NORTH       = new BlockPos(0, 0, -1);
+    public static final BlockPos BLOCKPOS_NORTH_WEST  = new BlockPos(-1, 0, -1);
+    public static final BlockPos BLOCKPOS_NORTH_EAST  = new BlockPos(1, 0, -1);
     public static final BlockPos BLOCKPOS_SOUTH       = new BlockPos(0, 0, 1);
+    public static final BlockPos BLOCKPOS_SOUTH_EAST  = new BlockPos(1, 0, 1);
     public static final BlockPos BLOCKPOS_EAST        = new BlockPos(1, 0, 0);
-    public static final BlockPos BLOCKPOS_WEST        = new BlockPos(-1, 0, 0);
+    public static final BlockPos BLOCKPOS_WEST        = new BlockPos(1, 0, 0);
+    public static final BlockPos BLOCKPOS_SOUTH_WEST  = new BlockPos(-1, 0, 1);
     public static final int      MAX_Y                = 256;
     public static final   int      MIN_Y                 = 0;
 

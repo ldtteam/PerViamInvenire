@@ -1,18 +1,18 @@
 package com.ldtteam.perviaminvenire.config;
 
 import com.ldtteam.perviaminvenire.api.config.ICommonConfig;
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class CommonConfig implements ICommonConfig
 {
 
-    private final ForgeConfigSpec.IntValue minimumRailsToUseInPath;
-    private final ForgeConfigSpec.IntValue maxPathFindingNodes;
-    private final ForgeConfigSpec.IntValue pathFindingLogVerbosity;
-    private final ForgeConfigSpec.IntValue pathFindingThreadCount;
-    private final ForgeConfigSpec.BooleanValue isVanillaReplacementEnabled;
+    private final ModConfigSpec.IntValue minimumRailsToUseInPath;
+    private final ModConfigSpec.IntValue maxPathFindingNodes;
+    private final ModConfigSpec.IntValue pathFindingLogVerbosity;
+    private final ModConfigSpec.IntValue pathFindingThreadCount;
+    private final ModConfigSpec.BooleanValue isVanillaReplacementEnabled;
 
-    public CommonConfig(final ForgeConfigSpec.Builder builder)
+    public CommonConfig(final ModConfigSpec.Builder builder)
     {
         this.minimumRailsToUseInPath = builder
                                          .comment("Minimum rails to use during pathing.")

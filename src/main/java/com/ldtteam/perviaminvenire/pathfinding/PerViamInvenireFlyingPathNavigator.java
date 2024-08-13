@@ -18,6 +18,8 @@ import com.ldtteam.perviaminvenire.compat.vanilla.VanillaCompatibilityPath;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -30,7 +32,6 @@ import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -282,7 +283,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
      */
     @Nullable
     public PathResult<? extends AbstractPathJob> moveToXYZ(final double x, final double y, final double z, double accuracy, final double speed) {
-        final BlockPos target = new BlockPos(x, y, z);
+        final BlockPos target = new BlockPos((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
 
         if (pathResult != null && pathResult.getJob() instanceof PathJobMoveToLocation &&
                 (
@@ -356,7 +357,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
 
     @Override
     protected boolean canMoveDirectly(@NotNull final Vec3 start, @NotNull final Vec3 end) {
-        return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, level.getBlockState(new BlockPos(start.x, start.y - 1, start.z)).getBlock())
+        return IRoadBlockRegistry.getInstance().getRunner().isRoad(ourEntity, level.getBlockState(new BlockPos((int) Math.floor(start.x), (int) Math.floor(start.y - 1), (int) Math.floor(start.z))).getBlock())
                 && super.canMoveDirectly(start, end);
     }
 
@@ -543,7 +544,7 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
     private boolean handlePathOnRails(final ExtendedNode pEx, final ExtendedNode pExNext) {
         return IRidingOnCartRegistry.getInstance().getRunner().handle(this.ourEntity, pEx, pExNext)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Entity : " + ForgeRegistries.ENTITY_TYPES.getKey(getOurEntity().getType()) + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
+                        "Entity : " + BuiltInRegistries.ENTITY_TYPE.getKey(getOurEntity().getType()) + " states that it can be used to ride on paths. But no handler for riding on carts is registered."));
     }
 
     private boolean handlePathPointOnLadder(final ExtendedNode pEx) {
@@ -728,10 +729,13 @@ public class PerViamInvenireFlyingPathNavigator extends AbstractAdvancedFlyingPa
 
         if (this.path != null && !this.path.isDone()) {
             Vec3 vec3d = this.path.getNextEntityPos(ourEntity);
-            if (new BlockPos(vec3d).equals(this.timeoutCachedNode)) {
+            int x = Mth.floor(vec3d.x());
+            int y = Mth.floor(vec3d.y());
+            int z = Mth.floor(vec3d.z());
+            if (new BlockPos(x, y, z).equals(this.timeoutCachedNode)) {
                 this.timeoutTimer += Util.getMillis() - this.lastTimeoutCheck;
             } else {
-                this.timeoutCachedNode = new Vec3i(vec3d.x, vec3d.y, vec3d.z);
+                this.timeoutCachedNode = new Vec3i(x, y, z);
                 double d0 = positionVec3.distanceTo(vec3d);
                 this.timeoutLimit = (this.mob.getSpeed() > 0.0F ? d0 / (double) this.mob.getSpeed() * 1000.0D : 0.0D) * 25;
             }

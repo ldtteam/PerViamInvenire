@@ -89,4 +89,9 @@ public class PathJobMoveToLocation extends AbstractPathJob {
         //  For Result Score lower is better
         return destination.distSqr(n.pos);
     }
+
+    @Override
+    protected float getAccuracy() {
+        return destinationSlack;
+    }
 }

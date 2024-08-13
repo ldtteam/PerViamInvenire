@@ -10,31 +10,33 @@ import com.ldtteam.perviaminvenire.network.NetworkManager;
 import com.ldtteam.perviaminvenire.pathfinding.PathFinding;
 import com.ldtteam.perviaminvenire.pathfinding.initialization.StartPositionAdapterInitializer;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
-import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegisterEvent;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.neoforge.registries.RegisterEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// The value here should match an entry in the META-INF/mods.toml file
+// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(ModConstants.MOD_ID)
 public class PerViamInvenire
 {
     // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public PerViamInvenire()
+    public PerViamInvenire(IEventBus modBus)
     {
         PerViamInvenireApiProxy.getInstance().setApiInstance(new PerViamInvenireApiImplementation());
 
-        Mod.EventBusSubscriber.Bus.FORGE.bus().get().addListener((ServerStoppingEvent event) -> PathFinding.shutdown());
-        Mod.EventBusSubscriber.Bus.MOD.bus().get().addListener(this::initialize);
-        Mod.EventBusSubscriber.Bus.MOD.bus().get().addListener(this::registerCommandArgumentType);
+        NeoForge.EVENT_BUS.addListener((ServerStoppingEvent event) -> PathFinding.shutdown());
+        modBus.addListener(this::initialize);
+        modBus.addListener(this::registerCommandArgumentType);
 
-        NetworkManager.getInstance().initialize();
         ConfigurationManager.getInstance().ensureInitialized(ModLoadingContext.get().getActiveContainer());
     }
 
@@ -45,9 +47,9 @@ public class PerViamInvenire
     }
 
     public void registerCommandArgumentType(final RegisterEvent registerEvent) {
-        registerEvent.register(ForgeRegistries.Keys.COMMAND_ARGUMENT_TYPES, helper -> {
+        registerEvent.register(Registries.COMMAND_ARGUMENT_TYPE, helper -> {
             ArgumentTypeInfos.registerByClass(ImportableResultDataArgument.class, ImportableResultDataArgument.TypeInfo.getInstance());
-            helper.register("pvi_importable_results", ImportableResultDataArgument.TypeInfo.getInstance());
+            helper.register(ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "pvi_importable_results"), ImportableResultDataArgument.TypeInfo.getInstance());
         });
     }
 

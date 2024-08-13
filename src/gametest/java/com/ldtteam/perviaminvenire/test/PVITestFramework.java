@@ -7,6 +7,7 @@ import com.ldtteam.perviaminvenire.test.template.TemplatePackManager;
 import com.ldtteam.perviaminvenire.util.EntityTypeUtils;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -20,15 +21,12 @@ import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.Tags;
-import net.minecraftforge.event.AddPackFindersEvent;
-import net.minecraftforge.event.RegisterGameTestsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.AddPackFindersEvent;
+import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -38,7 +36,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 @SuppressWarnings("ConstantConditions")
-@Mod.EventBusSubscriber(modid = ModConstants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = ModConstants.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class PVITestFramework {
 
     private static final Set<Block> NONE_PASSABLE_BLOCKS = Set.of(
@@ -71,21 +69,21 @@ public class PVITestFramework {
         LOGGER.info("Creating simple walking tests.");
 
         final List<TestFunction> tests = new ArrayList<>();
-        final EntityType<?>[] supportedGroundEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedGroundEntity);
+        final EntityType<?>[] supportedGroundEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedGroundEntity, null);
         for (EntityType<?> supportedEntityType : supportedGroundEntities) {
-            LOGGER.debug("Creating simple walking test for: %s".formatted(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType)).toString()));
+            LOGGER.debug("Creating simple walking test for: %s".formatted(Objects.requireNonNull(BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType)).toString()));
             tests.addAll(buildSimpleWalkingTestsFunctionFor(supportedEntityType, "Ground", false));
         }
 
-        final EntityType<?>[] supportedSwimmingEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedSwimmingEntity);
+        final EntityType<?>[] supportedSwimmingEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedSwimmingEntity, null);
         for (EntityType<?> supportedEntityType : supportedSwimmingEntities) {
-            LOGGER.debug("Creating simple walking test for: %s".formatted(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType)).toString()));
+            LOGGER.debug("Creating simple walking test for: %s".formatted(Objects.requireNonNull(BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType)).toString()));
             tests.addAll(buildSimpleWalkingTestsFunctionFor(supportedEntityType, "Swimming", false));
         }
 
-        final EntityType<?>[] supportedCliming = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedClimberEntity);
+        final EntityType<?>[] supportedCliming = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedClimberEntity, null);
         for (EntityType<?> supportedEntityType : supportedCliming) {
-            LOGGER.debug("Creating simple walking test for: %s".formatted(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType)).toString()));
+            LOGGER.debug("Creating simple walking test for: %s".formatted(Objects.requireNonNull(BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType)).toString()));
             tests.addAll(buildSimpleWalkingTestsFunctionFor(supportedEntityType, "Climber", false));
         }
 
@@ -101,16 +99,16 @@ public class PVITestFramework {
 
         final List<TestFunction> tests = new ArrayList<>();
         final List<WalkThroughBlockInformation> sourceGroundWalkthroughBlocks = new ArrayList<>();
-        sourceGroundWalkthroughBlocks.add(new WalkThroughBlockInformation(Blocks.GRASS.defaultBlockState(), Blocks.AIR.defaultBlockState(), Blocks.DIRT.defaultBlockState()));
+        sourceGroundWalkthroughBlocks.add(new WalkThroughBlockInformation(Blocks.GRASS_BLOCK.defaultBlockState(), Blocks.AIR.defaultBlockState(), Blocks.DIRT.defaultBlockState()));
 
-        ForgeRegistries.BLOCKS.getValues().stream()
+        BuiltInRegistries.BLOCK.stream()
                 .filter(FlowerPotBlock.class::isInstance)
                 .map(FlowerPotBlock.class::cast)
-                .map(FlowerPotBlock::getContent)
+                .map(FlowerPotBlock::getPotted)
                 .filter(block -> !(block instanceof LiquidBlockContainer))
                 .filter(block -> !NONE_PASSABLE_BLOCKS.contains(block))
                 .forEach(flower -> sourceGroundWalkthroughBlocks.add(new WalkThroughBlockInformation(flower.defaultBlockState(), Blocks.AIR.defaultBlockState(), Blocks.DIRT.defaultBlockState())));
-        ForgeRegistries.BLOCKS.getValues().stream()
+        BuiltInRegistries.BLOCK.stream()
                         .filter(DoublePlantBlock.class::isInstance)
                         .map(DoublePlantBlock.class::cast)
                         .filter(doublePlant -> !(doublePlant instanceof LiquidBlockContainer)) //Exclude water plants
@@ -122,14 +120,14 @@ public class PVITestFramework {
         Collections.shuffle(sourceGroundWalkthroughBlocks);
         final List<WalkThroughBlockInformation> groundWalkthroughBlocks = sourceGroundWalkthroughBlocks.subList(0, Math.min(sourceGroundWalkthroughBlocks.size(), PASSABLE_BLOCK_COUNT));
 
-        final EntityType<?>[] supportedGroundEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedGroundEntity);
+        final EntityType<?>[] supportedGroundEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedGroundEntity, null);
         groundWalkthroughBlocks.forEach(walkThroughBlockInformation -> {
             for (EntityType<?> supportedEntityType : supportedGroundEntities) {
                 LOGGER.debug("Creating walk through walking test for: %s through %s and %s on %s".formatted(
-                        ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.baseState().getBlock()),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.noneBaseState.getBlock()),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.soil.getBlock())));
+                        BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.baseState().getBlock()),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.noneBaseState.getBlock()),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.soil.getBlock())));
 
                 tests.addAll(buildWalkThroughWalkingTestsFunctionFor(supportedEntityType, "Ground", walkThroughBlockInformation.baseState(), walkThroughBlockInformation.noneBaseState(), walkThroughBlockInformation.soil(), false));
             }
@@ -144,27 +142,27 @@ public class PVITestFramework {
         Collections.shuffle(sourceSwimmerWalkthroughBlocks);
         final List<WalkThroughBlockInformation> swimmerWalkthroughBlocks = sourceSwimmerWalkthroughBlocks.subList(0, Math.min(sourceSwimmerWalkthroughBlocks.size(), PASSABLE_BLOCK_COUNT));
 
-        final EntityType<?>[] supportedSwimmingEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedSwimmingEntity);
+        final EntityType<?>[] supportedSwimmingEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedSwimmingEntity, null);
         swimmerWalkthroughBlocks.forEach(walkThroughBlockInformation -> {
             for (EntityType<?> supportedEntityType : supportedSwimmingEntities) {
                 LOGGER.debug("Creating swim through swimming test for: %s through %s and %s on %s".formatted(
-                        ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.baseState().getBlock()),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.noneBaseState.getBlock()),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.soil.getBlock())));
+                        BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.baseState().getBlock()),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.noneBaseState.getBlock()),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.soil.getBlock())));
 
                 tests.addAll(buildWalkThroughWalkingTestsFunctionFor(supportedEntityType, "Swimming", walkThroughBlockInformation.baseState(), walkThroughBlockInformation.noneBaseState(), walkThroughBlockInformation.soil(), false));
             }
         });
 
-        final EntityType<?>[] supportedClimbing = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedClimberEntity);
+        final EntityType<?>[] supportedClimbing = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedClimberEntity, null);
         groundWalkthroughBlocks.forEach(walkThroughBlockInformation -> {
             for (EntityType<?> supportedEntityType : supportedClimbing) {
                 LOGGER.debug("Creating walkthrough walking test for: %s through %s and %s on %s".formatted(
-                        ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.baseState().getBlock()),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.noneBaseState.getBlock()),
-                        ForgeRegistries.BLOCKS.getKey(walkThroughBlockInformation.soil.getBlock())));
+                        BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.baseState().getBlock()),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.noneBaseState.getBlock()),
+                        BuiltInRegistries.BLOCK.getKey(walkThroughBlockInformation.soil.getBlock())));
 
                 tests.addAll(buildWalkThroughWalkingTestsFunctionFor(supportedEntityType, "Climber", walkThroughBlockInformation.baseState(), walkThroughBlockInformation.noneBaseState(), walkThroughBlockInformation.soil(), false));
             }
@@ -183,9 +181,9 @@ public class PVITestFramework {
         final Direction[] directions = new Direction[] { Direction.UP, Direction.DOWN};
 
         final List<TestFunction> tests = new ArrayList<>();
-        final EntityType<?>[] supportedGroundEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedGroundEntity);
-        final EntityType<?>[] supportedSwimmingEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedSwimmingEntity);
-        final EntityType<?>[] supportedCliming = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedClimberEntity);
+        final EntityType<?>[] supportedGroundEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedGroundEntity, null);
+        final EntityType<?>[] supportedSwimmingEntities = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedSwimmingEntity, null);
+        final EntityType<?>[] supportedCliming = EntityTypeUtils.getCompatibleVanillaOverrideTypes(EntityTypeUtils::isMobEntityASupportedClimberEntity, null);
 
         final Function<Direction, BlockState> noStairBuilder = direction -> Blocks.AIR.defaultBlockState();
 
@@ -199,19 +197,19 @@ public class PVITestFramework {
                 };
 
                 for (EntityType<?> supportedEntityType : supportedGroundEntities) {
-                    LOGGER.debug("Creating jump %s walking test for: %s with count %s".formatted(direction.getName().toLowerCase(), Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType)).toString(), stepCount));
+                    LOGGER.debug("Creating jump %s walking test for: %s with count %s".formatted(direction.getName().toLowerCase(), Objects.requireNonNull(BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType)).toString(), stepCount));
                     tests.addAll(buildJumpTestsFunctionFor(supportedEntityType, "Ground", direction, stepCount, noStairBuilder, false));
                     tests.addAll(buildJumpTestsFunctionFor(supportedEntityType, "Ground", direction, stepCount, stairBuilder, false));
                 }
 
                 for (EntityType<?> supportedEntityType : supportedSwimmingEntities) {
-                    LOGGER.debug("Creating jump %s walking test for: %s with count %s".formatted(direction.getName().toLowerCase(), Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType)).toString(), stepCount));
+                    LOGGER.debug("Creating jump %s walking test for: %s with count %s".formatted(direction.getName().toLowerCase(), Objects.requireNonNull(BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType)).toString(), stepCount));
                     tests.addAll(buildJumpTestsFunctionFor(supportedEntityType, "Swimming", direction, stepCount, noStairBuilder, false));
                     tests.addAll(buildJumpTestsFunctionFor(supportedEntityType, "Swimming", direction, stepCount, stairBuilder, false));
                 }
 
                 for (EntityType<?> supportedEntityType : supportedCliming) {
-                    LOGGER.debug("Creating jump %s walking test for: %s with count %s".formatted(direction.getName().toLowerCase(), Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType)).toString(), stepCount));
+                    LOGGER.debug("Creating jump %s walking test for: %s with count %s".formatted(direction.getName().toLowerCase(), Objects.requireNonNull(BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType)).toString(), stepCount));
                     tests.addAll(buildJumpTestsFunctionFor(supportedEntityType, "Climbing", direction, stepCount, noStairBuilder, false));
                     tests.addAll(buildJumpTestsFunctionFor(supportedEntityType, "Climbing", direction, stepCount, stairBuilder, false));
                 }
@@ -247,7 +245,7 @@ public class PVITestFramework {
     public static Collection<TestFunction> generateManualTests() {
         final List<TestFunction> tests = new ArrayList<>();
 
-        tests.addAll(buildWalkThroughWalkingTestsFunctionFor(EntityType.CHICKEN, "Ground", Blocks.GRASS.defaultBlockState(), Blocks.AIR.defaultBlockState(), Blocks.GRASS_BLOCK.defaultBlockState(), true));
+        tests.addAll(buildWalkThroughWalkingTestsFunctionFor(EntityType.CHICKEN, "Ground", Blocks.GRASS_BLOCK.defaultBlockState(), Blocks.AIR.defaultBlockState(), Blocks.GRASS_BLOCK.defaultBlockState(), true));
 
         return tests;
     }
@@ -256,7 +254,7 @@ public class PVITestFramework {
     private static <V extends Entity> Collection<TestFunction> buildSimpleWalkingTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, boolean manual) {
         return buildFunctionsFor(
                 supportedEntityType,
-                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "simple_%s_%s".formatted(entityName.getNamespace(), entityName.getPath())),
+                (entityName, facing) -> ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "simple_%s_%s".formatted(entityName.getNamespace(), entityName.getPath())),
                 (testName, ground, filler, facing, width, height) -> TemplatePackManager.getInstance().createSimpleWalkTemplateFor(testName, ground, filler, width, height),
                 rotationName -> "%s simple walking %s".formatted(batchPrefix, rotationName),
                 (mobEntityType, width) -> WalkTestExecutor.getInstance().createSimpleWalkTestExecutionFor(mobEntityType, width),
@@ -265,12 +263,12 @@ public class PVITestFramework {
 
     @NotNull
     private static <V extends Entity> Collection<TestFunction> buildWalkThroughWalkingTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final BlockState groundLevelCollisionBlock, final BlockState noneGroundLevelCollisionBlock, final BlockState soilBlock, boolean manual) {
-        final String groundCollisionBlockName = ForgeRegistries.BLOCKS.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
-        final String noneGroundCollisionBlockName = ForgeRegistries.BLOCKS.getKey(noneGroundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
-        final String soilBlockName = ForgeRegistries.BLOCKS.getKey(soilBlock.getBlock()).toString().replace(":", "_");
+        final String groundCollisionBlockName = BuiltInRegistries.BLOCK.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
+        final String noneGroundCollisionBlockName = BuiltInRegistries.BLOCK.getKey(noneGroundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
+        final String soilBlockName = BuiltInRegistries.BLOCK.getKey(soilBlock.getBlock()).toString().replace(":", "_");
         return buildFunctionsFor(
                 supportedEntityType,
-                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "walkthrough_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, noneGroundCollisionBlockName, soilBlockName)),
+                (entityName, facing) -> ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "walkthrough_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, noneGroundCollisionBlockName, soilBlockName)),
                 (testName, ground, filler, facing, width, height) -> TemplatePackManager.getInstance().createWalkThroughTemplateFor(testName, ground, filler, groundLevelCollisionBlock, noneGroundLevelCollisionBlock, soilBlock, width, height),
                 rotationName -> "%s walking %s through %s and %s on %s".formatted(batchPrefix, rotationName, groundCollisionBlockName, noneGroundCollisionBlockName, soilBlockName),
                 (mobEntityType, width) -> WalkTestExecutor.getInstance().createSimpleWalkTestExecutionFor(mobEntityType, width),
@@ -279,12 +277,12 @@ public class PVITestFramework {
 
     @NotNull
     private static <V extends Entity> Collection<TestFunction> buildWadeThroughWalkingTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final BlockState groundLevelCollisionBlock, final BlockState fluidState, final boolean startOnSolid, boolean manual) {
-        final String groundCollisionBlockName = ForgeRegistries.BLOCKS.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
-        final String fluidCollisionBlockName = ForgeRegistries.BLOCKS.getKey(fluidState.getBlock()).toString().replace(":", "_");
+        final String groundCollisionBlockName = BuiltInRegistries.BLOCK.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
+        final String fluidCollisionBlockName = BuiltInRegistries.BLOCK.getKey(fluidState.getBlock()).toString().replace(":", "_");
         final String startOnSolidBlockName = String.valueOf(startOnSolid);
         return buildFunctionsFor(
                 supportedEntityType,
-                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
+                (entityName, facing) -> ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
                 (testName, ground, filler, facing, width, height) -> TemplatePackManager.getInstance().createWadeThroughTemplateFor(testName, ground, fluidState, startOnSolid, width, height),
                 rotationName -> "%s wading %s through %s and %s on %s".formatted(batchPrefix, rotationName, groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName),
                 (mobEntityType, width) -> WalkTestExecutor.getInstance().createSimpleWadeTestExecutionFor(mobEntityType, width),
@@ -293,12 +291,12 @@ public class PVITestFramework {
 
     @NotNull
     private static <V extends Entity> Collection<TestFunction> buildDeepWadeThroughWalkingTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final BlockState groundLevelCollisionBlock, final BlockState fluidState, final boolean startOnSolid, final int wadeDepth, boolean manual) {
-        final String groundCollisionBlockName = ForgeRegistries.BLOCKS.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
-        final String fluidCollisionBlockName = ForgeRegistries.BLOCKS.getKey(fluidState.getBlock()).toString().replace(":", "_");
+        final String groundCollisionBlockName = BuiltInRegistries.BLOCK.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
+        final String fluidCollisionBlockName = BuiltInRegistries.BLOCK.getKey(fluidState.getBlock()).toString().replace(":", "_");
         final String startOnSolidBlockName = String.valueOf(startOnSolid);
         return buildFunctionsFor(
                 supportedEntityType,
-                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "deep_wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
+                (entityName, facing) -> ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "deep_wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
                 (testName, ground, filler, facing, width, height) -> TemplatePackManager.getInstance().createDeepWadeThroughTemplateFor(testName, ground, fluidState, startOnSolid, width, height, wadeDepth),
                 rotationName -> "%s deep wading %s through %s and %s on %s".formatted(batchPrefix, rotationName, groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName),
                 (mobEntityType, width) -> WalkTestExecutor.getInstance().createSimpleDeepWadeTestExecutionFor(mobEntityType, width, wadeDepth, TestUtils.doesEntityTypeFloat(supportedEntityType)),
@@ -307,12 +305,12 @@ public class PVITestFramework {
 
     @NotNull
     private static <V extends Entity> Collection<TestFunction> buildNoneReachableDeepWadeThroughWalkingTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final BlockState groundLevelCollisionBlock, final BlockState fluidState, final boolean startOnSolid, final int wadeDepth, boolean manual) {
-        final String groundCollisionBlockName = ForgeRegistries.BLOCKS.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
-        final String fluidCollisionBlockName = ForgeRegistries.BLOCKS.getKey(fluidState.getBlock()).toString().replace(":", "_");
+        final String groundCollisionBlockName = BuiltInRegistries.BLOCK.getKey(groundLevelCollisionBlock.getBlock()).toString().replace(":", "_");
+        final String fluidCollisionBlockName = BuiltInRegistries.BLOCK.getKey(fluidState.getBlock()).toString().replace(":", "_");
         final String startOnSolidBlockName = String.valueOf(startOnSolid);
         return buildFunctionsFor(
                 supportedEntityType,
-                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "none_reachable_deep_wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
+                (entityName, facing) -> ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "none_reachable_deep_wade_%s_%s_through_%s_%s_on_%s".formatted(entityName.getNamespace(), entityName.getPath(), groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName)),
                 (testName, ground, filler, facing, width, height) -> TemplatePackManager.getInstance().createDeepWadeThroughTemplateFor(testName, ground, fluidState, startOnSolid, width, height, wadeDepth),
                 rotationName -> "%s none reachable deep wading %s through %s and %s on %s".formatted(batchPrefix, rotationName, groundCollisionBlockName, fluidCollisionBlockName, startOnSolidBlockName),
                 (mobEntityType, width) -> WalkTestExecutor.getInstance().createNoneReachableDeepWadeTestExecutionFor(mobEntityType, width, wadeDepth, TestUtils.doesEntityTypeFloat(supportedEntityType)),
@@ -323,9 +321,9 @@ public class PVITestFramework {
     private static <V extends Entity> Collection<TestFunction> buildJumpTestsFunctionFor(final EntityType<V> supportedEntityType, final String batchPrefix, final Direction direction, final int stepCount, final Function<Direction, BlockState> stairBuilder, boolean manual) {
         return buildFunctionsFor(
                 supportedEntityType,
-                (entityName, facing) -> new ResourceLocation(ModConstants.MOD_ID, "walk_%s_%s_%s_%s_times_with_%s".formatted(direction.getName().toLowerCase(), entityName.getNamespace(), entityName.getPath(), stepCount, ForgeRegistries.BLOCKS.getKey(stairBuilder.apply(facing).getBlock()).toString().replace(":", "_"))),
+                (entityName, facing) -> ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "walk_%s_%s_%s_%s_times_with_%s".formatted(direction.getName().toLowerCase(), entityName.getNamespace(), entityName.getPath(), stepCount, BuiltInRegistries.BLOCK.getKey(stairBuilder.apply(facing).getBlock()).toString().replace(":", "_"))),
                 (testName, ground, filler, rotation, width, height) -> TemplatePackManager.getInstance().createVerticalOffsetTemplateFor(testName, ground, filler, direction, width, stepCount, stairBuilder.apply(rotation) , width, height),
-                facing -> "%s jumping %s rotated towards the %s for %s times with help of %s".formatted(batchPrefix, direction.getName().toLowerCase(), facing.getName().toLowerCase(), stepCount, ForgeRegistries.BLOCKS.getKey(stairBuilder.apply(facing).getBlock())),
+                facing -> "%s jumping %s rotated towards the %s for %s times with help of %s".formatted(batchPrefix, direction.getName().toLowerCase(), facing.getName().toLowerCase(), stepCount, BuiltInRegistries.BLOCK.getKey(stairBuilder.apply(facing).getBlock())),
                 (mobEntityType, width) -> WalkTestExecutor.getInstance().createJumpWalkTestExecutionFor(mobEntityType, width, direction, stepCount),
                 manual
         );
@@ -335,10 +333,10 @@ public class PVITestFramework {
     @NotNull
     private static <V extends Entity> Collection<TestFunction> buildFunctionsFor(final EntityType<V> supportedEntityType, final ITestNameBuilder testNameBuilder, final ITestTemplateBuilder templateBuilder, final Function<Direction, String> testDisplayNameBuilder, final ITestExecutionBuilder testExecutionBuilder, boolean manual) {
         final Collection<TestFunction> testsForEntityType = new ArrayList<>();
-        final ResourceLocation entityName = ForgeRegistries.ENTITY_TYPES.getKey(supportedEntityType);
+        final ResourceLocation entityName = BuiltInRegistries.ENTITY_TYPE.getKey(supportedEntityType);
         if (entityName == null)
             return List.of();
-        final V entity = EntityTypeUtils.createEntityType(supportedEntityType);
+        final V entity = EntityTypeUtils.createEntityType(supportedEntityType, null);
         if (entity == null)
             return List.of();
         if (!(entity instanceof Mob))
@@ -350,7 +348,7 @@ public class PVITestFramework {
                 .getRunner().produce(entity)
                 .orElseGet(() -> {
                     final EntityDimensions entitySize = entity.getDimensions(entity.getPose());
-                    return AABB.ofSize(Vec3.ZERO, entitySize.width, entitySize.height, entitySize.width);
+                    return AABB.ofSize(Vec3.ZERO, entitySize.width(), entitySize.height(), entitySize.width());
                 });
 
         for (Rotation rotation : Rotation.values()) {

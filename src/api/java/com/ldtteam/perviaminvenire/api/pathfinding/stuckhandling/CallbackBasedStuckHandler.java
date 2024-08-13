@@ -1,6 +1,8 @@
 package com.ldtteam.perviaminvenire.api.pathfinding.stuckhandling;
 
 import com.ldtteam.perviaminvenire.api.pathfinding.IAdvancedPathNavigator;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -8,7 +10,6 @@ import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.core.Direction;
-import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.Vec3i;
@@ -226,7 +227,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
     private void completeStuckAction(final IAdvancedPathNavigator navigator)
     {
         final BlockPos desired = navigator.getDesiredPos();
-        final Level world = navigator.getOurEntity().level;
+        final Level world = navigator.getOurEntity().level();
         final Mob entity = navigator.getOurEntity();
 
         if (canTeleportGoal)
@@ -244,19 +245,19 @@ public class CallbackBasedStuckHandler implements IStuckHandler
         }
         if (takeDamageOnCompleteStuck)
         {
-            entity.hurt(new EntityDamageSource("Stuck-damage", entity), entity.getMaxHealth() * damagePct);
+            entity.hurt(entity.damageSources().cramming(), entity.getMaxHealth() * damagePct);
         }
 
         if (completeStuckBlockBreakRange > 0)
         {
-            final Vec3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
+            final Vec3i directionVector = new BlockPos(entity.blockPosition()).subtract(navigator.getDesiredPos());
             final Direction facing = Direction.getNearest(directionVector.getX(), directionVector.getY(), directionVector.getZ());
 
             for (int i = 1; i <= completeStuckBlockBreakRange; i++)
             {
-                if (!world.isEmptyBlock(new BlockPos(entity.position()).relative(facing, i)) || !world.isEmptyBlock(new BlockPos(entity.position()).relative(facing, i).above()))
+                if (!world.isEmptyBlock(new BlockPos(entity.blockPosition()).relative(facing, i)) || !world.isEmptyBlock(new BlockPos(entity.blockPosition()).relative(facing, i).above()))
                 {
-                    breakBlocksAhead(world, new BlockPos(entity.position()).relative(facing, i - 1), facing);
+                    breakBlocksAhead(world, new BlockPos(entity.blockPosition()).relative(facing, i - 1), facing);
                     break;
                 }
             }
@@ -291,7 +292,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
             stuckLevel++;
             delayToNextUnstuckAction = 300;
             navigator.stopCurrentCalculation();
-            navigator.moveAwayFromXYZ(new BlockPos(navigator.getOurEntity().position()),1, 10, 1.0f);
+            navigator.moveAwayFromXYZ(new BlockPos(navigator.getOurEntity().blockPosition()),1, 10, 1.0f);
             return;
         }
 
@@ -416,10 +417,10 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      */
     private void placeLadders(final IAdvancedPathNavigator navigator)
     {
-        final Level world = navigator.getOurEntity().level;
+        final Level world = navigator.getOurEntity().level();
         final Mob entity = navigator.getOurEntity();
 
-        BlockPos entityPos = new BlockPos(entity.position());
+        BlockPos entityPos = new BlockPos(entity.blockPosition());
 
         while (world.getBlockState(entityPos).getBlock() == Blocks.LADDER)
         {
@@ -438,10 +439,10 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      */
     private void placeLeaves(final IAdvancedPathNavigator navigator)
     {
-        final Level world = navigator.getOurEntity().level;
+        final Level world = navigator.getOurEntity().level();
         final Mob entity = navigator.getOurEntity();
 
-        final Vec3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
+        final Vec3i directionVector = new BlockPos(entity.blockPosition()).subtract(navigator.getDesiredPos());
         final Direction badFacing = Direction.getNearest(directionVector.getX(), directionVector.getY(), directionVector.getZ()).getOpposite();
 
         for (final Direction dir : directions)
@@ -451,9 +452,9 @@ public class CallbackBasedStuckHandler implements IStuckHandler
                 continue;
             }
 
-            if (world.isEmptyBlock(new BlockPos(entity.position()).below().relative(dir)))
+            if (world.isEmptyBlock(new BlockPos(entity.blockPosition()).below().relative(dir)))
             {
-                world.setBlockAndUpdate(new BlockPos(entity.position()).below().relative(dir), Blocks.ACACIA_LEAVES.defaultBlockState());
+                world.setBlockAndUpdate(new BlockPos(entity.blockPosition()).below().relative(dir), Blocks.ACACIA_LEAVES.defaultBlockState());
             }
         }
     }
@@ -465,13 +466,13 @@ public class CallbackBasedStuckHandler implements IStuckHandler
      */
     private void breakBlocks(final IAdvancedPathNavigator navigator)
     {
-        final Level world = navigator.getOurEntity().level;
+        final Level world = navigator.getOurEntity().level();
         final Mob entity = navigator.getOurEntity();
 
-        final Vec3i directionVector = new BlockPos(entity.position()).subtract(navigator.getDesiredPos());
+        final Vec3i directionVector = new BlockPos(entity.blockPosition()).subtract(navigator.getDesiredPos());
         final Direction facing = Direction.getNearest(directionVector.getX(), directionVector.getY(), directionVector.getZ());
 
-        breakBlocksAhead(world, new BlockPos(entity.position()), facing);
+        breakBlocksAhead(world, new BlockPos(entity.blockPosition()), facing);
     }
 
     /**
@@ -488,7 +489,7 @@ public class CallbackBasedStuckHandler implements IStuckHandler
             for (final Direction dir : directions)
             {
                 final BlockState toPlace = Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, dir.getOpposite());
-                if (world.getBlockState(pos.relative(dir)).getMaterial().isSolid() && Blocks.LADDER.canSurvive(toPlace, world, pos))
+                if (world.getBlockState(pos.relative(dir)).isSolid() && toPlace.canSurvive(world, pos))
                 {
                     world.setBlockAndUpdate(pos, toPlace);
                     break;

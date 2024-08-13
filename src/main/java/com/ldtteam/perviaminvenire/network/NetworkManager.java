@@ -2,14 +2,14 @@ package com.ldtteam.perviaminvenire.network;
 
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import com.ldtteam.perviaminvenire.network.message.OnCalculationCompleted;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
+@EventBusSubscriber(modid = ModConstants.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class NetworkManager
 {
     private static final String        LATEST_PROTO_VER    = "1.0";
@@ -22,29 +22,30 @@ public class NetworkManager
         return INSTANCE;
     }
 
-    private SimpleChannel channel = null;
-
     private NetworkManager()
     {
     }
 
-    public void initialize() {
-        this.channel = NetworkRegistry.newSimpleChannel(new ResourceLocation(ModConstants.MOD_ID, ModConstants.MOD_ID), () -> LATEST_PROTO_VER, ACCEPTED_PROTO_VERS::equals, ACCEPTED_PROTO_VERS::equals);
+    @SubscribeEvent
+    public static void register(final RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar("1");
 
-        this.channel.registerMessage(0, OnCalculationCompleted.class, OnCalculationCompleted::write, OnCalculationCompleted::new, (msg, ctxIn) -> {
-            final NetworkEvent.Context ctx = ctxIn.get();
-            final LogicalSide packetOrigin = ctx.getDirection().getOriginationSide();
-            ctx.setPacketHandled(true);
-            // boolean param MUST equals true if packet arrived at logical server
-            ctx.enqueueWork(() -> msg.processPacket(ctx, packetOrigin.equals(LogicalSide.CLIENT)));
-        });
+        registrar.commonToClient(
+                OnCalculationCompleted.TYPE,
+                OnCalculationCompleted.CODEC,
+                (payload, context) -> {
+                    //TODO Handle this.
+                }
+        );
     }
 
-    public <T> void sendToPlayer(final T packet, final ServerPlayer... players)
+    public <T extends CustomPacketPayload> void sendToPlayer(final T packet, final ServerPlayer... players)
     {
         for (final ServerPlayer player : players)
         {
-            this.channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+            if (player.connection.hasChannel(OnCalculationCompleted.TYPE)) {
+                player.connection.send(packet);
+            }
         }
     }
 }

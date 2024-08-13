@@ -25,7 +25,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.server.command.EnumArgument;
+import net.neoforged.neoforge.server.command.EnumArgument;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -202,20 +202,29 @@ public class PerViamInvenireCommand {
         GameTestRunner.clearMarkers(context.getSource().getLevel());
         Collection<TestFunction> tests = GameTestRegistry.getAllTestFunctions();
 
-        Collection<TestFunction> testsToRun = tests.parallelStream().filter(test -> batchPattern.matcher(test.getBatchName()).matches() &&
-                (entityId == null || test.getTestName().equals(entityId.toString()))).collect(Collectors.toList());
+        Collection<TestFunction> testsToRun = tests.parallelStream().filter(test -> batchPattern.matcher(test.batchName()).matches() &&
+                (entityId == null || test.testName().equals(entityId.toString()))).toList();
 
-        context.getSource().sendSuccess(Component.literal("Running all " + testsToRun.size() + " tests..."), false);
+        context.getSource().sendSuccess(() -> Component.literal("Running all " + testsToRun.size() + " tests..."), false);
         GameTestRegistry.forgetFailedTests();
 
-        BlockPos sourcePosition = new BlockPos(context.getSource().getPosition());
+        BlockPos sourcePosition = new BlockPos(context.getSource().getEntity().blockPosition());
         BlockPos startPosition = new BlockPos(sourcePosition.getX(), context.getSource().getLevel().getHeightmapPos(Heightmap.Types.WORLD_SURFACE, sourcePosition).getY(), sourcePosition.getZ() + 3);
         ServerLevel serverlevel = context.getSource().getLevel();
         Rotation rotation = StructureUtils.getRotationForRotationSteps(0);
 
-        Collection<GameTestInfo> results = GameTestRunner.runTests(testsToRun, startPosition, rotation, serverlevel, GameTestTicker.SINGLETON, 8);
+        Collection<GameTestInfo> gameTestInfos = testsToRun.stream()
+                .map(test -> new GameTestInfo(test, rotation, serverlevel, RetryOptions.noRetries()))
+                .toList();
 
-        MultipleTestTracker multipletesttracker = new MultipleTestTracker(results);
+        final GameTestRunner runner =
+                GameTestRunner.Builder.fromInfo(gameTestInfos, serverlevel)
+                        .newStructureSpawner(new StructureGridSpawner(startPosition, 5, false))
+                        .build();
+
+        runner.start();
+
+        MultipleTestTracker multipletesttracker = new MultipleTestTracker(gameTestInfos);
         multipletesttracker.addListener(new TestSummaryDisplayer(serverlevel, multipletesttracker));
         multipletesttracker.addFailureListener((failedTest) -> GameTestRegistry.rememberFailedTest(failedTest.getTestFunction()));
         return 1;
@@ -225,19 +234,27 @@ public class PerViamInvenireCommand {
         GameTestRunner.clearMarkers(context.getSource().getLevel());
         Collection<TestFunction> tests = GameTestRegistry.getAllTestFunctions();
 
-        Collection<TestFunction> testsToRun = tests.parallelStream().filter(test -> test.getTestName().equals(entityId.toString()) && test.getRotation().equals(rotation)).collect(Collectors.toList());
+        Collection<TestFunction> testsToRun = tests.parallelStream().filter(test -> test.testName().equals(entityId.toString()) && test.rotation().equals(rotation)).collect(Collectors.toList());
 
-        context.getSource().sendSuccess(Component.literal("Running all " + testsToRun.size() + " tests..."), false);
+        context.getSource().sendSuccess(() -> Component.literal("Running all " + testsToRun.size() + " tests..."), false);
         GameTestRegistry.forgetFailedTests();
 
-        BlockPos sourcePosition = new BlockPos(context.getSource().getPosition());
-        BlockPos startPosition = new BlockPos(sourcePosition.getX(), context.getSource().getLevel().getHeightmapPos(Heightmap.Types.WORLD_SURFACE, sourcePosition).getY(), sourcePosition.getZ() + 3);
+        BlockPos sourcePosition = new BlockPos(context.getSource().getEntity().blockPosition());
+        BlockPos startPosition = new BlockPos(sourcePosition.getX(), context.getSource().getLevel().getHeightmapPos(Heightmap.Types.WORLD_SURFACE, sourcePosition).getY() + 1, sourcePosition.getZ() + 3);
         ServerLevel serverlevel = context.getSource().getLevel();
 
-        Collection<GameTestInfo> results = GameTestRunner.runTests(testsToRun, startPosition, rotation, serverlevel, GameTestTicker.SINGLETON, 8);
+        Collection<GameTestInfo> gameTestInfos = testsToRun.stream()
+                .map(test -> new GameTestInfo(test, rotation, serverlevel, RetryOptions.noRetries()))
+                .toList();
 
-        MultipleTestTracker multipletesttracker = new MultipleTestTracker(results);
-        multipletesttracker.addListener(new TestSummaryDisplayer(serverlevel, multipletesttracker));
+        final GameTestRunner runner =
+                GameTestRunner.Builder.fromInfo(gameTestInfos, serverlevel)
+                        .newStructureSpawner(new StructureGridSpawner(startPosition, 5, false))
+                        .build();
+
+        runner.start();
+
+        MultipleTestTracker multipletesttracker = new MultipleTestTracker(gameTestInfos);        multipletesttracker.addListener(new TestSummaryDisplayer(serverlevel, multipletesttracker));
         multipletesttracker.addFailureListener((failedTest) -> GameTestRegistry.rememberFailedTest(failedTest.getTestFunction()));
         return 1;
     }
@@ -249,18 +266,27 @@ public class PerViamInvenireCommand {
 
         Collection<TestFunction> testsToRun = tests
                 .parallelStream()
-                .filter(test -> test.getTestName().equals(entityId.toString()) && test.getRotation().equals(rotation) && test.getBatchName().startsWith("[MANUAL]")).collect(Collectors.toList());
+                .filter(test -> test.testName().equals(entityId.toString()) && test.rotation().equals(rotation) && test.batchName().startsWith("[MANUAL]")).collect(Collectors.toList());
 
-        context.getSource().sendSuccess(Component.literal("Running all " + testsToRun.size() + " tests..."), false);
+        context.getSource().sendSuccess(() -> Component.literal("Running all " + testsToRun.size() + " tests..."), false);
         GameTestRegistry.forgetFailedTests();
 
-        BlockPos sourcePosition = new BlockPos(context.getSource().getPosition());
+        BlockPos sourcePosition = new BlockPos(context.getSource().getEntity().blockPosition());
         BlockPos startPosition = new BlockPos(sourcePosition.getX(), context.getSource().getLevel().getHeightmapPos(Heightmap.Types.WORLD_SURFACE, sourcePosition).getY(), sourcePosition.getZ() + 3);
         ServerLevel serverlevel = context.getSource().getLevel();
 
-        Collection<GameTestInfo> results = GameTestRunner.runTests(testsToRun, startPosition, rotation, serverlevel, GameTestTicker.SINGLETON, 8);
+        Collection<GameTestInfo> gameTestInfos = testsToRun.stream()
+                .map(test -> new GameTestInfo(test, rotation, serverlevel, RetryOptions.noRetries()))
+                .toList();
 
-        MultipleTestTracker multipletesttracker = new MultipleTestTracker(results);
+        final GameTestRunner runner =
+                GameTestRunner.Builder.fromInfo(gameTestInfos, serverlevel)
+                        .newStructureSpawner(new StructureGridSpawner(startPosition, 5, false))
+                        .build();
+
+        runner.start();
+
+        MultipleTestTracker multipletesttracker = new MultipleTestTracker(gameTestInfos);
         multipletesttracker.addListener(new TestSummaryDisplayer(serverlevel, multipletesttracker));
         multipletesttracker.addFailureListener((failedTest) -> GameTestRegistry.rememberFailedTest(failedTest.getTestFunction()));
         return 1;
@@ -278,12 +304,19 @@ public class PerViamInvenireCommand {
         public void testStructureLoaded(@NotNull GameTestInfo pTestInfo) {
         }
 
-        public void testPassed(@NotNull GameTestInfo pTestInfo) {
+        @Override
+        public void testPassed(GameTestInfo p_177494_, GameTestRunner p_320110_) {
             showTestSummaryIfAllDone(this.level, this.tracker);
         }
 
-        public void testFailed(@NotNull GameTestInfo pTestInfo) {
+        @Override
+        public void testFailed(GameTestInfo p_127652_, GameTestRunner p_320238_) {
             showTestSummaryIfAllDone(this.level, this.tracker);
+        }
+
+        @Override
+        public void testAddedForRerun(GameTestInfo p_320937_, GameTestInfo p_320294_, GameTestRunner p_320147_) {
+
         }
     }
 

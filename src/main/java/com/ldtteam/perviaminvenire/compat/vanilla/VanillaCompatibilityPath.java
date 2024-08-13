@@ -76,8 +76,6 @@ public class VanillaCompatibilityPath extends Path implements ICompatibilityPath
         isCalculationComplete = true;
 
         this.nodes = calculatedPath.nodes;
-        this.openSet = calculatedPath.openSet;
-        this.closedSet = calculatedPath.closedSet;
         this.nextNodeIndex = calculatedPath.nextNodeIndex;
         this.distToTarget = calculatedPath.distToTarget;
         this.reached = calculatedPath.reached;

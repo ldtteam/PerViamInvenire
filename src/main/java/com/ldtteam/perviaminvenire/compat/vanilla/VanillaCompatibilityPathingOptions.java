@@ -3,8 +3,8 @@ package com.ldtteam.perviaminvenire.compat.vanilla;
 import com.ldtteam.perviaminvenire.api.compat.vanilla.ICompatibilityPathingOptions;
 import com.ldtteam.perviaminvenire.api.pathfinding.PathingOptions;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.pathfinder.PathType;
 
 public class VanillaCompatibilityPathingOptions extends PathingOptions implements ICompatibilityPathingOptions {
 
@@ -38,21 +38,21 @@ public class VanillaCompatibilityPathingOptions extends PathingOptions implement
 
     @Override
     public boolean canSwim() {
-        return mob.getPathfindingMalus(BlockPathTypes.WATER) >= 0.0F;
+        return mob.getPathfindingMalus(PathType.WATER) >= 0.0F;
     }
 
     @Override
     public double onPathCost() {
-        return mob.getPathfindingMalus(BlockPathTypes.WALKABLE);
+        return mob.getPathfindingMalus(PathType.WALKABLE);
     }
 
     @Override
     public double swimCost() {
-        return mob.getPathfindingMalus(BlockPathTypes.WATER);
+        return mob.getPathfindingMalus(PathType.WATER);
     }
 
     @Override
     public double swimCostEnter() {
-        return mob.getPathfindingMalus(BlockPathTypes.WATER_BORDER);
+        return mob.getPathfindingMalus(PathType.WATER_BORDER);
     }
 }

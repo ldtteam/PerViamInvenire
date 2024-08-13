@@ -1,18 +1,19 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
-import net.minecraft.core.Holder;
-import net.minecraft.core.SectionPos;
+import net.minecraft.core.*;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.biome.Biome;
@@ -20,11 +21,9 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.LevelLightEngine;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -42,6 +41,7 @@ public class ChunkCache implements LevelReader
     protected Level     world;
     protected WorldBorder worldBorder = new WorldBorder();
     private final BiomeManager biomeManager;
+    private final RegistryAccess registryAccess;
 
     public ChunkCache(Level worldIn, BlockPos posFromIn, BlockPos posToIn, int subIn)
     {
@@ -64,6 +64,7 @@ public class ChunkCache implements LevelReader
                 }
             }
         }
+        registryAccess = worldIn.registryAccess();
     }
 
     /**
@@ -133,13 +134,13 @@ public class ChunkCache implements LevelReader
     @Override
     public @NotNull Holder<Biome> getBiome(@NotNull BlockPos pos)
     {
-        return ForgeRegistries.BIOMES.getHolder(Biomes.PLAINS.location()).orElseThrow();
+        return registryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
     }
 
     @Override
     public @NotNull Holder<Biome> getUncachedNoiseBiome(final int x, final int y, final int z)
     {
-        return ForgeRegistries.BIOMES.getHolder(Biomes.PLAINS.location()).orElseThrow();
+        return registryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
     }
 
     /**
@@ -158,6 +159,16 @@ public class ChunkCache implements LevelReader
     public BlockGetter getChunkForCollisions(final int chunkX, final int chunkZ)
     {
         return getChunk(chunkX, chunkZ, ChunkStatus.FULL, false);
+    }
+
+    @Override
+    public @NotNull RegistryAccess registryAccess() {
+        return registryAccess;
+    }
+
+    @Override
+    public @NotNull FeatureFlagSet enabledFeatures() {
+        return FeatureFlagSet.of();
     }
 
     @Nullable

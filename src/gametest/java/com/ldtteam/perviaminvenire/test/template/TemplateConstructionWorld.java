@@ -1,16 +1,24 @@
 package com.ldtteam.perviaminvenire.test.template;
 
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
+import com.ldtteam.perviaminvenire.util.EntityTypeUtils;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.*;
-import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.RegistryLayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.TickRateManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
@@ -23,6 +31,7 @@ import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -39,13 +48,18 @@ import java.util.function.Predicate;
 @SuppressWarnings("ConstantConditions")
 final class TemplateConstructionWorld extends Level {
 
+    private static RegistryAccess createRegistryAccess() {
+        return EntityTypeUtils.createInstantiationRegistries(null);
+    }
+
     private final Map<BlockPos, BlockState> blocks;
     private final Map<BlockPos, BlockEntity> blockEntities;
 
     TemplateConstructionWorld(Map<BlockPos, BlockState> blocks, Map<BlockPos, BlockEntity> blockEntities) {
         super(new ClientLevel.ClientLevelData(Difficulty.PEACEFUL, true, true),
-                ResourceKey.create(Registry.DIMENSION_REGISTRY, new ResourceLocation(ModConstants.MOD_ID, "pvi_template")),
-                BuiltinRegistries.DIMENSION_TYPE.getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
+                ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, "pvi_template")),
+                createRegistryAccess(),
+                EntityTypeUtils.createDimensionType(),
                 () -> null,
                 false,
                 false,
@@ -67,7 +81,7 @@ final class TemplateConstructionWorld extends Level {
     }
 
     @Override
-    public void playSeededSound(@Nullable Player p_220372_, @NotNull Entity p_220373_, @NotNull SoundEvent p_220374_, @NotNull SoundSource p_220375_, float p_220376_, float p_220377_, long p_220378_) {
+    public void playSeededSound(@Nullable Player player, Entity entity, Holder<SoundEvent> sound, SoundSource category, float volume, float pitch, long seed) {
 
     }
 
@@ -82,20 +96,25 @@ final class TemplateConstructionWorld extends Level {
         return null;
     }
 
+    @Override
+    public TickRateManager tickRateManager() {
+        return null;
+    }
+
     @Nullable
     @Override
-    public MapItemSavedData getMapData(@NotNull String p_46650_) {
+    public MapItemSavedData getMapData(MapId mapId) {
         return null;
     }
 
     @Override
-    public void setMapData(@NotNull String p_151533_, @NotNull MapItemSavedData p_151534_) {
+    public void setMapData(MapId mapId, MapItemSavedData mapData) {
 
     }
 
     @Override
-    public int getFreeMapId() {
-        return 0;
+    public MapId getFreeMapId() {
+        return null;
     }
 
     @Override
@@ -139,13 +158,43 @@ final class TemplateConstructionWorld extends Level {
     }
 
     @Override
-    public void gameEvent(@NotNull GameEvent p_220404_, @NotNull Vec3 p_220405_, GameEvent.@NotNull Context p_220406_) {
+    public void gameEvent(Holder<GameEvent> gameEvent, Vec3 pos, GameEvent.Context context) {
 
     }
 
     @Override
     public @NotNull RegistryAccess registryAccess() {
         return null;
+    }
+
+    @Override
+    public FeatureFlagSet enabledFeatures() {
+        return null;
+    }
+
+    @Override
+    public PotionBrewing potionBrewing() {
+        return null;
+    }
+
+    @Override
+    public void setDayTimeFraction(float v) {
+
+    }
+
+    @Override
+    public float getDayTimeFraction() {
+        return 0;
+    }
+
+    @Override
+    public float getDayTimePerTick() {
+        return 0;
+    }
+
+    @Override
+    public void setDayTimePerTick(float v) {
+
     }
 
     @Override
@@ -171,6 +220,11 @@ final class TemplateConstructionWorld extends Level {
     @Override
     public @NotNull BlockState getBlockState(@NotNull BlockPos position) {
         return this.blocks.getOrDefault(position, Blocks.AIR.defaultBlockState());
+    }
+
+    @Override
+    public void playSeededSound(@Nullable Player player, double x, double y, double z, Holder<SoundEvent> sound, SoundSource category, float volume, float pitch, long seed) {
+
     }
 
     @Nullable

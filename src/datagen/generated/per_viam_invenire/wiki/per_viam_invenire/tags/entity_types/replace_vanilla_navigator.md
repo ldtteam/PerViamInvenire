@@ -1,8 +1,11 @@
 #### Compatible Entities:
 
 - Allay
+- Armadillo
 - Bat
 - Blaze
+- Bogged
+- Breeze
 - Cat
 - Cave Spider
 - Chicken
@@ -20,8 +23,8 @@
 - Illusioner
 - Iron Golem
 - Llama
-- Mule
 - Mooshroom
+- Mule
 - Ocelot
 - Parrot
 - Pig
@@ -29,10 +32,12 @@
 - Piglin Brute
 - Pillager
 - Polar Bear
+- Ravager
 - Sheep
 - Silverfish
 - Skeleton
 - Skeleton Horse
+- Sniffer
 - Snow Golem
 - Spider
 - Squid
@@ -43,7 +48,6 @@
 - Wandering Trader
 - Witch
 - Wither Skeleton
-- Wolf
 - Zoglin
 - Zombie
 - Zombie Horse

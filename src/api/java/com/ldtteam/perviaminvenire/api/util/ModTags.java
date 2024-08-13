@@ -1,7 +1,7 @@
 package com.ldtteam.perviaminvenire.api.util;
 
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
@@ -18,6 +18,6 @@ public final class ModTags
 
     private static TagKey<EntityType<?>> tag(String name)
     {
-        return TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(ModConstants.MOD_ID, name));
+        return TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(ModConstants.MOD_ID, name));
     }
 }

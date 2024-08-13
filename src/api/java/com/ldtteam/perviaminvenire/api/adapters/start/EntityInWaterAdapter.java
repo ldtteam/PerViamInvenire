@@ -17,15 +17,13 @@ public class EntityInWaterAdapter implements IStartPositionAdapter {
             return Optional.empty();
 
         BlockPos workingPos = startPos;
-        BlockState liquidState = entity.getCommandSenderWorld().getBlockState(workingPos);
 
-        if (!liquidState.getMaterial().isLiquid())
+        if (!job.isLiquid(workingPos))
             return Optional.empty();
 
-        while (liquidState.getMaterial().isLiquid())
+        while (job.isLiquid(workingPos))
         {
             workingPos = workingPos.above();
-            liquidState = entity.getCommandSenderWorld().getBlockState(workingPos);
         }
 
         return Optional.of(workingPos);

@@ -1,9 +1,9 @@
 package com.ldtteam.perviaminvenire.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ConfigTracker;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -29,14 +29,8 @@ public final class ConfigurationManager {
 
     public void ensureInitialized(final ModContainer modContainer) {
         LOGGER.info("PVI Configuration created.");
-        final Pair<CommonConfig, ForgeConfigSpec> com = new ForgeConfigSpec.Builder().configure(CommonConfig::new);
-
-        /**
-         * Loaded on both sides, not synced. Values might differ.
-         */
-        final ModConfig common = new ModConfig(ModConfig.Type.COMMON, com.getRight(), modContainer);
+        final Pair<CommonConfig, ModConfigSpec> com = new ModConfigSpec.Builder().configure(CommonConfig::new);
+        modContainer.registerConfig(ModConfig.Type.COMMON, com.getRight());
         commonConfig = com.getLeft();
-
-        modContainer.addConfig(common);
     }
 }

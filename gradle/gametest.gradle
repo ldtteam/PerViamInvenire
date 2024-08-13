@@ -1,40 +1,23 @@
-minecraft {
-    runs {
-        gameTestServer {
-            workingDirectory project.file('run/gametest/server')
+repositories {
+    mavenLocal()
+}
 
-            property 'forge.logging.markers', ''
-            property 'forge.logging.console.level', 'info'
+runs {
+    gameTestServer {
+        modSource sourceSets.gametest
+    }
 
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+    gameTestClient {
+        configure 'client'
 
-            mods {
-                perviaminvenire {
-                    source sourceSets.api
-                    source sourceSets.main
-                    source sourceSets.gametest
-                }
-            }
-        }
+        modSource sourceSets.gametest
+    }
 
-        gameTestClient {
-            parent runs.client
-            workingDirectory project.file('run/gametest/client')
+    renderDoc {
+        configure 'client'
 
-            property 'forge.logging.markers', ''
-            property 'forge.logging.console.level', 'info'
-
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
-
-            mods {
-                perviaminvenire {
-                    source sourceSets.api
-                    source sourceSets.main
-                    source sourceSets.gametest
-                }
-            }
+        renderDoc {
+            enabled true
         }
     }
 }

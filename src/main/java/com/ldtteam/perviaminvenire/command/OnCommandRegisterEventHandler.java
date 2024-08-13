@@ -1,11 +1,11 @@
 package com.ldtteam.perviaminvenire.command;
 
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
-@Mod.EventBusSubscriber(modid = ModConstants.MOD_ID)
+@EventBusSubscriber(modid = ModConstants.MOD_ID)
 public class OnCommandRegisterEventHandler
 {
 

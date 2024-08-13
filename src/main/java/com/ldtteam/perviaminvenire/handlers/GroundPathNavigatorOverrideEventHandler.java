@@ -7,26 +7,15 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 
-import java.lang.reflect.Field;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber(modid = ModConstants.MOD_ID)
+@EventBusSubscriber(modid = ModConstants.MOD_ID)
 public class GroundPathNavigatorOverrideEventHandler
 {
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    private static final Field movementControllerField = ObfuscationReflectionHelper.findField(
-      Mob.class, "f_21342_"
-    );
-
     @SubscribeEvent
     public static void handleModSpawnNavigatorEvent(final EntityJoinLevelEvent event)
     {
@@ -39,14 +28,7 @@ public class GroundPathNavigatorOverrideEventHandler
 
         final Optional<MoveControl> controllerHandler = MovementControllerRegistry.getInstance().getRunner().get(mob, mob.getMoveControl());
         controllerHandler.ifPresent(controller -> {
-            try
-            {
-                movementControllerField.set(mob, controller);
-            }
-            catch (IllegalAccessException e)
-            {
-               LOGGER.warn("Failed to update the movement controller of an entity.", e);
-            }
+            mob.moveControl = controller;
         });
     }
 }

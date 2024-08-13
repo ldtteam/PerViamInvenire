@@ -1,18 +1,50 @@
 package com.ldtteam.perviaminvenire.api.pathfinding;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
+import com.jcraft.jorbis.Block;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.level.pathfinder.Path;
+import net.neoforged.neoforge.network.codec.NeoForgeStreamCodecs;
 
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.IntFunction;
 
 public class PathingCalculationData
 {
+    public static final StreamCodec<FriendlyByteBuf, PathingCalculationData> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.map(
+                    (IntFunction<Map<BlockPos, Collection<BlockPos>>>) Maps::newHashMapWithExpectedSize,
+                    BlockPos.STREAM_CODEC,
+                    ByteBufCodecs.collection((IntFunction<Collection<BlockPos>>) ArrayList::new).apply(BlockPos.STREAM_CODEC)
+            ).map(
+                    blockPosCollectionMap -> {
+                        final Multimap<BlockPos, BlockPos> multimap = HashMultimap.create();
+                        blockPosCollectionMap.forEach(multimap::putAll);
+                        return multimap;
+                    },
+                    Multimaps::asMap
+            ),
+            PathingCalculationData::getWalkedPositions,
+            ByteBufCodecs.map(
+                    Maps::newHashMapWithExpectedSize,
+                    BlockPos.STREAM_CODEC,
+                    NeoForgeStreamCodecs.enumCodec(InvalidNodeReason.class)
+            ),
+            PathingCalculationData::getInvalidNodeReasons,
+            ByteBufCodecs.collection((IntFunction<LinkedList<BlockPos>>) value -> new LinkedList<>()).apply(BlockPos.STREAM_CODEC),
+            PathingCalculationData::getConsumedNodes,
+            ByteBufCodecs.collection((IntFunction<LinkedList<BlockPos>>) value -> new LinkedList<>()).apply(BlockPos.STREAM_CODEC),
+            PathingCalculationData::getPath,
+            ByteBufCodecs.BOOL,
+            PathingCalculationData::isReachesDestination,
+            PathingCalculationData::new
+    );
+
     private final Multimap<BlockPos, BlockPos>          walkedPositions;
     private final Map<BlockPos, InvalidNodeReason>      invalidNodeReasons;
     private final LinkedList<BlockPos>                  consumedNodes;
@@ -75,73 +107,6 @@ public class PathingCalculationData
         this.consumedNodes.clear();
         this.path.clear();
         this.reachesDestination = false;
-    }
-
-    public void fromPacketBuffer(final FriendlyByteBuf buffer)
-    {
-        reset();
-
-        final int walkedPositionSourceCount = buffer.readVarInt();
-        for (int i = 0; i < walkedPositionSourceCount; i++)
-        {
-            final BlockPos source = buffer.readBlockPos();
-            final int targetCount = buffer.readVarInt();
-            for (int j = 0; j < targetCount; j++)
-            {
-                this.walkedPositions.put(
-                  source,
-                  buffer.readBlockPos()
-                );
-            }
-        }
-
-        final int invalidReasonSourceCount = buffer.readVarInt();
-        for (int i = 0; i < invalidReasonSourceCount; i++)
-        {
-            final BlockPos source = buffer.readBlockPos();
-            this.invalidNodeReasons.put(
-              source,
-              InvalidNodeReason.values()[buffer.readVarInt()]
-            );
-        }
-
-        final int consumedNodeCount = buffer.readVarInt();
-        for (int i = 0; i < consumedNodeCount; i++)
-        {
-            this.consumedNodes.add(buffer.readBlockPos());
-        }
-
-        final int pathNodeCount = buffer.readVarInt();
-        for (int i = 0; i < pathNodeCount; i++)
-        {
-            this.path.add(buffer.readBlockPos());
-        }
-
-        this.reachesDestination = buffer.readBoolean();
-    }
-
-    public void toPacketBuffer(final FriendlyByteBuf buffer)
-    {
-        buffer.writeVarInt(this.walkedPositions.keySet().size());
-        this.walkedPositions.keySet().forEach(source -> {
-            buffer.writeBlockPos(source);
-            buffer.writeVarInt(this.walkedPositions.get(source).size());
-            this.walkedPositions.get(source).forEach(buffer::writeBlockPos);
-        });
-
-        buffer.writeVarInt(this.invalidNodeReasons.keySet().size());
-        this.invalidNodeReasons.keySet().forEach(source -> {
-            buffer.writeBlockPos(source);
-            buffer.writeVarInt(this.invalidNodeReasons.get(source).ordinal());
-        });
-
-        buffer.writeVarInt(this.consumedNodes.size());
-        this.consumedNodes.forEach(buffer::writeBlockPos);
-
-        buffer.writeVarInt(this.path.size());
-        this.path.forEach(buffer::writeBlockPos);
-
-        buffer.writeBoolean(this.reachesDestination);
     }
 
     public Multimap<BlockPos, BlockPos> getWalkedPositions()

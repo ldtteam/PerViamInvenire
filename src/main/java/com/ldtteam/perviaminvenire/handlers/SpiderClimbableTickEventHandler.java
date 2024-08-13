@@ -4,18 +4,18 @@ import com.ldtteam.perviaminvenire.api.pathfinding.AbstractAdvancedGroundPathNav
 import com.ldtteam.perviaminvenire.api.pathfinding.ExtendedNode;
 import com.ldtteam.perviaminvenire.api.util.constants.ModConstants;
 import net.minecraft.world.entity.monster.Spider;
-import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.Node;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.world.level.pathfinder.Path;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
-@Mod.EventBusSubscriber(modid = ModConstants.MOD_ID)
+@EventBusSubscriber(modid = ModConstants.MOD_ID)
 public class SpiderClimbableTickEventHandler
 {
 
     @SubscribeEvent
-    public static void onLivingUpdate(final LivingEvent.LivingTickEvent event)
+    public static void onLivingUpdate(final EntityTickEvent.Post event)
     {
         if (!(event.getEntity() instanceof final Spider spiderEntity)) {
             return;

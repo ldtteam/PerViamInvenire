@@ -2,20 +2,22 @@ package com.ldtteam.perviaminvenire.movement;
 
 import com.ldtteam.perviaminvenire.api.adapters.registry.IIsLadderBlockRegistry;
 import com.ldtteam.perviaminvenire.api.movement.registry.IWantedMovementHandlerRegistry;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.control.MoveControl;
-import net.minecraft.world.level.pathfinder.NodeEvaluator;
-import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.PathfindingContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+
+import java.util.Objects;
 
 
 public class PVIMovementController extends MoveControl
@@ -53,10 +55,10 @@ public class PVIMovementController extends MoveControl
             final PathNavigation pathnavigator = this.mob.getNavigation();
 
             final NodeEvaluator nodeprocessor = pathnavigator.getNodeEvaluator();
-            if (nodeprocessor.getBlockPathType(this.mob.level,
+            if (nodeprocessor.getPathType(new PathfindingContext(this.mob.level(), this.mob),
               Mth.floor(this.mob.getX() + (double) rot1),
               Mth.floor(this.mob.getY()),
-              Mth.floor(this.mob.getZ() + (double) rot2)) != BlockPathTypes.WALKABLE)
+              Mth.floor(this.mob.getZ() + (double) rot2)) != PathType.WALKABLE)
             {
                 this.strafeForwards = 1.0F;
                 this.strafeRight = 0.0F;
@@ -84,10 +86,10 @@ public class PVIMovementController extends MoveControl
             final float range = (float) (Mth.atan2(zDif, xDif) * (double) (180F / (float) Math.PI)) - 90.0F;
             this.mob.setYRot(this.rotlerp(this.mob.getYRot(), range, 90.0F));
             this.mob.setSpeed((float) (this.speedModifier * speedAtr.getValue()));
-            final BlockPos blockpos = new BlockPos(this.mob.position());
-            final BlockState blockstate = this.mob.level.getBlockState(blockpos);
-            final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level, blockpos);
-            if ((yDif > (double) this.mob.getStepHeight() && xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()))
+            final BlockPos blockpos = new BlockPos(this.mob.blockPosition());
+            final BlockState blockstate = this.mob.level().getBlockState(blockpos);
+            final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level(), blockpos);
+            if ((yDif > (double) Objects.requireNonNull(this.mob.getAttribute(Attributes.STEP_HEIGHT)).getValue() && xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()))
                   || (!voxelshape.isEmpty() && this.mob.getY() < voxelshape.max(Direction.Axis.Y) + (double) blockpos.getY() && !blockstate.is(BlockTags.DOORS) && !blockstate.is(
               BlockTags.FENCES))
                        && !this.isLadder(blockstate, blockpos))
@@ -101,9 +103,9 @@ public class PVIMovementController extends MoveControl
             this.mob.setSpeed((float) (this.speedModifier * speedAtr.getValue()));
 
             // Avoid beeing stuck in jumping while in liquids
-            final BlockPos blockpos = new BlockPos(this.mob.position());
-            final BlockState blockstate = this.mob.level.getBlockState(blockpos);
-            if (this.mob.isOnGround() || blockstate.getMaterial().isLiquid())
+            final BlockPos blockpos = new BlockPos(this.mob.blockPosition());
+            final BlockState blockstate = this.mob.level().getBlockState(blockpos);
+            if (this.mob.onGround() || blockstate.liquid())
             {
                 this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.WAIT;
             }
@@ -125,7 +127,7 @@ public class PVIMovementController extends MoveControl
 
     private boolean isLadder(final BlockState blockState, final BlockPos pos) {
         return IIsLadderBlockRegistry.getInstance()
-                 .getRunner().isLadder(this.mob, blockState, this.mob.level, pos)
-                 .orElseGet(() -> blockState.getBlock().isLadder(this.mob.level.getBlockState(pos), this.mob.level, pos, this.mob));
+                 .getRunner().isLadder(this.mob, blockState, this.mob.level(), pos)
+                 .orElseGet(() -> blockState.getBlock().isLadder(this.mob.level().getBlockState(pos), this.mob.level(), pos, this.mob));
     }
 }

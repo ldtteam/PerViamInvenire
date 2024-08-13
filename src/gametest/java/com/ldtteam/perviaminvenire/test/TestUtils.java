@@ -1,6 +1,6 @@
 package com.ldtteam.perviaminvenire.test;
 
-import com.ldtteam.perviaminvenire.test.level.EmptyLevel;
+import com.ldtteam.perviaminvenire.util.EntityTypeUtils;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -13,7 +13,7 @@ public final class TestUtils {
 
     public static boolean doesEntityTypeFloat(final EntityType<?> type) {
         try {
-            final Entity entity = type.create(new EmptyLevel());
+            final Entity entity = EntityTypeUtils.createEntityType(type, null);
             if (!(entity instanceof Mob mob))
                 return false;
 

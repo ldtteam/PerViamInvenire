@@ -10,9 +10,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackSelectionConfig;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
+import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.RepositorySource;
@@ -21,8 +22,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.minecraftforge.resource.PathPackResources;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -32,7 +31,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public final class TemplatePackManager implements RepositorySource {
@@ -50,6 +51,15 @@ public final class TemplatePackManager implements RepositorySource {
                 final Path pviPackPath = packPath.resolve(ModConstants.MOD_ID);
                 Files.createDirectories(pviPackPath);
             }
+
+            final Path mcmetaPath = rootPath.resolve("pack.mcmeta");
+            final String mcmetaContent = "{\n" +
+                    "  \"pack\": {\n" +
+                    "    \"pack_format\": 6,\n" +
+                    "    \"description\": \"PVI GameTest Templates\"\n" +
+                    "  }\n" +
+                    "}";
+            Files.write(mcmetaPath, List.of(mcmetaContent));
         } catch (IOException e) {
             throw new RuntimeException("Failed to create in memory Pack FS", e);
         }
@@ -60,24 +70,27 @@ public final class TemplatePackManager implements RepositorySource {
     }
 
     @Override
-    public void loadPacks(@NotNull Consumer<Pack> packConsumer, @NotNull Pack.PackConstructor packConstructor) {
-        packConsumer.accept(
-                packConstructor.create(
-                        "pvi_templates",
-                        Component.literal("PVI GameTest Templates"),
-                        true,
-                        this::buildPackResources,
-                        new PackMetadataSection(Component.literal("Contains the PVI GameTest Templates."), 0),
-                        Pack.Position.TOP,
-                        PackSource.BUILT_IN,
-                        true
+    public void loadPacks(Consumer<Pack> onLoad) {
+        onLoad.accept(
+                Pack.readMetaAndCreate(
+                        new PackLocationInfo(
+                                "pvi_templates",
+                                Component.literal("PVI GameTest Templates"),
+                                PackSource.BUILT_IN,
+                                Optional.empty()),
+                        buildPackResources(),
+                        PackType.SERVER_DATA,
+                        new PackSelectionConfig(
+                                true,
+                                Pack.Position.TOP,
+                                true)
                 )
         );
     }
 
-    private PackResources buildPackResources() {
+    private Pack.ResourcesSupplier buildPackResources() {
         final Path rootTemplateResourcesPath = templateResourceFileSystems.getPath("/");
-        return new PathPackResources("pvi_templates", rootTemplateResourcesPath);
+        return new PathPackResources.PathResourcesSupplier(rootTemplateResourcesPath);
     }
 
     public void createWadeThroughTemplateFor(final ResourceLocation name, final Block baseWalkBlock, final BlockState wadeState, final boolean startOnSolid, final int width, final int height) {
@@ -164,8 +177,7 @@ public final class TemplatePackManager implements RepositorySource {
                             blocks.put(new BlockPos(x, y, z), baseWalkBlock.defaultBlockState());
                         }
                     }
-                }
-                else {
+                } else {
                     for (int z = 0; z < width; z++) {
                         if (y <= (height - entityHeight)) {
                             blocks.put(new BlockPos(x, y, z), wadeState);
@@ -363,7 +375,7 @@ public final class TemplatePackManager implements RepositorySource {
     }
 
     private void createTemplateFor(ResourceLocation name, Map<BlockPos, BlockState> blocks, Map<BlockPos, BlockEntity> blockEntities, BlockPos startPosition, BlockPos endPosition) {
-        final Path outputPath = templateResourceFileSystems.getPath("/", "data", name.getNamespace(), "structures", name.getPath() + ".nbt");
+        final Path outputPath = templateResourceFileSystems.getPath("/", "data", name.getNamespace(), "structure", name.getPath() + ".nbt");
         final Path parentDirectory = outputPath.getParent();
         try {
             Files.createDirectories(parentDirectory);

@@ -16,10 +16,10 @@ public class EntityInNoneFullBlockAdapter implements IStartPositionAdapter
     public Optional<BlockPos> apply(final AbstractPathJob job, final Entity entity, final BlockPos startPos)
     {
         final BlockPos start = entity.blockPosition();
-        final BlockState blockState = entity.getLevel().getBlockState(start);
+        final BlockState blockState = entity.level().getBlockState(start);
 
-        final VoxelShape collisionShape = blockState.getCollisionShape(entity.level, start);
-        if (blockState.getMaterial().blocksMotion() && collisionShape.max(Direction.Axis.Y) > 0)
+        final VoxelShape collisionShape = blockState.getCollisionShape(entity.level(), start);
+        if (blockState.blocksMotion() && collisionShape.max(Direction.Axis.Y) > 0)
         {
             final double relPosX = Math.abs(entity.getX() % 1);
             final double relPosZ = Math.abs(entity.getZ() % 1);
